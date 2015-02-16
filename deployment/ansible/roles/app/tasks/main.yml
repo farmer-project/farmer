@@ -14,31 +14,21 @@
   sudo: yes
   shell: sudo sed -i 's/user .*;/user root;/' /etc/nginx/nginx.conf
 
-- name: docker rest api config file
+- name: Change default nginx site
   sudo: yes
-  shell: tee /etc/nginx/sites-enabled/docker <<EOF
-         upstream docker {
-           server unix:/var/run/docker.sock;
-         }
+  template: src=docker.j2 dest=/etc/nginx/sites-enabled/docker
+  notify: restart nginx
 
-         server {
-           listen 4242 default_server;
-           location / {
-             proxy_pass http://docker;
-             auth_basic_user_file /etc/nginx/.htpasswd;
-             auth_basic "Access restricted";
-           }
-         }
-         EOF
-#- name: "Install forever (to run Node.js app)."
-#  sudo: yes
-#  npm: name=forever global=yes state=latest
+- name: install MySQLdb
+  sudo: yes
+  shell: apt-get install -y python-mysqldb
+
+- mysql_db: name=farmer_development collation=utf8_general_ci
+
+#- shell: npm start
+#  args:
+#    chdir: /var/www/
 #
-#- name: "Check list of Node.js apps running."
-#  command: forever list
-#  register: forever_list
-#  changed_when: false
-#
-#- name: "Start example Node.js app."
-#  command: forever start /var/www/src/index.js
-#  when: "forever_list.stdout.find('/path/to/app.js') == -1"
+
+- name: Start Node.js app
+  shell: forever start /var/www/src/index.js

@@ -4,7 +4,7 @@ module.exports = function(sequelize, DataTypes) {
 
     var Container = sequelize.define("Container", {
         id: {
-            type: DataTypes.STRING(256),
+            type: DataTypes.STRING(128),
             primaryKey: true
         },
         name: DataTypes.STRING(128),

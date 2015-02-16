@@ -2,9 +2,9 @@
 module.exports = {
     // ### Production environment
     "production": {
-        "port": {{ app_port }},
-        "docker_server": {{ docker_server }},
-        "log_dir": {{ log_dir }},
+        "port": "{{ app_port }}",
+        "docker_server": "{{ docker_server }}",
+        "log_dir": "{{ log_dir }}",
         "database_username": "root",
         "database_password": "v3&d0raR@v@j^hmad",
         "database_name": "farmer",
@@ -13,9 +13,9 @@ module.exports = {
     },
 
     "staging": {
-        "port": {{ app_port }},
-        "docker_server": {{ docker_server }},
-        "log_dir": {{ log_dir }},
+        "port": "{{ app_port }}",
+        "docker_server": "{{ docker_server }}",
+        "log_dir": "{{ log_dir }}",
         "database_username": "root",
         "database_password": "vendoraRavajAram",
         "database_name": "farmer_staging",
@@ -25,9 +25,9 @@ module.exports = {
 
     // ### Development **(default)**
     "development": {
-        "port": {{ app_development_port }},
-        "docker_server": {{ docker_server }},
-        "log_dir": {{ log_dir }},
+        "port": "{{ app_development_port }}",
+        "docker_server": "{{ docker_server }}",
+        "log_dir": "{{ log_dir }}",
         "database_username": "root",
         "database_password": null,
         "database_name": "farmer_development",

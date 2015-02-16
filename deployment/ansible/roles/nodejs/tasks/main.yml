@@ -7,6 +7,10 @@
   sudo: yes
   shell: apt-get install -y npm
 
+- name: "Install forever"
+  sudo: yes
+  shell: npm install -g forever
+
 - name: "Install nodejs-legacy to read package.json"
   sudo: yes
   shell: apt-get install -y nodejs-legacy
