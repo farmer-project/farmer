@@ -1,0 +1,23 @@
+{
+  "name": "farmer",
+  "version": "0.0.0",
+  "description": "container manager with rest API",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "author": "Majid Golshadi <golshadi.majid@gmail.com>",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "body-parser": "^1.11.0",
+    "colors": "^1.0.3",
+    "express": "~4.11.2",
+    "lodash": "~3.1.0",
+    "mysql": "^2.5.4",
+    "sequelize": "^2.0.0-rc8",
+    "q": "~1.1.2",
+    "request": "~2.53.0",
+    "log4js": "~0.6.22"
+  }
+}

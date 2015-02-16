@@ -1,0 +1,37 @@
+// TODO: any config value fetch from gruop vars
+module.exports = {
+    // ### Production environment
+    "production": {
+        "port": {{ app_port }},
+        "docker_server": {{ docker_server }},
+        "log_dir": {{ log_dir }},
+        "database_username": "root",
+        "database_password": "v3&d0raR@v@j^hmad",
+        "database_name": "farmer",
+        "database_host": "127.0.0.1",
+        "database_dialect": "mysql"
+    },
+
+    "staging": {
+        "port": {{ app_port }},
+        "docker_server": {{ docker_server }},
+        "log_dir": {{ log_dir }},
+        "database_username": "root",
+        "database_password": "vendoraRavajAram",
+        "database_name": "farmer_staging",
+        "database_host": "127.0.0.1",
+        "database_dialect": "mysql"
+    },
+
+    // ### Development **(default)**
+    "development": {
+        "port": {{ app_development_port }},
+        "docker_server": {{ docker_server }},
+        "log_dir": {{ log_dir }},
+        "database_username": "root",
+        "database_password": null,
+        "database_name": "farmer_development",
+        "database_host": "127.0.0.1",
+        "database_dialect": "mysql"
+    }
+};

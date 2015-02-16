@@ -1,0 +1,12 @@
+---
+- name: "Install Nodejs"
+  sudo: yes
+  shell: apt-get install -y nodejs
+
+- name: "Install npm"
+  sudo: yes
+  shell: apt-get install -y npm
+
+- name: "Install nodejs-legacy to read package.json"
+  sudo: yes
+  shell: apt-get install -y nodejs-legacy
