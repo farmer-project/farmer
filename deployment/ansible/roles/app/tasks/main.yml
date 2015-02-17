@@ -25,10 +25,5 @@
 
 - mysql_db: name=farmer_development collation=utf8_general_ci
 
-#- shell: npm start
-#  args:
-#    chdir: /var/www/
-#
-
 - name: Start Node.js app
   shell: forever start /var/www/src/index.js

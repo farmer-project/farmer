@@ -1,9 +1,9 @@
 module.exports = function Container() {
     var express = require('express'),
-        models = require('../models'),
+        models = require('../../models/index'),
         staging = require('./staging'),
         production = require('./production'),
-        ContainerManager = require('../container-manager'),
+        ContainerManager = require('../../container-manager/index'),
         app = express();
 
     app.use('/staging', staging());

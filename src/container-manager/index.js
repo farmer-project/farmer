@@ -149,6 +149,26 @@ ContainerManager.prototype.getContainerInfo = function (containerId)
     return deferred.promise;
 };
 
+ContainerManager.prototype.getListImages = function ()
+{
+    var deferred = Q.defer();
+
+    DockerClient
+        .buildListImagesAction()
+        .execute()
+        .then(function (info) {
+            LogCenter.debug("Fetch images list");
+            deferred.resolve(info);
+        }, function (error) {
+            LogCenter.error("Error on fetch images list");
+            LogCenter.error(error);
+            deferred.reject(error);
+        })
+    ;
+
+    return deferred.promise;
+};
+
 ContainerManager.prototype.deleteContainer = function (config)
 {
     var deferred = Q.defer(),

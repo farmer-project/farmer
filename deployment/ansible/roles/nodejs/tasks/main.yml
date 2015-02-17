@@ -7,9 +7,9 @@
   sudo: yes
   shell: apt-get install -y npm
 
-- name: "Install forever"
+- name: "Install nodemon"
   sudo: yes
-  shell: npm install -g forever
+  shell: npm install -g nodemon
 
 - name: "Install nodejs-legacy to read package.json"
   sudo: yes

@@ -1,7 +1,7 @@
 module.exports = function Staging() {
     var express = require('express'),
-        models = require('../models'),
-        ContainerManager = require('../container-manager'),
+        models = require('../../models/index'),
+        ContainerManager = require('../../container-manager/index'),
         app = express(),
         TYPE = "staging";
 

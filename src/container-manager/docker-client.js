@@ -3,7 +3,8 @@ var
     StartAction = require('./actions/StartAction'),
     InfoAction = require('./actions/InfoAction'),
     StopAction = require('./actions/StopAction'),
-    RemoveAction = require('./actions/RemoveAction')
+    RemoveAction = require('./actions/RemoveAction'),
+    ListImagesAction = require('./actions/ListImagesAction')
     ;
 
 function DockerClient() {
@@ -20,6 +21,10 @@ DockerClient.prototype.buildStartAction = function () {
 
 DockerClient.prototype.buildInfoAction = function () {
     return new InfoAction();
+};
+
+DockerClient.prototype.buildListImagesAction = function () {
+    return new ListImagesAction();
 };
 
 DockerClient.prototype.buildStopAction = function () {
