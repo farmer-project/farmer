@@ -11,28 +11,28 @@ function DockerClient() {
 
 }
 
-DockerClient.prototype.buildCreateAction = function () {
-    return new CreateAction();
+DockerClient.prototype.buildCreateAction = function (config) {
+    return new CreateAction(config);
 };
 
-DockerClient.prototype.buildStartAction = function () {
-    return new StartAction();
+DockerClient.prototype.buildStartAction = function (identifier) {
+    return new StartAction(identifier);
 };
 
-DockerClient.prototype.buildInfoAction = function () {
-    return new InfoAction();
+DockerClient.prototype.buildInfoAction = function (identifier) {
+    return new InfoAction(identifier);
 };
 
 DockerClient.prototype.buildListImagesAction = function () {
     return new ListImagesAction();
 };
 
-DockerClient.prototype.buildStopAction = function () {
-    return new StopAction();
+DockerClient.prototype.buildStopAction = function (identifier) {
+    return new StopAction(identifier);
 };
 
-DockerClient.prototype.buildRemoveAction = function () {
-    return new RemoveAction();
+DockerClient.prototype.buildRemoveAction = function (identifier) {
+    return new RemoveAction(identifier);
 };
 
 module.exports = new DockerClient();

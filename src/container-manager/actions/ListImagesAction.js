@@ -14,7 +14,7 @@ ListImages.prototype.execute = function ()
         uri: config.docker_server + '/images/json',
         method: "GET"
     };
-console.log(options);
+
     request(options, function (error, response, body) {
 
         if (!error && response.statusCode == 200) {
@@ -25,7 +25,8 @@ console.log(options);
             });
 
         } else {
-            // 500 – server error
+            var error = "";
+            if( response.statusCode == 500) error = "server error";
             deferred.reject({
                 code: response.statusCode,
                 message: error

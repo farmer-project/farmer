@@ -39,27 +39,30 @@ module.exports = function Production() {
                     message = "An error occurred while select on containers ";
                     LogCenter.error(message + err);
 
-                    res.json({
-                        "success": false,
-                        "message": message
-                    });
-                } else if (!result) {
-                    message = "No container found";
-                    LogCenter.info(message);
-                    LogCenter.debug(result);
+                    res
+                        .status(500)
+                        .json({
+                            "result": [],
+                            "error": message
+                        });
 
-                    res.json({
-                        "success": true,
-                        "message": message
-                    });
                 } else {
-                    LogCenter.info("production container found");
+
+                    if (!result) {
+                        LogCenter.info("No container found");
+                    } else {
+                        LogCenter.info("production container found");
+                    }
+
                     LogCenter.debug(result);
 
-                    res.json({
-                        "success": true,
-                        "message": result
-                    });
+                    res
+                        .status(200)
+                        .json({
+                            "result": result,
+                            "error": ''
+                        });
+
                 }
             })
         ;

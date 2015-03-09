@@ -27,6 +27,7 @@ Vagrant.configure("2") do |config|
 
     # Configure the network interfaces
     config.vm.network   :private_network, ip: "192.168.33.105"
+    config.ssh.forward_agent = true
 
     # Configure shared folders
     config.vm.synced_folder ".", "/var/www", id: "application",  :nfs => true, :linux__nfs_options => ["rw", "no_root_squash", "async"]

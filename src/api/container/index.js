@@ -1,12 +1,16 @@
 module.exports = function Container() {
     var express = require('express'),
         models = require('../../models/index'),
-        staging = require('./staging'),
+        greenhouse = require('./greenhouse'),
         production = require('./production'),
         ContainerManager = require('../../container-manager/index'),
         app = express();
 
-    app.use('/staging', staging());
+    /*
+    we grow our plant(code) in greenhouse and after that transfer them to our farm
+     greenhouse = staging
+     */
+    app.use('/greenhouse', greenhouse());
     app.use('/production', production());
 
     // Regular routes
@@ -14,16 +18,21 @@ module.exports = function Container() {
 
         ContainerManager
             .getContainerInfo(req.params.containerId)
-            .then(function (info) {
-                res.json({
-                    success: true,
-                    info: info
-                });
+            .then(function (response) {
+                res
+                    .status(response.code)
+                    .json({
+                        'result': response.message,
+                        'error' : ''
+                    });
+
             }, function (error) {
-                res.json({
-                    success: false,
-                    error: error
-                });
+                res
+                    .status(error.code)
+                    .json({
+                        'result': '',
+                        'error' : error.message
+                    });
             });
     });
 

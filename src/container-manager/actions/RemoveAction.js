@@ -2,16 +2,10 @@ var Q = require('q'),
     config = require('../../config'),
     request = require('request');
 
-function RemoveAction () {
-    this.containerId = null;
+function RemoveAction (identifier) {
+    this.identifier = identifier;
     this.removeVolume = 0;
 }
-
-RemoveAction.prototype.setContainerId = function (containerId)
-{
-    this.containerId = containerId;
-    return this;
-};
 
 RemoveAction.prototype.removeVolumeFunc = function (removeVolume)
 {
@@ -24,15 +18,15 @@ RemoveAction.prototype.removeVolumeFunc = function (removeVolume)
 
 RemoveAction.prototype.execute = function ()
 {
-    if (typeof this.containerId !== 'string' || !this.containerId) {
-        throw new Error('Container ID must be set when getting container info.');
+    if (typeof this.identifier !== 'string' || !this.identifier) {
+        throw new Error('Container identifier must be set when getting container info.');
     }
 
     var deferred = Q.defer(),
         self = this;
 
     var options = {
-        uri: config.docker_server + '/containers/' + this.containerId + '?force=1&v=' + this.removeVolume,
+        uri: config.docker_server + '/containers/' + this.identifier + '?force=1&v=' + this.removeVolume,
         method: "DELETE"
     };
 
@@ -46,12 +40,13 @@ RemoveAction.prototype.execute = function ()
             });
 
         } else {
-            // 400 – bad parameter
-            // 404 – no such container
-            // 500 – server error
+            var errorMessage = "";
+            if( response.statusCode == 400) errorMessage = "bad parameter";
+            if( response.statusCode == 404) errorMessage = "no such container";
+            if( response.statusCode == 500) errorMessage = "server error";
             deferred.reject({
                 code: response.statusCode,
-                message: error
+                message: errorMessage
             });
         }
 

@@ -2,30 +2,18 @@ var Q = require('q'),
     config = require('../../config'),
     request = require('request');
 
-function StartAction () {
-    this.id = "";
-    this.volumes = [];
-
+function StartAction (identifier) {
+    this.identifier = identifier;
+    this.HostConfig = {};
 }
 
-StartAction.prototype.setId = function (id)
-{
-    this.id = id;
+StartAction.prototype.setConfig = function (HostConfig) {
+    this.HostConfig = HostConfig;
+    this.HostConfig["NetworkMode"] = "bridge";
 
-    return this;
-};
-
-StartAction.prototype.addVolume = function (volumes)
-{
-    if (typeof volumes === "undefined") {
-        volumes = [];
-    }
-
-    if (typeof volumes === "string") {
-        volumes = [volumes];
-    }
-
-    this.volumes = this.volumes.concat(volumes);
+    this.HostConfig["PublishAllPorts"] =
+        typeof this.HostConfig["PublishAllPorts"] !== 'undefined' ?
+            this.HostConfig["PublishAllPorts"] : true;
 
     return this;
 };
@@ -35,28 +23,24 @@ StartAction.prototype.execute = function ()
     var deferred = Q.defer();
 
     var options = {
-        uri: config.docker_server + '/containers/' + this.id + '/start',
+        uri: config.docker_server + '/containers/' + this.identifier + '/start',
         method: "POST",
-        json: {
-            "PublishAllPorts": true,
-            "NetworkMode": "bridge",
-            "Binds": this.volumes
-        }
+        json: this.HostConfig
     };
 
     request(options, function (error, response, body) {
 
         if (!error && response.statusCode == 204) {
-            // 204 – no error
             deferred.resolve({
                 code: response.statusCode,
-                message: this.id
+                message: this.identifier
             });
 
         } else {
-            // 304 – container already started
-            // 404 – no such container
-            // 500 – server error
+            var errorMessage = "";
+            if( response.statusCode == 304) errorMessage = "container already started";
+            if( response.statusCode == 404) errorMessage = "no such container";
+            if( response.statusCode == 500) errorMessage = "server error";
             deferred.reject({
                 code: response.statusCode,
                 message: error

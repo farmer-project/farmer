@@ -29,16 +29,28 @@ ContainerManager.prototype.runContainer = function (config)
         .then(function (info) {
             config['id'] = info.message.Id;
 
+            console.log('config: ', config);
+
             self.startContainer(config)
                 .then(function (info) {
+
+                    console.log('info: ', info);
+
                     info['id'] = config.id;
                     deferred.resolve(info);
                 }, function (error) {
+
+                    console.log('error: ', error);
+
                     deferred.reject(error);
                 });
         }, function (error) {
+
+            console.log('wow Error: ', error);
+
             deferred.reject(error);
-        });
+        })
+    ;
 
 
     return deferred.promise;
@@ -49,11 +61,7 @@ ContainerManager.prototype.createContainer = function (config)
     var deferred = Q.defer();
 
     DockerClient
-        .buildCreateAction()
-        .setImage(config.image)
-        .setName(config.name)
-        .setHostname(config.hostname)
-        .addPort(config.ports)
+        .buildCreateAction(config)
         .execute()
         .then(function (info) {
 
@@ -96,17 +104,16 @@ ContainerManager.prototype.startContainer = function (config)
     var deferred = Q.defer();
 
     DockerClient
-        .buildStartAction()
-        .setId(config.id)
-        .addVolume(config.volumes)
+        .buildStartAction(config.id)
+        .setConfig(config.HostConfig)
         .execute()
         .then(function (info) {
-
+            console.log('start in Container manager THEN');
             models
                 .Container
                 .update({
                     "state": "running",
-                    "volumes": JSON.stringify(config.volumes)
+                    "volumes": JSON.stringify(config.HostConfig.Binds)
                 },{
                     where: { id: config.id }
                 }).then(function (info) {
@@ -122,25 +129,24 @@ ContainerManager.prototype.startContainer = function (config)
         }, function (error) {
             deferred.reject(error);
         })
-        ;
+    ;
 
     return deferred.promise;
 };
 
 
-ContainerManager.prototype.getContainerInfo = function (containerId)
+ContainerManager.prototype.getContainerInfo = function (identifier)
 {
     var deferred = Q.defer();
 
     DockerClient
-        .buildInfoAction()
-        .setContainerId(containerId)
+        .buildInfoAction(identifier)
         .execute()
         .then(function (info) {
-            LogCenter.debug("Fetch " + containerId + " container info");
+            LogCenter.debug("Fetch " + identifier + " container info");
             deferred.resolve(info);
         }, function (error) {
-            LogCenter.error("Container ID " + containerId + " not found");
+            LogCenter.error("Container ID/Name " + identifier + " not found");
             LogCenter.error(error);
             deferred.reject(error);
         })
@@ -192,13 +198,12 @@ ContainerManager.prototype.deleteContainer = function (config)
     return deferred.promise;
 };
 
-ContainerManager.prototype.stopContainer = function (containerId)
+ContainerManager.prototype.stopContainer = function (identifier)
 {
     var deferred = Q.defer();
 
     DockerClient
-        .buildStopAction()
-        .setContainerId(containerId)
+        .buildStopAction(identifier)
         .execute()
         .then(function (info) {
 
@@ -231,11 +236,10 @@ ContainerManager.prototype.stopContainer = function (containerId)
 ContainerManager.prototype.removeContainer = function (config)
 {
     var deferred = Q.defer();
-    console.log("removeVolume".red,config.removeVolume);
+    console.log("removeVolume".red, config.removeVolume);
 
     DockerClient
-        .buildRemoveAction()
-        .setContainerId(config.id)
+        .buildRemoveAction(config.id)
         .removeVolumeFunc(config.removeVolume)
         .execute()
         .then(function (info) {

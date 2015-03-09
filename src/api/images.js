@@ -8,16 +8,20 @@ module.exports = function Container() {
 
         ContainerManager
             .getListImages()
-            .then(function (info) {
-                res.json({
-                    success: true,
-                    info: info
-                });
+            .then(function (response) {
+                res
+                    .status(response.code)
+                    .json({
+                        "result": response.message,
+                        "error": ""
+                    });
             }, function (error) {
-                res.json({
-                    success: false,
-                    error: error
-                });
+                res
+                    .status(error.code)
+                    .json({
+                        "result": "",
+                        "error": error.message
+                    });
             });
     });
 

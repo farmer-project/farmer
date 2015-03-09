@@ -2,69 +2,35 @@ var Q = require('q'),
     config = require('../../config'),
     request = require('request');
 
-function CreateAction () {
-    this.hostname = "";
-    this.name = "";
-    this.image = "";
-    this.ports = [];
+function CreateAction (config) {
+    this.name = '';
+
+    if (typeof config.Name !== 'undefined') {
+        this.name = '?name=' + config.Name;
+        delete config['Name'];
+    }
+
+    this.sendData = config;
 }
-
-CreateAction.prototype.setHostname = function (hostname)
-{
-    this.hostname = hostname;
-    return this;
-};
-
-CreateAction.prototype.setName = function (name)
-{
-    this.name = name;
-    return this;
-};
-
-CreateAction.prototype.addPort = function (ports)
-{
-    if (typeof ports === "undefined") {
-        ports = [];
-    }
-
-    if (typeof ports === "string") {
-        ports = [ports];
-    }
-
-    this.ports = this.ports.concat(ports);
-
-    return this;
-};
-
-CreateAction.prototype.setImage = function (image)
-{
-    this.image = image;
-    return this;
-};
 
 CreateAction.prototype.execute = function ()
 {
-    var deferred = Q.defer();
+    var deferred = Q.defer(),
+        image = this.sendData["Image"];
 
-    if (typeof this.image !== 'string' || !this.image) {
-        throw new Error('Image should be set when building Create command.');
-    }
+    if (typeof this.sendData.Image !== 'string' || !this.sendData.Image) {
+        deferred.reject({
+            code: 500,
+            message: 'Image should be set when building Create command.'
+        });
 
-    var ExposedPorts = {};
-    if (this.ports.length) {
-        for (var c = this.ports.length, i = 0; i < c; i++) {
-            ExposedPorts[this.ports[i]+'/tcp'] = {};
-        }
+        return deferred.promise;
     }
 
     var options = {
-        uri: config.docker_server + '/containers/create?name=' + this.name,
+        uri: config.docker_server + '/containers/create' + this.name,
         method: 'POST',
-        json: {
-            "Hostname": this.hostname,
-            "Image": this.image,
-            "ExposedPorts": ExposedPorts
-        }
+        json: this.sendData
     };
 
     request(options, function (error, response, body) {
@@ -76,12 +42,13 @@ CreateAction.prototype.execute = function ()
             });
 
         } else {
-            // 404 – no such container
-            // 406 – impossible to attach (container not running)
-            // 500 – server error
+            var errorMsg = "";
+            if( response.statusCode == 404) errorMsg = "no such container";
+            if( response.statusCode == 406) errorMsg = "impossible to attach (container not running)";
+            if( response.statusCode == 500) errorMsg = "server error";
             deferred.reject({
                 code: response.statusCode,
-                message: error
+                message: errorMsg
             });
         }
 

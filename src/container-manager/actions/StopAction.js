@@ -2,27 +2,21 @@ var Q = require('q'),
     config = require('../../config'),
     request = require('request');
 
-function StopAction () {
-    this.containerId = null;
+function StopAction (identifier) {
+    this.identifier = identifier;
 }
-
-StopAction.prototype.setContainerId = function (containerId)
-{
-    this.containerId = containerId;
-    return this;
-};
 
 StopAction.prototype.execute = function ()
 {
-    if (typeof this.containerId !== 'string' || !this.containerId) {
-        throw new Error('Container ID must be set when getting container info.');
+    if (typeof this.identifier !== 'string' || !this.identifier) {
+        throw new Error('Container identifier must be set when getting container info.');
     }
 
     var deferred = Q.defer(),
         self = this;
 
     var options = {
-        uri: config.docker_server + '/containers/' + this.containerId + '/stop',
+        uri: config.docker_server + '/containers/' + this.identifier + '/stop',
         method: "POST"
     };
 
@@ -34,16 +28,17 @@ StopAction.prototype.execute = function ()
             deferred.resolve({
                 code: response.statusCode,
                 message: {
-                    "id": self.containerId
+                    "id": self.identifier
                 }
             });
 
         } else {
-            // 404 – no such container
-            // 500 – server error
+            var errorMessage = "";
+            if( response.statusCode == 404) errorMessage = "no such container";
+            if( response.statusCode == 500) errorMessage = "server error";
             deferred.reject({
                 code: response.statusCode,
-                message: error
+                message: errorMessage
             });
         }
 
