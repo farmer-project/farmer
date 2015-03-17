@@ -1,25 +1,43 @@
 'use strict';
 
-module.exports = function Greenhouse() {
-    var express = require('express'),
-        Seed = require('./seed'),
-        models = require('../../../models'),
-        ContainerManager = require('../../../container-manager'),
-        LogCenter = require('../../../log-center'),
+var express = require('express'),
+    Seed = require('./seed'),
+    models = require('../../../models'),
+    ContainerManager = require('../../../container-manager'),
+    packageCompose = require('../../../package-compose'),
+    LogCenter = require('../../../log-center'),
+    config = require('../../../config');
 
-        app = express(),
+module.exports = function Greenhouse() {
+    var app = express(),
         seed = new Seed(),
         TYPE = "staging";
-
-
 
     app.post('/create', function (req, res) {
         req.body.type = TYPE;
         req.body.image = req.body.package;
 
-        console.log('ppppppppppppppqqqqqqqqqqqqqqqqq');
-        var packageCompose = require('../../../package-compose')('base');
-        console.log('eeeeeeeeeeeeeeeeeeeEEEEEEEEEEEEEEEEE');
+        packageCompose.run({
+            "packages": config.packages + req.body.package + ".yml",
+            "vars": {
+                "name": req.body.name,
+                "host": req.body.name
+            }
+        }).then(function (result) {
+            res
+                .status(200)
+                .json({
+                    "result": result,
+                    "error": ""
+                });
+        }, function (error) {
+            res
+                .status(500)
+                .json({
+                    "result": '',
+                    "error": error
+                });
+        });
 
         //seed.implant(req.body)
         //    .then(function (result) {
@@ -35,7 +53,8 @@ module.exports = function Greenhouse() {
         //                "result": {},
         //                "message": error.message
         //            });
-        //    });
+        //    })
+        //;
 
 
         //if (typeof req.body.name === 'undefined') {

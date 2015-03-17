@@ -19,7 +19,7 @@ Seed.prototype.implant = function (request) {
         git.clone(request)
             .execute()
             .then(function (result) {
-                farmland.furrow();
+                //farmland.furrow();
                 deferred.resolve(result);
             }, function (error) {
                 deferred.reject(error);
