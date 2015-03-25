@@ -1,11 +1,12 @@
 'use strict';
 
-var yamlParser = require('js-yaml'),
+var _ = require('underscore'),
+    parser = require('js-yaml'),
     mustache = require('mustache'),
     fs = require('fs'),
     Q = require('q');
 
-module.exports = function yaml(file, variables) {
+module.exports = function (file, variables) {
     var deferred = Q.defer(),
         compose = {};
 
@@ -16,7 +17,7 @@ module.exports = function yaml(file, variables) {
         }
 
         try {
-            compose = yamlParser.safeLoad(
+            compose = parser.safeLoad(
                 mustache.render(data, variables)
             );
             deferred.resolve(compose);

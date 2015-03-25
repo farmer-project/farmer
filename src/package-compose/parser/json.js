@@ -1,12 +1,13 @@
 'use strict';
 
-var mustache = require('mustache'),
-    fs = require('fs'),
-    Q = require('q');
+var _        = require('underscore'),
+    mustache = require('mustache'),
+    fs       = require('fs'),
+    Q        = require('q');
 
 module.exports = function json(file, variables) {
     var deferred = Q.defer(),
-        compose = {};
+        compose  = {};
 
     fs.readFile(file, 'utf8', function (err, data) {
         if (err) {

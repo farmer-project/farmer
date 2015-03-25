@@ -1,12 +1,14 @@
 'use strict';
 
-var _ = require('lodash');
+var _ = require('underscore');
 
 /**
  * nodes [
  *       {
  *          "label": "A",
  *          "weight": 12,
+ *          "out_deg": 2,
+ *          "in_deg": 10,
  *          "edges": [],
  *          ...
  *      },
@@ -20,32 +22,22 @@ function GraphDataSource () {
     this.edges = [];
 }
 
-GraphDataSource.prototype.indexOf = function (searchLabel) {
-    return this.nodes
-        .map(function(e) { return e.label; })
-        .indexOf(searchLabel);
-};
-
 GraphDataSource.prototype.getNodes = function () {
-    var nodesArr = [];
-    for (var i = 0; i < this.nodes.length; i++) {
-        if (this.nodes[i].hasOwnProperty('label')) {
-            nodesArr.push(this.nodes[i]['label']);
-        }
-    }
-
-    return nodesArr;
+    return _.pluck(this.nodes, 'label');
 };
 
-GraphDataSource.prototype.getNodesByInfo = function () {
+GraphDataSource.prototype.getNodesArray = function () {
     return this.nodes;
 };
 
-GraphDataSource.prototype.getNodeInfo = function (label, property) {
-    if (typeof property !== 'undefined')
-        return this.nodes[this.indexOf(label)][property];
+GraphDataSource.prototype.getNode = function (label, forceCreate) {
+    var node = _.findWhere(this.nodes, { label: label });
 
-    return this.nodes[this.indexOf(label)];
+    if (!node && forceCreate) {
+        node = this.addNode(label);
+    }
+
+    return node;
 };
 
 GraphDataSource.prototype.getEdges = function () {
@@ -53,72 +45,89 @@ GraphDataSource.prototype.getEdges = function () {
 };
 
 GraphDataSource.prototype.getNodeEdges = function (label) {
-    return this.nodes[this.indexOf(label)]["edges"];
-};
-
-GraphDataSource.prototype.addEdge = function (src, dest) {
-    var edge = {
-        "src": src,
-        "dest": dest
-    };
-
-    this.edges.push(edge);
-
-    this._addNodeWeight(src);
-    this._addNodeWeight(dest);
-
-    this._addNodeEdge(src, edge);
-    this._addNodeEdge(dest, edge);
-
-    this._calNodesDeg(edge);
+    return this.getNode(label).edges;
 };
 
 GraphDataSource.prototype.addNode = function (label) {
-    this.nodes.push({
+    var node;
+
+    if (node = this.getNode(label)) {
+        return node;
+    }
+
+    node = {
         label: label,
         weight: 0,
         out_deg: 0,
         in_deg: 0,
         edges: []
-    });
+    };
+
+    this.nodes.push(node);
+
+    return node;
+};
+
+GraphDataSource.prototype.addEdge = function (sourceLabel, destinationLabel) {
+    var edge = {
+        src: sourceLabel,
+        dest: destinationLabel
+    };
+
+    this.edges.push(edge);
+
+    this._addNodeEdge(sourceLabel, edge);
+    this._addNodeEdge(destinationLabel, edge);
 };
 
 GraphDataSource.prototype.removeNode = function (label) {
-    var nodeEdge = this.getNodeEdges(label);
+    var nodeEdges = this.getNodeEdges(label);
 
-    for (var i = 0; i < nodeEdge.length; i++) {
-        this._removeEdge(nodeEdge[i]);
+    for (var i = 0; i < nodeEdges.length; i++) {
+        this.removeEdge(nodeEdges[i].src, nodeEdges[i].dest);
     }
 
-    this.nodes.splice(this.indexOf(label), 1);
+    this.nodes = _.reject(this.nodes, function (node) {
+        return node.label === label;
+    });
 };
 
-GraphDataSource.prototype._addNodeWeight = function (label) {
-    this.nodes[this.indexOf(label)]["weight"] += 1;
+GraphDataSource.prototype.removeEdge = function (sourceLabel, destinationLabel) {
+    var edge = {
+        src: sourceLabel,
+        dest: destinationLabel
+    };
+
+    this._removeNodeEdge(sourceLabel, edge);
+    this._removeNodeEdge(destinationLabel, edge);
+
+    this.edges = _.reject(this.edges, edge);
 };
 
 GraphDataSource.prototype._addNodeEdge = function (label, edge) {
-    this.nodes[this.indexOf(label)]["edges"].push(edge);
+    var node = this.getNode(label, true);
+
+    if (label === edge.src) {
+        node.out_deg++;
+    } else if (label === edge.dest) {
+        node.in_deg++;
+    }
+
+    node.edges.push(edge);
+    node.weight++;
 };
 
-GraphDataSource.prototype._calNodesDeg = function (edge) {
-    this.nodes[this.indexOf(edge.src)]["out_deg"] += 1;
-    this.nodes[this.indexOf(edge.dest)]["in_deg"] += 1;
-};
+GraphDataSource.prototype._removeNodeEdge = function (label, edge) {
+    var node = this.getNode(label);
 
-GraphDataSource.prototype._removeEdge = function (edge) {
-    var indexSrc = this.indexOf(edge.src),
-        indexDest = this.indexOf(edge.dest);
+    if (label === edge.src) {
+        node.out_deg--;
+    } else if (label === edge.dest) {
+        node.in_deg--;
+    }
 
-    this.nodes[this.indexOf(edge.src)]["weight"] -= 1;
-    this.nodes[this.indexOf(edge.src)]["out_deg"] -= 1;
-    _.remove(this.nodes[indexSrc]['edges'], edge);
-
-    this.nodes[this.indexOf(edge.dest)]["in_deg"] -= 1;
-    this.nodes[this.indexOf(edge.dest)]["weight"] -= 1;
-    _.remove(this.nodes[indexDest]['edges'], edge);
-
-    _.remove(this.nodes['edges'], edge);
+    node.edges = _.reject(node.edges, edge);
+    node.weight--;
 };
 
 module.exports = GraphDataSource;

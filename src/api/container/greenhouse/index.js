@@ -18,10 +18,11 @@ module.exports = function Greenhouse() {
         req.body.image = req.body.package;
 
         packageCompose.run({
-            "packages": config.packages + req.body.package + ".yml",
+            "packages": config.packages_path + '/' + req.body.package + ".yml",
             "vars": {
                 "name": req.body.name,
-                "host": req.body.name
+                "hostname": req.body.name,
+                "code": '/some/where'
             }
         }).then(function (result) {
             res

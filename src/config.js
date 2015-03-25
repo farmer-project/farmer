@@ -1,4 +1,4 @@
-var _ = require('lodash');
+var _ = require('underscore');
 
 process.env.RAVAJ_STAGE = process.env.RAVAJ_STAGE || 'development';
 

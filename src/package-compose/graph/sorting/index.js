@@ -4,7 +4,7 @@ function Sorting(graphDataSource) {
     this.graphDataSource = graphDataSource;
 }
 
-Sorting.prototype.creatingTime = require('./CreationTime');
+Sorting.prototype.creatingTime = require('./Topological');
 
 Sorting.prototype.weight = require('./Weight');
 

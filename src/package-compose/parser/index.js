@@ -1,27 +1,25 @@
 'use strict';
 
-var mime = require('mime'),
-    Q = require('q');
+var mime       = require('mime'),
+    YamlParser = require('./yaml'),
+    JsonParser = require('./json'),
+    Q          = require('q');
 
 function Parser() {
-
 }
 
 Parser.prototype.parse = function (file, variables) {
-    var parser = {},
-        deferred = Q.defer(),
-        ext = mime.extension(mime.lookup(file));
+    var ext = mime.extension(mime.lookup(file));
 
     if (ext == 'yaml' || ext == 'yml') {
-        return require('./yaml')(file, variables);
+        return YamlParser(file, variables);
     }
 
     if (ext == 'json') {
-        return require('./json')(file, variables);
+        return JsonParser(file, variables);
     }
 
-    deferred.reject('undefined file type');
-    return deferred.promise;
+    return Q.reject('Unknown file type');
 };
 
 module.exports = new Parser();
