@@ -1,7 +1,6 @@
 /**
  * this method need an object with these properties
  * {
- *  "name":
  *  "repo":
  *  "code_destination",
  *  "branch"
@@ -17,14 +16,13 @@ var Q = require('q'),
 function Clone(object) {
     this.config = object || {};
 
-    if (!this.config.name || !this.config.repo || !this.config.code_destination)
-        throw new error("invalid arguments");
+    if (!this.config.repo || !this.config.code_destination)
+        throw new Error("invalid arguments");
 
     this.config.branch = object.branch || 'master';
 }
 
 Clone.prototype.execute = function () {
-
     var deferred = Q.defer(),
         self = this,
         options = {
@@ -40,18 +38,11 @@ Clone.prototype.execute = function () {
         };
 
     Nodegit.Clone
-        .clone(this.config.repo, this.config.code_destination , options)
+        .clone(this.config.repo, this.config.code_destination, options)
         .then(function (result) {
-
-            deferred.resolve({
-                "statusCode": 200,
-                "message": self.config
-            });
+            deferred.resolve(self.config);
         }, function(error){
-            deferred.reject({
-                "statusCode": 500,
-                "message": error
-            });
+            deferred.reject(error.toString());
         });
 
     return deferred.promise;

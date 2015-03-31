@@ -1,11 +1,11 @@
 'use strict';
 
-var _       = require('underscore'),
+var _ = require('underscore'),
+    Q = require('q'),
     Parser = require('../parser'),
     Graph = require('../graph'),
     containerManager = require('../../container-manager'),
-    upperCaseFirst = require('upper-case-first'),
-    Q = require('q');
+    upperCaseFirst = require('upper-case-first');
 
 function RunPackage () {
     this.containers = {};
@@ -34,17 +34,18 @@ RunPackage.prototype._sortByCreationPriority = function (config) {
         }, function (reason) {
             console.log('_sortByCreationPriority FAILED.', reason);
         })
-        ;
+    ;
 };
 
 RunPackage.prototype._createContainers = function (nodes, config) {
     var self = this,
-        results = {};
+        results = [];
 
     return nodes.reduce(function (prevPromise, node, index) {
         return prevPromise.then(function () {
             return self._runContainer(node, config[node]).then(function (result) {
-                results[node] = result;
+                result.message.alias = node;
+                results.push(result.message);
                 if (nodes.size() - 1 === index) {
                     return results;
                 }
@@ -121,28 +122,42 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
                     containerAlias = typeof parts[1] !== 'undefined'
                         ? parts[1] : pkgAlias;
 
-                console.log('link', link);
-                console.log('pkgAlias', pkgAlias);
-                console.log('self.containers', self.containers);
-
                 request['HostConfig']['Links'] =
                     self.containers[pkgAlias] + ':' + containerAlias;
             });
+
+        } else if (key == 'ports') {
+            var portBindings = {};
+            _.each(value, function (port) {
+                if (port.indexOf('/') > 0) {
+                    portBindings[port] = [];
+                } else {
+                    portBindings[port + '/tcp'] = [];
+                }
+
+                request['ExposedPorts'] = portBindings;
+            });
+
+        } else if (key == 'volumes') {
+            var volBindings = [];
+            _.each(value, function (vol) {
+                volBindings.push(vol);
+            });
+
+            request['HostConfig']['Binds'] = volBindings;
 
         } else if (HostConfig.indexOf(key) > -1) {
             request['HostConfig'][upperCaseFirst(key)] = value;
 
         } else if (key == 'hostConfig') {
             _.each(value, function (hcValue, hcKey) {
-                    request['HostConfig'][upperCaseFirst(hcKey)] = hcValue;
+                request['HostConfig'][upperCaseFirst(hcKey)] = hcValue;
             });
         } else {
             request[upperCaseFirst(key)] = value;
         }
 
     });
-
-    console.log(request);
 
     return request;
 };

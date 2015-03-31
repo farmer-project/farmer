@@ -1,4 +1,5 @@
 var express     = require('express'),
+    timeout     = require('connect-timeout'),
     bodyParser  = require('body-parser'),
     models      = require('./models'),
     config      = require('./config'),
@@ -11,6 +12,7 @@ require('colors');
 // Create our stand-alone express app
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(timeout('180s'));
 
 // TODO: Set up authentication
 // app.use(auth());

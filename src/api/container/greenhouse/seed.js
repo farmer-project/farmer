@@ -10,28 +10,45 @@ function Seed() {
     this.code_destination = "";
 }
 
-Seed.prototype.implant = function (request) {
-    var deferred = Q.defer();
+/**
+ * to implant a seed we need an object like below
+ * {
+ *  "package": // package name
+ *  "name": // must be unique
+ *  "hostname": // must be unique
+ *  "app": // application code address
+ *  "repo": // git repository address
+ *  "branch": // code branch default value is master(optional)
+ * }
+ * @param config
+ * @returns {*}
+ */
+Seed.prototype.implant = function (config) {
+    this.code_destination = config.app;
 
-    request['code_destination'] = this.code_destination = config.greenhouse + request.name;
+    var farmlandConf = {
+            package: config.package,
+            name: config.name,
+            hostname: config.hostname,
+            seed: config.app,
+            type: config.type
+        },
+        gitConf = {
+            branch: config.branch,
+            repo: config.repo,
+            code_destination: config.app
+        };
 
-    try {
-        git.clone(request)
-            .execute()
-            .then(function (result) {
-                //farmland.furrow();
-                deferred.resolve(result);
-            }, function (error) {
-                deferred.reject(error);
-            });
-    } catch (e) {
-        deferred.reject({
-            "statusCode": 500,
-            "message": e
-        });
-    }
-
-    return deferred.promise;
+    return farmland.furrow(farmlandConf)
+        .then(function (response) {
+            try {
+                return git.clone(gitConf).execute();
+            } catch (e) {
+                console.log('catch', e);
+                return Q.reject(e);
+            }
+        })
+    ;
 };
 
 Seed.prototype.remove = function () {

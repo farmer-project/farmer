@@ -13,7 +13,8 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING(128),
         domain: DataTypes.STRING(128),
         state: DataTypes.STRING(128),
-        metadata: DataTypes.TEXT
+        metadata: DataTypes.TEXT,
+        request: DataTypes.TEXT
     },{
         tableName: 'containers',
 

@@ -1,8 +1,10 @@
 to get clone automatically from stash ensure that you have something like this in 
 your enviroment runtime configuration file, like `.bashrc`:
 
-```shell  
+  
 # SSH Agent
+
+```
 SSH_ENV="$HOME/.ssh/environment"
 
 function start_agent {
@@ -13,9 +15,11 @@ function start_agent {
    . "${SSH_ENV}" > /dev/null
    /usr/bin/ssh-add;
 }
+```
 
 # Source SSH settings, if applicable
 
+```
 if [ -f "${SSH_ENV}" ]; then
    . "${SSH_ENV}" > /dev/null
    #ps ${SSH_AGENT_PID} doesn't work under cywgin

@@ -1,4 +1,5 @@
-var Q = require('q'),
+var _ = require('underscore'),
+    Q = require('q'),
     DockerClient = require('./docker-client'),
     models = require('../models'),
     LogCenter = require('../log-center');
@@ -58,7 +59,14 @@ ContainerManager.prototype.runContainer = function (config)
 
 ContainerManager.prototype.createContainer = function (config)
 {
-    var deferred = Q.defer();
+    var deferred = Q.defer(),
+        reqConfig = _.clone(config),
+        ports = (config.HostConfig.PublishAllPorts) ?
+            JSON.stringify(config.ExposedPorts) : "";
+
+        // our manual extended information
+        delete config.Type;
+        delete config.Metadata;
 
     DockerClient
         .buildCreateAction(config)
@@ -66,16 +74,18 @@ ContainerManager.prototype.createContainer = function (config)
         .then(function (info) {
 
             LogCenter.info("Container Create");
-            LogCenter.debug(config);
+            LogCenter.debug(reqConfig);
 
             models
                 .Container
                 .create({
                     "id": info.message.Id,
-                    "name": config.name,
-                    "ports": JSON.stringify(config.ports),
-                    "type": config.type,
-                    "state": "created"
+                    "name": reqConfig.Name,
+                    "ports": ports,
+                    "type": reqConfig.Type,
+                    "state": "created",
+                    "metadata": reqConfig.Metadata,
+                    "request": JSON.stringify(reqConfig)
                 }).complete(function (err, container) {
                     if (!err) {
                         LogCenter.info("Insert in table");
