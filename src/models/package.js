@@ -10,7 +10,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         containers: DataTypes.TEXT,
         type: DataTypes.STRING(128),
-        seed: DataTypes.STRING(128)
+        domain: DataTypes.STRING(128)
     },{
         tableName: 'packages',
 

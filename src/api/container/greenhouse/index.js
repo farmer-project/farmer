@@ -4,8 +4,6 @@ var express = require('express'),
     _ = require('underscore'),
     Q = require('q'),
     Seed = require('./seed'),
-    models = require('../../../models'),
-    packageCompose = require('../../../package-compose'),
     LogCenter = require('../../../log-center'),
     config = require('../../../config');
 
@@ -15,21 +13,13 @@ module.exports = function Greenhouse() {
 
     app.post('/create', function (req, res) {
 
-        seed.implant({
-            package: req.body.package,
-            name: req.body.name,
-            hostname: req.body.name,
-            app: config.greenhouse + '/' + req.body.name,
-            repo: req.body.repo,
-            branch: req.body.branch,
-            type: "staging"
-        })
+        seed.implant(req.body)
             .then(function (result) {
                 res
                     .status(200)
                     .json({
                         "result": result,
-                        "message": "khodaya zibaii"
+                        "message": "your plant is ready to have very beautiful bloom on your farm"
                     });
             }, function (error) {
                 res

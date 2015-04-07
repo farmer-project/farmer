@@ -25,6 +25,10 @@ Vagrant.configure("2") do |config|
     config.vm.box_url   = 'http://files.vagrantup.com/trusty64.box'
     config.vm.hostname  = _vars["domain"]
 
+    # config.vm.provider :virtualbox do |vb|
+    #  vb.gui = true
+    # end
+
     # Configure the network interfaces
     config.vm.network   :private_network, ip: "192.168.33.105"
     config.ssh.forward_agent = true

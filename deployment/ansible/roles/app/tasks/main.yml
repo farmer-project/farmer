@@ -14,16 +14,13 @@
   sudo: yes
   shell: sudo sed -i 's/user .*;/user root;/' /etc/nginx/nginx.conf
 
-- name: Change default nginx site
-  sudo: yes
-  template: src=docker.j2 dest=/etc/nginx/sites-enabled/docker
-  notify: restart nginx
-
 - name: install MySQLdb
   sudo: yes
   shell: apt-get install -y python-mysqldb
 
 - mysql_db: name=farmer_development collation=utf8_general_ci
 
-- name: Start Node.js app
-  shell: forever start /var/www/src/index.js
+- name: Change default nginx site
+  sudo: yes
+  template: src=docker.j2 dest=/etc/nginx/sites-enabled/docker
+  notify: restart nginx

@@ -1,52 +1,70 @@
 'use strict';
 
 var Q = require('q'),
+    _ = require('underscore'),
     fs = require('fs'),
+    procfile = require('../../../procfile'),
+    git = require('../../../git'),
     config = require('../../../config'),
-    farmland = require('./farmland'),
-    git = require('../../../git');
+    farmland = require('./farmland')
+    ;
 
 function Seed() {
     this.code_destination = "";
 }
 
-/**
- * to implant a seed we need an object like below
+/*
+*
  * {
- *  "package": // package name
- *  "name": // must be unique
- *  "hostname": // must be unique
- *  "app": // application code address
- *  "repo": // git repository address
- *  "branch": // code branch default value is master(optional)
- * }
- * @param config
- * @returns {*}
- */
-Seed.prototype.implant = function (config) {
-    this.code_destination = config.app;
+     *      containers: deployment/compose.yml ----> file content in json
+     *      git: {
+     *          web: {
+     *              repo: shell://git.ravaj.ir/ravaj.git
+     *              branch: branch-name(optional)
+     *           }
+     *      }
+     *      shell: {
+     *          web: [
+     *              ansible-book ...,
+     *              command ,
+     *              ...
+     *          ],
+     *          db: [
+     *              ansible-book ...,
+     *              command,
+     *              ...
+     *          ]
+     *      }
+     * }
+*/
 
-    var farmlandConf = {
-            package: config.package,
-            name: config.name,
-            hostname: config.hostname,
-            seed: config.app,
-            type: config.type
-        },
-        gitConf = {
-            branch: config.branch,
-            repo: config.repo,
-            code_destination: config.app
-        };
+Seed.prototype.implant = function (jsonProcfile) {
 
-    return farmland.furrow(farmlandConf)
-        .then(function (response) {
-            try {
-                return git.clone(gitConf).execute();
-            } catch (e) {
-                console.log('catch', e);
-                return Q.reject(e);
-            }
+
+    return procfile.dockerComposeConfigResolver(jsonProcfile.containers, jsonProcfile.git)
+        .then(function (dockerComposeConfig) {
+
+            return _(jsonProcfile.git).reduce(function (prevPromise, gitConf, alias) {
+                return prevPromise.then(function () {
+                    return _(dockerComposeConfig[alias]['binds']).reduce(function (prevPromise2, bind) {
+                        return prevPromise2.then(function () {
+
+                            return git.clone({
+                                repo: gitConf.repo,
+                                code_destination: bind.split(':')[0],
+                                branch: gitConf.branch || 'master'
+                            }).execute();
+
+                        });
+                    }, Q.when(true));
+                });
+            }, Q.when(true)).then(function () {
+                return [dockerComposeConfig, "staging"];
+            });
+        })
+        .spread(farmland.furrow)
+        .then(function () {
+            console.log('finished :D');
         })
     ;
 };

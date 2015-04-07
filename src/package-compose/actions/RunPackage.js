@@ -2,22 +2,35 @@
 
 var _ = require('underscore'),
     Q = require('q'),
+    upperCaseFirst = require('upper-case-first'),
     Parser = require('../parser'),
     Graph = require('../graph'),
-    containerManager = require('../../container-manager'),
-    upperCaseFirst = require('upper-case-first');
+    containerManager = require('../../container-manager')
+    ;
 
 function RunPackage () {
     this.containers = {};
 }
 
-RunPackage.prototype.execute = function (pkg, vars) {
+RunPackage.prototype.parsAndRun = function (composeFile, vars) {
     var self = this;
 
-    return Parser.parse(pkg, vars)
+    return Parser.parse(composeFile, vars)
         .then(function (config) {
             return self._sortByCreationPriority(config);
         })
+        .spread(function (nodes, config) {
+            return self._createContainers(nodes, config);
+        })
+    ;
+};
+
+
+RunPackage.prototype.execute = function (config) {
+    var self = this;
+
+    return this
+        ._sortByCreationPriority(config)
         .spread(function (nodes, config) {
             return self._createContainers(nodes, config);
         })
@@ -75,6 +88,8 @@ RunPackage.prototype._runContainer = function (alias, config) {
 
     if (config.hasOwnProperty('image')) {
         var request = this._dockerApiRequestCreator(config);
+        console.log('request', request);
+        console.log('>>>>>>>>>>>>>>');
         return containerManager
             .runContainer(request)
             .then(function (result) {
@@ -85,6 +100,7 @@ RunPackage.prototype._runContainer = function (alias, config) {
                         return result;
                     });
             });
+
     } else {
         return Q.reject('Image is not specified in package info.');
     }
@@ -96,7 +112,7 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
             'HostConfig': {}
         },
         HostConfig = [
-            "bind",
+            "binds",
             "links",
             "lxcConf",
             "portBindings",

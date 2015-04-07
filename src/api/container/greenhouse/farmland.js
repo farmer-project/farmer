@@ -19,20 +19,15 @@ function Farmland () {
  *  "seed":
  *  "type":
  * }
- * @param request
+ * @param farmSite
  * @returns {*}
  */
-Farmland.prototype.furrow = function (request) {
+Farmland.prototype.furrow = function (farmSite, stage) {
     var containersId = [];
 
-    return packageCompose.run({
-        "packages": config.packages_path + '/' + request.package + ".yml",
-        "vars": {
-            "name": request.name,
-            "hostname": request.hostname,
-            "code": request.seed
-        }
-    }).then(function (result) {
+    return packageCompose
+        .run(farmSite)
+        .then(function (result) {
 
         result.reduce(function (prevPromise, inspect) {
             return prevPromise.then(function () {
@@ -41,7 +36,7 @@ Farmland.prototype.furrow = function (request) {
                 return models
                     .Container
                     .update({
-                        "type": request.type
+                        "type": stage
                     },{
                         where: { id: inspect.Id }
                     });
@@ -51,9 +46,8 @@ Farmland.prototype.furrow = function (request) {
                 return models
                     .Package
                     .create({
-                        "seed": request.package,
                         "containers": JSON.stringify(containersId),
-                        "type": request.type
+                        "type": stage
                     }).error(function (error) {
                         console.log("error:", error);
                     });
