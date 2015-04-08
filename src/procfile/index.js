@@ -6,24 +6,85 @@ var _ = require('underscore'),
     config = require('../config');
 
 function Procfile() {
-
+    this.containers = {};
+    this.git = {};
+    this.shell = {};
+    this.packageConfig = [];
+    this.sourceCodes = [];
 }
 
-Procfile.prototype.dockerComposeConfigResolver = function (containers, gitConf) {
-    var config = {};
+Procfile.prototype.init = function (procfile) {
+    this.containers = procfile.containers;
+    this.git = procfile.git;
+    this.shell = procfile.shell;
 
-    if( typeof containers === 'object' && Object.keys(containers).length > 0) {
-        config = this._isolate(containers);
-        config = this._codeBinding(config, gitConf);
-    } else {
-        return Q.reject('compose file is not parsable');
+    try {
+        this._validation(procfile);
+        this.packageConfig = this._packageConfigResolver();
+        this.sourceCodes = this._sourceCodeResolver();
+    } catch (e) {
+        throw new Error(e);
     }
 
-    return Q.resolve(config);
+    return this;
+};
+
+Procfile.prototype.getPackageConfig = function () {
+    return this.packageConfig;
+};
+
+Procfile.prototype.getSourceCodes = function () {
+    return this.sourceCodes;
+};
+
+Procfile.prototype.getShellCommands = function () {
+    return this.shell;
+};
+
+
+Procfile.prototype._validation = function (procfile) {
+    if( typeof this.containers !== 'object' &&
+        Object.keys(this.containers).length > 0 )
+
+        throw new Error('compose file is not parsable');
 };
 
 /**
- * isolate container group
+ * Parse data and fetch package config (based on docker compose)
+ *
+ * @returns {{}}
+ * @private
+ */
+Procfile.prototype._packageConfigResolver = function () {
+    var self = this;
+
+    return this._codeBinding(self._isolate(this.containers), this.git);
+};
+
+/**
+ * Parse information and said which code with what type, which source and branch to where
+ *
+ * @returns {Array}
+ * @private
+ */
+Procfile.prototype._sourceCodeResolver = function () {
+    var self = this,
+        sourceCodes = [];
+
+    _(this.git).each(function (sourceConfig, alias) {
+        sourceCodes.push({
+            type: 'git',
+            repo: sourceConfig.repo,
+            branch: sourceConfig.branch || 'master',
+            code_destination: self.packageConfig[alias]['volumes'][0].split(':')[0]
+        });
+    });
+
+    return sourceCodes;
+};
+
+/**
+ * Isolate container group
  *
  * @param containers
  * @returns {*}
@@ -42,7 +103,7 @@ Procfile.prototype._isolate = function (containers) {
 };
 
 /**
- * bind any container code destination to their "app" folder
+ * Bind any container code destination to their "app" folder
  *
  * @param containers
  * @param git
@@ -57,4 +118,4 @@ Procfile.prototype._codeBinding = function (containers, git) {
     return containers;
 };
 
-module.exports = new Procfile();
+module.exports = Procfile;

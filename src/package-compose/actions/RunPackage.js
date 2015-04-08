@@ -88,8 +88,6 @@ RunPackage.prototype._runContainer = function (alias, config) {
 
     if (config.hasOwnProperty('image')) {
         var request = this._dockerApiRequestCreator(config);
-        console.log('request', request);
-        console.log('>>>>>>>>>>>>>>');
         return containerManager
             .runContainer(request)
             .then(function (result) {

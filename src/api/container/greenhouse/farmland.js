@@ -29,21 +29,21 @@ Farmland.prototype.furrow = function (farmSite, stage) {
         .run(farmSite)
         .then(function (result) {
 
-        result.reduce(function (prevPromise, inspect) {
-            return prevPromise.then(function () {
-                containersId.push(inspect.Id);
+            return result.reduce(function (prevPromise, inspect) {
+                return prevPromise.then(function () {
+                    containersId.push(inspect.Id);
 
-                return models
-                    .Container
-                    .update({
-                        "type": stage
-                    },{
-                        where: { id: inspect.Id }
-                    });
-            });
-        }, Q.when(true))
-            .then(function (result) {
-                return models
+                    return models
+                        .Container
+                        .update({
+                            "type": stage
+                        },{
+                            where: { id: inspect.Id }
+                        });
+                });
+            }, Q.when(true))
+            .then(function () {
+                models
                     .Package
                     .create({
                         "containers": JSON.stringify(containersId),
@@ -51,6 +51,8 @@ Farmland.prototype.furrow = function (farmSite, stage) {
                     }).error(function (error) {
                         console.log("error:", error);
                     });
+
+                return result;
             })
         ;
 

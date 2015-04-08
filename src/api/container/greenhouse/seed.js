@@ -3,8 +3,9 @@
 var Q = require('q'),
     _ = require('underscore'),
     fs = require('fs'),
-    procfile = require('../../../procfile'),
-    git = require('../../../git'),
+    Procfile = require('../../../procfile'),
+    sourceManager = require('../../../source-manager'),
+    containerCommander = require('../../../container-commander'),
     config = require('../../../config'),
     farmland = require('./farmland')
     ;
@@ -14,63 +15,56 @@ function Seed() {
 }
 
 /*
-*
  * {
-     *      containers: deployment/compose.yml ----> file content in json
-     *      git: {
-     *          web: {
-     *              repo: shell://git.ravaj.ir/ravaj.git
-     *              branch: branch-name(optional)
-     *           }
-     *      }
-     *      shell: {
-     *          web: [
-     *              ansible-book ...,
-     *              command ,
-     *              ...
-     *          ],
-     *          db: [
-     *              ansible-book ...,
-     *              command,
-     *              ...
-     *          ]
-     *      }
-     * }
-*/
+ *      containers: deployment/compose.yml ----> file content in json
+ *      git: {
+ *          web: {
+ *              repo: shell://git.ravaj.ir/ravaj.git
+ *              branch: branch-name(optional)
+ *           }
+ *      }
+ *      shell: {
+ *          web: [
+ *              ansible-book ...,
+ *              command ,
+ *              ...
+ *          ],
+ *          db: [
+ *              ansible-book ...,
+ *              command,
+ *              ...
+ *          ]
+ *      }
+ * }
+ */
 
 Seed.prototype.implant = function (jsonProcfile) {
+    var procfile = new Procfile();
 
+    try {
+        procfile.init(jsonProcfile);
 
-    return procfile.dockerComposeConfigResolver(jsonProcfile.containers, jsonProcfile.git)
-        .then(function (dockerComposeConfig) {
+        return sourceManager.downloadSourceCode(procfile.getSourceCodes())
+            .then(function () {
+                return farmland.furrow(procfile.getPackageConfig(), 'staging');
+            }).then(function (result) {
 
-            return _(jsonProcfile.git).reduce(function (prevPromise, gitConf, alias) {
-                return prevPromise.then(function () {
-                    return _(dockerComposeConfig[alias]['binds']).reduce(function (prevPromise2, bind) {
-                        return prevPromise2.then(function () {
+                var shellCmdOnContainers = _(procfile.getShellCommands());
+                shellCmdOnContainers.reduce(function (prePromise, commands, alias) {
+                    prePromise.then(function () {
+                        var ip = result[_.findIndex(result, {alias: alias})].NetworkSettings.IPAddress;
+                        return containerCommander.shell(ip, commands);
+                    });
+                }, Q.when(true));
+            })
+        ;
 
-                            return git.clone({
-                                repo: gitConf.repo,
-                                code_destination: bind.split(':')[0],
-                                branch: gitConf.branch || 'master'
-                            }).execute();
-
-                        });
-                    }, Q.when(true));
-                });
-            }, Q.when(true)).then(function () {
-                return [dockerComposeConfig, "staging"];
-            });
-        })
-        .spread(farmland.furrow)
-        .then(function () {
-            console.log('finished :D');
-        })
-    ;
+    } catch (e) {
+        return Q.reject(e);
+    }
 };
 
 Seed.prototype.remove = function () {
-
     var deferred = Q.defer(),
         deleteFolderRecursive = function(path) {
         if( fs.existsSync(path) ) {

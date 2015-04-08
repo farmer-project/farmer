@@ -25,6 +25,7 @@
     "upper-case-first": "~1.1.0",
     "underscore": "~1.8.2",
     "connect-timeout": "~1.6.1",
-    "ssh-url": "~0.1.5"
+    "ssh-url": "~0.1.5",
+    "node-ssh": "~0.2.0"
   }
 }
