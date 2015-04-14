@@ -5,6 +5,7 @@ var express = require('express'),
     Q = require('q'),
     Seed = require('./seed'),
     LogCenter = require('../../../log-center'),
+    Publisher = require('../../../event-publisher'),
     config = require('../../../config');
 
 module.exports = function Greenhouse() {
@@ -13,21 +14,25 @@ module.exports = function Greenhouse() {
 
     app.post('/create', function (req, res) {
 
-        seed.implant(req.body)
-            .then(function (result) {
+        var publisher = new Publisher(config.station_server);
+        publisher
+            .connect()
+            .then(function () {
+                publisher.inStep('Hi');
                 res
                     .status(200)
                     .json({
-                        "result": result,
-                        "message": "your plant is ready to have very beautiful bloom on your farm"
+                        id: publisher.getID(),
+                        message: ''
                     });
-            }, function (error) {
-                res
-                    .status(500)
-                    .json({
-                        "result": {},
-                        "message": error
-                    });
+
+                seed.implant(req.body, publisher)
+                    .then(function (result) {
+                        publisher.nextStep("your plant is ready to have very beautiful bloom on your farm");
+                    }, function (error) {
+                        publisher.inStep(error);
+                    })
+                ;
             })
         ;
 

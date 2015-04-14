@@ -38,17 +38,22 @@ function Seed() {
  * }
  */
 
-Seed.prototype.implant = function (jsonProcfile) {
+Seed.prototype.implant = function (jsonProcfile, publisher) {
     var procfile = new Procfile();
 
     try {
         procfile.init(jsonProcfile);
+        publisher.nextStep("code cloning...");
 
         return sourceManager.downloadSourceCode(procfile.getSourceCodes())
             .then(function () {
+                publisher.inStep("code cloned");
+                publisher.nextStep("create containers");
+
                 return farmland.furrow(procfile.getPackageConfig(), 'staging');
             }).then(function (result) {
-
+                publisher.nextStep(result);
+                publisher.nextStep('run shell commands on containers');
                 var shellCmdOnContainers = _(procfile.getShellCommands());
                 shellCmdOnContainers.reduce(function (prePromise, commands, alias) {
                     prePromise.then(function () {
@@ -60,6 +65,7 @@ Seed.prototype.implant = function (jsonProcfile) {
         ;
 
     } catch (e) {
+        publisher.inStep('run shell commands on containers');
         return Q.reject(e);
     }
 };

@@ -19,6 +19,9 @@ ContainerCommander.prototype.shell = function (ip, commands) {
         privateKey: config.container_private_key
     });
 
+    //  to disconnect from container
+    commands.push('exit');
+
     return ssh.connect().then(function () {
         return _(commands).reduce(function (prevPromise, cmd) {
             return prevPromise.then(function () {
@@ -29,6 +32,7 @@ ContainerCommander.prototype.shell = function (ip, commands) {
             });
 
         }, Q.when(true));
+
     });
 };
 
