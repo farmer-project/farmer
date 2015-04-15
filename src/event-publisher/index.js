@@ -39,7 +39,6 @@ Publisher.prototype.connect = function () {
 
 
 Publisher.prototype.nextStep = function (data) {
-    console.log('nextStep ');
     data = this._dataResolver(data);
     data['stage'] = ++this.stage;
     this._emitEvent(data);
@@ -66,9 +65,9 @@ Publisher.prototype._dataResolver = function (input) {
 
     } else if (typeof input === 'object') {
         data = input;
-        data['room'] = this.ID;
     }
 
+    data['room'] = this.ID;
     return data;
 };
 
