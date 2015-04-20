@@ -12,7 +12,7 @@
 
 var Q = require('q'),
     shelljs = require('shelljs'),
-    config = require('../../config');
+    config = require('../../../config');
 
 function Clone(object) {
     this.config = object || {};

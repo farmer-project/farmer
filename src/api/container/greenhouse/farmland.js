@@ -22,9 +22,17 @@ function Farmland () {
  * @param farmSite
  * @returns {*}
  */
-Farmland.prototype.furrow = function (farmSite, stage) {
-    var containersId = [];
 
+/**
+ *
+ * @param farmSite
+ * @param stage
+ * @param publisher
+ * @returns {Bluebird.Promise|*}
+ */
+Farmland.prototype.furrow = function (farmSite, stage, publisher) {
+    var containersId = [];
+    publisher.pub("create containers", true);
     return packageCompose
         .run(farmSite)
         .then(function (result) {
@@ -52,6 +60,7 @@ Farmland.prototype.furrow = function (farmSite, stage) {
                         console.log("error:", error);
                     });
 
+                publisher.pub(JSON.stringify(result));
                 return result;
             })
         ;

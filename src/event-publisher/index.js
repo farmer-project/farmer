@@ -8,7 +8,7 @@ function Publisher (stationServer) {
     this.serverUrl = stationServer;
     this.ID = (new Date).getTime().toString() + Math.floor((Math.random() * 100) + 1);
     this.socket = null;
-    this.stage = 0;
+    this.level = 0;
 }
 
 Publisher.prototype.getID = function () {
@@ -38,16 +38,17 @@ Publisher.prototype.connect = function () {
 };
 
 
-Publisher.prototype.nextStep = function (data) {
+Publisher.prototype.pub = function (data, nextLevel) {
     data = this._dataResolver(data);
-    data['stage'] = ++this.stage;
+    data['level'] = (nextLevel)? ++this.level : this.level;
     this._emitEvent(data);
 };
 
-Publisher.prototype.inStep = function (data) {
-    data = this._dataResolver(data);
-    data['stage'] = this.stage;
-    this._emitEvent(data);
+Publisher.prototype.finish = function () {
+    this._emitEvent({
+        end: 'END_FLAG_UP',
+        room: this.ID
+    });
 };
 
 Publisher.prototype._emitEvent = function (data) {
@@ -61,7 +62,7 @@ Publisher.prototype._dataResolver = function (input) {
     var data = {};
 
     if (typeof input === 'string') {
-        data['message'] = input;
+        data['msg'] = input;
 
     } else if (typeof input === 'object') {
         data = input;

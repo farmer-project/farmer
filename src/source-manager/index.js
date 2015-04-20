@@ -2,7 +2,7 @@
 
 var Q = require('q'),
     _ = require('underscore'),
-    git = require('../git')
+    git = require('./git')
     ;
 
 function SourceManager () {
@@ -10,18 +10,28 @@ function SourceManager () {
 }
 
 /**
- *
+ * get array of object that they contain source information
  * @param sourceCodes array[]
- * @returns {*}
+ * @param publisher
+ * @returns {Bluebird.Promise|*}
  */
-SourceManager.prototype.downloadSourceCode = function (sourceCodes) {
+SourceManager.prototype.downloadSourceCode = function (sourceCodes, publisher) {
     var self = this;
+
+    publisher.pub("code cloning", true);
 
     return _(sourceCodes).reduce(function (prevPromise, conf) {
         return prevPromise.then(function () {
-            return self.get(conf);
+            publisher.pub(JSON.stringify(conf) + "code cloning...");
+
+            return self.get(conf).then(function () {
+                publisher.pub("code cloned");
+            });
+
         });
-    }, Q.when(true));
+    }, Q.when(true)).then(function () {
+        publisher.pub("code cloning finished");
+    });
 
 };
 
@@ -37,11 +47,7 @@ SourceManager.prototype.get = function (config) {
         case "Git":
         case "GIT":
         default:
-            return git.clone({
-                repo: config.repo,
-                code_destination: config.code_destination,
-                branch: config.branch
-            }).execute();
+            return git.clone(config).execute();
     }
 };
 

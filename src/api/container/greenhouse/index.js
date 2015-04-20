@@ -18,7 +18,7 @@ module.exports = function Greenhouse() {
         publisher
             .connect()
             .then(function () {
-                publisher.inStep('Hi');
+                publisher.pub('open room on server');
                 res
                     .status(200)
                     .json({
@@ -28,9 +28,10 @@ module.exports = function Greenhouse() {
 
                 seed.implant(req.body, publisher)
                     .then(function (result) {
-                        publisher.nextStep("your plant is ready to have very beautiful bloom on your farm");
+                        publisher.pub("your plant is ready to have very beautiful bloom on your farm", true);
+                        publisher.finish();
                     }, function (error) {
-                        publisher.inStep(error);
+                        publisher.pub(error);
                     })
                 ;
             })

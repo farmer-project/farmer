@@ -43,29 +43,26 @@ Seed.prototype.implant = function (jsonProcfile, publisher) {
 
     try {
         procfile.init(jsonProcfile);
-        publisher.nextStep("code cloning...");
 
-        return sourceManager.downloadSourceCode(procfile.getSourceCodes())
+        return sourceManager.downloadSourceCode(procfile.getSourceCodes(), publisher)
             .then(function () {
-                publisher.inStep("code cloned");
-                publisher.nextStep("create containers");
 
-                return farmland.furrow(procfile.getPackageConfig(), 'staging');
+                return farmland.furrow(procfile.getPackageConfig(), 'staging', publisher);
             }).then(function (result) {
-                publisher.nextStep(result);
-                publisher.nextStep('run shell commands on containers');
+
                 var shellCmdOnContainers = _(procfile.getShellCommands());
-                shellCmdOnContainers.reduce(function (prePromise, commands, alias) {
-                    prePromise.then(function () {
+                publisher.pub('run shell commands on containers', true);
+                return shellCmdOnContainers.reduce(function (prePromise, commands, alias) {
+                    return prePromise.then(function () {
                         var ip = result[_.findIndex(result, {alias: alias})].NetworkSettings.IPAddress;
-                        return containerCommander.shell(ip, commands);
+
+                        return containerCommander.shell(ip, commands, publisher);
                     });
                 }, Q.when(true));
             })
         ;
 
     } catch (e) {
-        publisher.inStep('run shell commands on containers');
         return Q.reject(e);
     }
 };

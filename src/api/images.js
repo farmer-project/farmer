@@ -1,4 +1,4 @@
-module.exports = function Container() {
+module.exports = function Images() {
     var express = require('express'),
         ContainerManager = require('../container-manager'),
         app = express();
