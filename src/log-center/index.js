@@ -1,8 +1,7 @@
-/**
- * Created by majid on 2/16/15.
- */
+'use strict';
+
 var log4js = require('log4js'),
-    config = require('../config');
+    config = require(require('path').resolve(__dirname, '../config'));
 
 function LogCenter() {
     this.ERROR_LOG_FILE_TAG = "error";

@@ -10,9 +10,9 @@
 
 'use strict';
 
-var Q = require('q'),
+var Q       = require('q'),
     shelljs = require('shelljs'),
-    config = require('../../../config');
+    config  = require(require('path').resolve(__dirname, '../../../config'));
 
 function Clone(object) {
     this.config = object || {};

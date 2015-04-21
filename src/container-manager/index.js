@@ -30,8 +30,6 @@ ContainerManager.prototype.runContainer = function (config)
         .then(function (info) {
             config['id'] = info.message.Id;
 
-            console.log('config: ', config);
-
             self.startContainer(config)
                 .then(function (info) {
 
@@ -111,15 +109,12 @@ ContainerManager.prototype.createContainer = function (config)
 
 ContainerManager.prototype.startContainer = function (config)
 {
-    var deferred = Q.defer();
-
-    DockerClient
+    return DockerClient
         .buildStartAction(config.id)
         .setConfig(config.HostConfig)
         .execute()
         .then(function (info) {
-            console.log('start in Container manager THEN');
-            models
+            return models
                 .Container
                 .update({
                     "state": "running",
@@ -133,96 +128,65 @@ ContainerManager.prototype.startContainer = function (config)
                 }, function (error) {
                     LogCenter.error("Update Error");
                     LogCenter.error(error);
-                });
-
-            deferred.resolve(info);
-        }, function (error) {
-            deferred.reject(error);
+                })
+            ;
         })
     ;
-
-    return deferred.promise;
 };
 
 
 ContainerManager.prototype.getContainerInfo = function (identifier)
 {
-    var deferred = Q.defer();
-
-    DockerClient
+    return DockerClient
         .buildInfoAction(identifier)
         .execute()
         .then(function (info) {
             LogCenter.debug("Fetch " + identifier + " container info");
-            deferred.resolve(info);
         }, function (error) {
             LogCenter.error("Container ID/Name " + identifier + " not found");
             LogCenter.error(error);
-            deferred.reject(error);
         })
     ;
-
-    return deferred.promise;
 };
 
 ContainerManager.prototype.getListImages = function ()
 {
-    var deferred = Q.defer();
-
-    DockerClient
+    return DockerClient
         .buildListImagesAction()
         .execute()
         .then(function (info) {
             LogCenter.debug("Fetch images list");
-            deferred.resolve(info);
         }, function (error) {
             LogCenter.error("Error on fetch images list");
             LogCenter.error(error);
-            deferred.reject(error);
         })
     ;
-
-    return deferred.promise;
 };
 
 ContainerManager.prototype.deleteContainer = function (config)
 {
-    var deferred = Q.defer(),
-        self = this;
+    var self = this;
 
-    this.stopContainer(config.id)
+    return this.stopContainer(config.id)
         .then(function (info) {
-
-            self.removeContainer(config)
-                .then(function (info) {
-
-                    deferred.resolve(info);
-                }, function (error) {
-                    deferred.reject(error);
-                });
-        }, function (error) {
-            deferred.reject(error);
-        });
-
-
-    return deferred.promise;
+            return self.removeContainer(config);
+        })
+    ;
 };
 
 ContainerManager.prototype.stopContainer = function (identifier)
 {
-    var deferred = Q.defer();
-
-    DockerClient
+    return DockerClient
         .buildStopAction(identifier)
         .execute()
         .then(function (info) {
 
-            models
+            return models
                 .Container
                 .update({
                     "state": "stop"
                 },{
-                    where: { id: containerId }
+                    where: { id: identifier }
                 }).then(function (info) {
                     LogCenter.info("container " + containerId + " stop");
                     LogCenter.debug(info);
@@ -232,29 +196,22 @@ ContainerManager.prototype.stopContainer = function (identifier)
                     LogCenter.error(error);
                 });
 
-            deferred.resolve(info);
         }, function (error) {
             LogCenter.error("Can't stop container " + containerId);
             LogCenter.error(error);
-            deferred.reject(error);
         })
     ;
-
-    return deferred.promise;
 };
 
 ContainerManager.prototype.removeContainer = function (config)
 {
-    var deferred = Q.defer();
-    console.log("removeVolume".red, config.removeVolume);
-
-    DockerClient
+    return DockerClient
         .buildRemoveAction(config.id)
         .removeVolumeFunc(config.removeVolume)
         .execute()
         .then(function (info) {
 
-            models
+            return models
                 .Container
                 .update({
                     "state": "remove"
@@ -269,15 +226,11 @@ ContainerManager.prototype.removeContainer = function (config)
                     LogCenter.error(error);
                 });
 
-            deferred.resolve(info);
         }, function (error) {
             LogCenter.error("Remove " + config.id + " Error");
             LogCenter.error(error);
-            deferred.reject(error);
         })
     ;
-
-    return deferred.promise;
 };
 
 module.exports = new ContainerManager();

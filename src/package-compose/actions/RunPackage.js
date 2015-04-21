@@ -5,7 +5,7 @@ var _ = require('underscore'),
     upperCaseFirst = require('upper-case-first'),
     Parser = require('../parser'),
     Graph = require('../graph'),
-    containerManager = require('../../container-manager')
+    ContainerManager = require(require('path').resolve(__dirname, '../../container-manager'))
     ;
 
 function RunPackage () {
@@ -88,10 +88,10 @@ RunPackage.prototype._runContainer = function (alias, config) {
 
     if (config.hasOwnProperty('image')) {
         var request = this._dockerApiRequestCreator(config);
-        return containerManager
+        return ContainerManager
             .runContainer(request)
             .then(function (result) {
-                return containerManager
+                return ContainerManager
                     .getContainerInfo(result.id)
                     .then(function (result) {
                         self.containers[alias] = result.message.Name.replace('/', '');

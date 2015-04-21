@@ -1,9 +1,9 @@
 'use strict';
 
-var _ = require('underscore'),
-    Q = require('q'),
+var _       = require('underscore'),
+    Q       = require('q'),
     domainManager = require('../domain-manager'),
-    config = require('../config');
+    config  = require(require('path').resolve(__dirname, '../config'));
 
 function Procfile() {
     this.containers = {};

@@ -1,11 +1,12 @@
 'use strict';
 
-var _ = require('underscore'),
-    Q = require('q'),
-    models = require('../../../models'),
-    packageCompose = require('../../../package-compose'),
-    LogCenter = require('../../../log-center'),
-    config = require('../../../config');
+var _           = require('underscore'),
+    Q           = require('q'),
+    models      = require('../models'),
+    packageCompose = require('../package-compose'),
+    LogCenter   = require('../log-center'),
+    config      = require(require('path').resolve(__dirname, '../config'))
+    ;
 
 function Farmland () {
 

@@ -12,7 +12,7 @@
 var Q = require('q'),
     Nodegit = require('nodegit'),
     url = require('ssh-url'),
-    config = require('../../config');
+    config = require(require('path').resolve(__dirname, '../../config'));
 
 function Clone(object) {
     this.config = object || {};

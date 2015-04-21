@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require('../config');
+var config = require(require('path').resolve(__dirname, '../config'));
 
 function DomainManager () {
 

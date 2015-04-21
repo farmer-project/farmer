@@ -3,17 +3,16 @@
 var express = require('express'),
     _ = require('underscore'),
     Q = require('q'),
-    Seed = require('./seed'),
-    LogCenter = require('../../../log-center'),
-    Publisher = require('../../../event-publisher'),
-    config = require('../../../config');
+    Seed = require('../../greenhouse/seed'),
+    LogCenter = require('../../log-center'),
+    Publisher = require('../../event-publisher'),
+    config = require(require('path').resolve(__dirname, '../../config'));
 
 module.exports = function Greenhouse() {
     var app = express(),
         seed = new Seed();
 
     app.post('/create', function (req, res) {
-
         var publisher = new Publisher(config.station_server);
         publisher
             .connect()

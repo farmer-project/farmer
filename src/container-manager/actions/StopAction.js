@@ -1,5 +1,7 @@
-var Q = require('q'),
-    config = require('../../config'),
+'use strict';
+
+var Q       = require('q'),
+    config  = require(require('path').resolve(__dirname, '../../config')),
     request = require('request');
 
 function StopAction (identifier) {

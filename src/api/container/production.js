@@ -1,7 +1,7 @@
 module.exports = function Production() {
     var express = require('express'),
         models = require('../../models/index'),
-        ContainerManager = require('../../container-manager/index'),
+        ContainerManager = require(require('path').resolve(__dirname, '../../container-manager')),
         LogCenter = require('../../log-center/index'),
         app = express(),
         TYPE = "production";

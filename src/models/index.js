@@ -3,7 +3,7 @@
 var fs        = require("fs"),
     path      = require("path"),
     Sequelize = require("sequelize"),
-    config    = require('../config'),
+    config = require(require('path').resolve(__dirname, '../config')),
     db        = {},
 
     sequelize = new Sequelize(config.database_name, config.database_username, config.database_password, {

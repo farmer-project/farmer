@@ -3,7 +3,7 @@ module.exports = function Container() {
         models = require('../../models/index'),
         greenhouse = require('./greenhouse'),
         production = require('./production'),
-        ContainerManager = require('../../container-manager/index'),
+        ContainerManager = require(require('path').resolve(__dirname, '../../container-manager')),
         app = express();
 
     /*

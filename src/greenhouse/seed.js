@@ -3,10 +3,10 @@
 var Q = require('q'),
     _ = require('underscore'),
     fs = require('fs'),
-    Procfile = require('../../../procfile'),
-    sourceManager = require('../../../source-manager'),
-    containerCommander = require('../../../container-commander'),
-    config = require('../../../config'),
+    Procfile = require('../procfile'),
+    sourceManager = require('../source-manager'),
+    containerCommander = require('../container-commander'),
+    config = require(require('path').resolve(__dirname, '../config')),
     farmland = require('./farmland')
     ;
 

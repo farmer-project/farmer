@@ -2,7 +2,7 @@ var express     = require('express'),
     timeout     = require('connect-timeout'),
     bodyParser  = require('body-parser'),
     models      = require('./models'),
-    config      = require('./config'),
+    config      = require(require('path').resolve(__dirname, './config')),
     api         = require('./api'),
     app         = express();
 

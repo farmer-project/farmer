@@ -34,6 +34,7 @@ ContainerCommander.prototype.shell = function (ip, commands, publisher) {
                 );
                 ssh.exec(cmd).then(function (result) {
                     if (result.stderr) {
+                        publisher.pub('error: ' + result.stderr);
                         cmdDeferred.reject(result.stderr);
                     }
                     publisher.pub('output: ' + result.stdout);

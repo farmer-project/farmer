@@ -1,5 +1,5 @@
-var Q = require('q'),
-    config = require('../../config'),
+var Q       = require('q'),
+    config  = require(require('path').resolve(__dirname, '../../config')),
     request = require('request');
 
 function ListImages () {
