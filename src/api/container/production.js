@@ -1,8 +1,9 @@
 module.exports = function Production() {
     var express = require('express'),
-        models = require('../../models/index'),
-        ContainerManager = require(require('path').resolve(__dirname, '../../container-manager')),
-        LogCenter = require('../../log-center/index'),
+        path = require('path'),
+        models = require('.././index'),
+        ContainerManager = require(path.resolve(__dirname, '../../core/container/manager')),
+        log = require(path.resolve(__dirname, '../../core/debug/log')),
         app = express(),
         TYPE = "production";
 
@@ -37,7 +38,7 @@ module.exports = function Production() {
                 var message = "";
                 if (!!err) {
                     message = "An error occurred while select on containers ";
-                    LogCenter.error(message + err);
+                    log.error(message + err);
 
                     res
                         .status(500)
@@ -49,12 +50,12 @@ module.exports = function Production() {
                 } else {
 
                     if (!result) {
-                        LogCenter.info("No container found");
+                        log.info("No container found");
                     } else {
-                        LogCenter.info("production container found");
+                        log.info("production container found");
                     }
 
-                    LogCenter.debug(result);
+                    log.debug(result);
 
                     res
                         .status(200)

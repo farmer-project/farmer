@@ -1,5 +1,6 @@
 ---
 - name: Install npm dependencies
+  sudo: yes
   npm: path=/var/www
 
 - name: create application config file

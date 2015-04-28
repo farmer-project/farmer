@@ -1,9 +1,9 @@
 module.exports = function Container() {
     var express = require('express'),
-        models = require('../../models/index'),
+        models = require('.././index'),
         greenhouse = require('./greenhouse'),
         production = require('./production'),
-        ContainerManager = require(require('path').resolve(__dirname, '../../container-manager')),
+        ContainerManager = require(require('path').resolve(__dirname, '../../core/container/manager')),
         app = express();
 
     /*

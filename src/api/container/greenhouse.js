@@ -1,41 +1,40 @@
 'use strict';
 
-var express = require('express'),
-    _ = require('underscore'),
-    Q = require('q'),
-    Seed = require('../../greenhouse/seed'),
-    LogCenter = require('../../log-center'),
-    Publisher = require('../../event-publisher'),
-    config = require(require('path').resolve(__dirname, '../../config'));
+var express     = require('express'),
+    _           = require('underscore'),
+    Q           = require('q'),
+    Seed        = require('../../core/enviroment/greenhouse/seed'),
+    LogCenter   = require('../../core/debug/log'),
+    Publisher   = require('../../core/station'),
+    auth        = require('../../core/security/auth'),
+    config      = require(require('path').resolve(__dirname, '../../config'));
 
 module.exports = function Greenhouse() {
     var app = express(),
         seed = new Seed();
+
+    //app.use(auth.middleware);
 
     app.post('/create', function (req, res) {
         var publisher = new Publisher(config.station_server);
         publisher
             .connect()
             .then(function () {
-                publisher.pub('open room on server');
-                res
-                    .status(200)
+                publisher.toClient('open room');
+                res.status(200)
                     .json({
-                        id: publisher.getID(),
-                        message: ''
+                        room: publisher.roomID()
                     });
 
                 seed.implant(req.body, publisher)
-                    .then(function (result) {
-                        publisher.pub("your plant is ready to have very beautiful bloom on your farm", true);
-                        publisher.finish();
-                    }, function (error) {
-                        publisher.pub(error);
-                    })
-                ;
-            })
-        ;
+                    .finally(publisher.subWorksFinish);
+            });
 
+        res.status(500)
+            .json({
+                result: '',
+                error: 'station server not reposed'
+            });
     });
 
     app.get('/list', function (req, res) {

@@ -1,28 +1,27 @@
 module.exports = function Security() {
     var express = require('express'),
-        AES = require('../security/aes'),
-        RSA = require('../security/rsa'),
+        AES = require('../core/security/aes'),
+        RSA = require('../core/security/rsa'),
         app = express();
 
-    // Regular routes
-    app.post('/getKey', function (req, res) {
-        var username = req.body.username;
 
-        AES.getKey(username).then(function (key) {
-            return RSA.encrypt(key, username, 'base64').then(function (encryptData) {
-                res
-                    .status(200)
+    app.post('/key', function (req, res) {
+        var username = req.body.username;
+        
+        AES.newKey(username).then(function (key) {
+            console.log('key>>>>', key);
+            RSA.encrypt(key, username, 'base64').then(function (encryptData) {
+                res.status(200)
                     .json({
-                        "result": encryptData,
-                        "error": ""
+                        result: encryptData,
+                        error: ""
                     });
             });
-        }, function () {
-            res
-                .status(500)
+        }, function (error) {
+            res.status(500)
                 .json({
-                    "result": "",
-                    "error": error
+                    result: "",
+                    error: error
                 });
         });
     });

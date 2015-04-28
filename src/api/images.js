@@ -1,6 +1,6 @@
 module.exports = function Images() {
     var express = require('express'),
-        ContainerManager = require(require('path').resolve(__dirname, '../container-manager')),
+        ContainerManager = require(require('path').resolve(__dirname, '../core/container/manager')),
         app = express();
 
     // Regular routes

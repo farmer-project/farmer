@@ -4,7 +4,8 @@ Example:
 ```
 {
     'code' : 200, // status code
-    'message' : "error" //
+    'result': {...}
+    'message' : "error"
 }
 ```
 
