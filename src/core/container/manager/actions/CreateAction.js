@@ -1,17 +1,23 @@
+'use strict';
+
 var Q       = require('q'),
-    request = require('request'),
-    config  = require(require('path').resolve(__dirname, '../../../../../config'));
+    url     = require('url'),
+    request = require('request');
 
-function CreateAction (config) {
-    this.name = '';
+function CreateAction () {
+    this.configuration = {};
+    this.queryParamiters = '?';
+}
 
-    if (typeof config.Name !== 'undefined') {
-        this.name = '?name=' + config.Name;
-        delete config['Name'];
+
+CreateAction.prototype.options = function (opt) {
+    if (opt.Name) {
+        this.queryParamiters = url.resolve(this.queryParamiters, opt.Name);
+        delete opt['Name'];
     }
 
-    this.dockerConfiguration = config;
-}
+    this.configuration = opt;
+};
 
 /**
  * Create container
@@ -22,13 +28,13 @@ function CreateAction (config) {
  *
  * @returns {*|promise}
  */
-CreateAction.prototype.execute = function ()
+CreateAction.prototype.executeOn = function (serverConfig)
 {
     var deferred = Q.defer(),
         options = {
-            uri: config.docker_server + '/containers/create' + this.name,
+            uri: url.resolve(serverConfig.docker_server, '/containers/create/', this.queryParamiters),
             method: 'POST',
-            json: this.dockerConfiguration
+            json: this.configuration
         };
 
     request(options, function (error, response, body) {

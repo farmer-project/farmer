@@ -2,33 +2,18 @@
 
 var Q               = require('q'),
     path            = require('path'),
-    deasync         = require('deasync'),
     models          = require('../models'),
-    containerClient = require('./container-api-client'),
     repository      = require('./repository'),
-    log             = require(path.resolve(__dirname, '../debug/log'));
+    log             = require(path.resolve(__dirname, '../debug/log')),
+    ContainerApiFactory = require('./manager/factory');
 
 
-function Container (identifier) {
-    this.identifier = identifier;
-    this.configuration = 'undefined';
+function Container (type) {
+    this.configuration = {};
     this.metadata = {};
-    this.state = 'created';
+    this.type = type || 'docker';
+    this.containerState = ['created', 'running', 'stop', 'destroyed'];
 }
-
-/**
- * Set container config
- *
- * Any container can have their configuration and external information as metadata
- *
- * @param configuration
- */
-Container.prototype.setConfiguration = function (configuration) {
-    this.metadata = configuration['metadata'];
-    delete configuration.metadata;
-
-    this.configuration = configuration;
-};
 
 /**
  * Get container configuration
@@ -38,52 +23,44 @@ Container.prototype.setConfiguration = function (configuration) {
  *
  * @returns {*|promise}
  */
-Container.prototype.getConfiguration = function () {
+Container.prototype.getInstance  = function (identifier) {
     var self = this;
-    if (!this.configuration) {
-        return repository.getContainerInfo(this.identifier).then(function (config) {
-            return models
-                .Container
-                .find({
-                    where: {id: self.identifier}
-                }).then(function (container) {
+    return repository.containerInfo(identifier).then(function (config) {
+        return models
+            .Container
+            .find({
+                where: {id: self.identifier}
+            }).then(function (container) { self.metadata = container.metadata;
+            }).finally(function () {
+                self.configuration = config[0];
+            });
+    });
+};
 
-                    self.metadata = container.metadata;
-                    return self.configuration = config[0];
-                });
-        });
-    }
-
-    return Q.when(this.configuration);
+Container.prototype._setConfiguration = function (config) {
+    this.configuration = config;
 };
 
 /**
- * Get container configuration synchronise
+ * Return container configuration entry
  *
- * @returns {string|*}
+ * @param entryName
+ * @returns {Array}
  */
-Container.prototype.getConfigurationSync = function () {
-    var self = this,
-        done = false;
-    if (!this.configuration) {
-        repository.containerInfo(this.identifier).then(function (config) {
-            return models
-                .Container
-                .find({
-                    where: {id: self.identifier}
-                }).then(function (container) {
-
-                    self.metadata = container.metadata;
-                    self.configuration = config[0];
-                    done = true;
-                });
-        });
-        while(!done) {
-            deasync.runLoopOnce();
-        }
+Container.prototype.getConfigurationEntry = function (entry) {
+    if (this.configuration !== {}) {
+        var found = [];
+        var recurse = function (obj, key) {
+            for (var p in obj) {
+                if (p === key) {
+                    found.push(obj[p]);
+                }
+                if (typeof obj[p] === 'object') recurse(obj[p], key);
+            }
+        };
+        recurse(config, entry);
+        return found;
     }
-
-    return this.configuration;
 };
 
 /**
@@ -93,39 +70,18 @@ Container.prototype.getConfigurationSync = function () {
  * @param data
  */
 Container.prototype.updateConfigurationEntry = function (entry, data) {
-    var config = this.getConfigurationSync(),
-        found = [];
-    var recurse = function (obj, key) {
-        for (var p in obj) {
-            if (p === key) {
-                obj[p] = data;
+    if (this.configuration !== {}) {
+        var recurse = function (obj, key) {
+            for (var p in obj) {
+                if (p === key) {
+                    obj[p] = data;
+                    break;
+                }
+                if (typeof obj[p] === 'object') recurse(obj[p], key);
             }
-            if (typeof obj[p] === 'object') recurse(obj[p], key);
-        }
-    };
-    recurse(config, entry);
-    return found;
-};
-
-/**
- * Return container configuration entry
- *
- * @param entryName
- * @returns {Array}
- */
-Container.prototype.getConfigurationEntry = function (entryName) {
-    var config = this.getConfigurationSync(),
-        found = [];
-    var recurse = function (obj, key) {
-        for (var p in obj) {
-            if (p === key) {
-                found.push(obj[p]);
-            }
-            if (typeof obj[p] === 'object') recurse(obj[p], key);
-        }
-    };
-    recurse(config, entryName);
-    return found;
+        };
+        recurse(this.configuration, entry);
+    }
 };
 
 /**
@@ -134,64 +90,25 @@ Container.prototype.getConfigurationEntry = function (entryName) {
  * @returns {*}
  */
 Container.prototype.getMetadata = function () {
-    var self = this;
-    if (!this.configuration) {
-        return this.getConfiguration().then(function () {
-            return self.metadata;
-        });
-    }
-
-    return Q.when(self.metadata);
+    return this.metadata;
 };
 
-/**
- * Get container metadata synchronise
- *
- * @returns {*}
- */
-Container.prototype.getMetadataSync = function () {
-    var self = this,
-        done = false;
-    if (!this.configuration) {
-        return this.getConfiguration().then(function () {
-            done = true;
-        });
-        while(!done) {
-            deasync.runLoopOnce();
-        }
+// promise method
+Container.prototype.run = function (config) {
+    if (!config.Image) {
+        return Q.reject('Unknown container base image');
     }
 
-    return self.metadata;
-};
-
-/**
- * Create configured container
- *
- * @returns {*}
- */
-Container.prototype.create = function () {
-    if (!this.configuration.Image) {
-        return Q.reject('Image must be set');
-    }
-
-    return containerClient.createContainer(this);
-};
-
-/**
- * Start created container
- *
- * @returns {*}
- */
-Container.prototype.start = function () {
-    if (!this.getConfigurationEntry('Id')) {
-        return Q.reject('container is not created yet');
-    }
-
+    var containerClient = new ContainerApiFactory(this.type);
+    containerClient.createContainer(this);
     return containerClient.startContainer(this);
 };
 
+Container.prototype.shutdown = function () {
 
-Container.prototype.delete = function (rmVolume) {
+};
+
+Container.prototype.destroy = function () {
     if (!this.getConfigurationEntry('Id')) {
         return Q.reject('container is not created yet');
     }
@@ -199,8 +116,13 @@ Container.prototype.delete = function (rmVolume) {
     return containerClient.deleteContainer(this);
 };
 
+Container.prototype.restart = function () {
+
+};
+
 /**
  * Save container state in database
+ *
  * @param state
  * @returns {Bluebird.Promise|*}
  */

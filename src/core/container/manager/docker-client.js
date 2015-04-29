@@ -35,4 +35,4 @@ DockerClient.prototype.buildRemoveAction = function (identifier) {
     return new RemoveAction(identifier);
 };
 
-module.exports = new DockerClient();
+module.exports = DockerClient;

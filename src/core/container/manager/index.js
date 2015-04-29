@@ -7,9 +7,41 @@ var _           = require('underscore'),
     log         = require(path.resolve(__dirname, '../../debug/log')),
     config      = require(path.resolve(__dirname, '../../../config'));
 
-function ContainerClient() {
-
+function Manager(type) {
+    switch (type) {
+        case 'docker':
+            this.type = 'docker';
+            this.ContainerClient = new DockerClient();
+            break;
+        default:
+            this.type = 'docker';
+            this.ContainerClient = new DockerClient();
+    }
 }
+
+/**
+ * return manager type
+ *
+ * Container manager can be moderator container technology
+ * today we use docker only
+ *
+ * @returns {*|string}
+ */
+Manager.prototype.type = function () {
+    return this.type;
+};
+
+/**
+ * Return target server configuration to send request
+ *
+ * @returns {{api: string}}
+ */
+Manager.prototype.targetServerConfig = function () {
+    // TODO: in future version this method change by a class that it will be decide which server must be responsible for this request
+    return {
+        api: config.docker_server
+    }
+};
 
 /*{
  image: IMAGE_NAME,
@@ -25,7 +57,6 @@ function ContainerClient() {
  ]
  }*/
 
-
 /**
  * Create container
  *
@@ -33,12 +64,11 @@ function ContainerClient() {
  *      a Container Object
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.createContainer = function (container) {
-    var configuration = container.getConfigurationSync();
-
-    return DockerClient
-        .buildCreateAction(configuration)
-        .execute()
+Manager.prototype.createContainer = function (container) {
+    return this.ContainerClient
+        .buildCreateAction()
+        .options(container.getCon)
+        .executeOn(this.targetServerConfig())
         .then(function (response) {
             return repository.containerInfo(response.result.Id).then(function (configuration) {
                 container.setConfiguration(configuration);
@@ -56,7 +86,7 @@ ContainerClient.prototype.createContainer = function (container) {
  * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.startContainer = function (container) {
+Manager.prototype.startContainer = function (container) {
     var id = container.getConfigurationEntry('Id');
 
     return DockerClient
@@ -80,7 +110,7 @@ ContainerClient.prototype.startContainer = function (container) {
  * @param config
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.deleteContainer = function (container, rmVolume)
+Manager.prototype.deleteContainer = function (container, rmVolume)
 {
     return this.stopContainer(container)
         .then(this.removeContainer(container));
@@ -92,7 +122,7 @@ ContainerClient.prototype.deleteContainer = function (container, rmVolume)
  * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.stopContainer = function (container)
+Manager.prototype.stopContainer = function (container)
 {
     var id = container.getConfigurationEntry('Id');
 
@@ -112,7 +142,7 @@ ContainerClient.prototype.stopContainer = function (container)
  * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.removeContainer = function (container)
+Manager.prototype.removeContainer = function (container)
 {
     return DockerClient
         .buildRemoveAction(config.id)
@@ -147,7 +177,7 @@ ContainerClient.prototype.removeContainer = function (container)
  * @param identifier
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.getContainerInfo = function (identifier)
+Manager.prototype.getContainerInfo = function (identifier)
 {
     return DockerClient
         .buildInfoAction(identifier)
@@ -162,7 +192,7 @@ ContainerClient.prototype.getContainerInfo = function (identifier)
  *
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.getImages = function ()
+Manager.prototype.getImages = function ()
 {
     return DockerClient
         .buildListImagesAction()
@@ -171,4 +201,4 @@ ContainerClient.prototype.getImages = function ()
 };
 
 
-module.exports = new ContainerClient();
+module.exports = new Manager();
