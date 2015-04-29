@@ -2,6 +2,7 @@ var _           = require('underscore'),
     Q           = require('q'),
     path        = require('path'),
     DockerClient= require('./docker-client'),
+    repository  = require('../repository'),
     models      = require(path.resolve(__dirname, '../../models')),
     log         = require(path.resolve(__dirname, '../../debug/log')),
     config      = require(path.resolve(__dirname, '../../../config'));
@@ -28,46 +29,49 @@ function ContainerClient() {
 /**
  * Create container
  *
- * @param containerObj
- * @returns {*|promise}
+ * @param container
+ *      a Container Object
+ * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.createContainer = function (containerObj) {
-    var configuration = containerObj.getConfigurationSync();
+ContainerClient.prototype.createContainer = function (container) {
+    var configuration = container.getConfigurationSync();
 
     return DockerClient
         .buildCreateAction(configuration)
         .execute()
-        .then(function (info) {
-            return info.Id;
-        }, log.error);
+        .then(function (response) {
+            return repository.containerInfo(response.result.Id).then(function (configuration) {
+                container.setConfiguration(configuration);
+                container.setState('created');
+
+                return container;
+            }, log.error);
+
+        },log.error);
 };
 
 /**
- * Start container
+ * Start created container
  *
- * @param config
+ * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.startContainer = function (config) {
+ContainerClient.prototype.startContainer = function (container) {
+    var id = container.getConfigurationEntry('Id');
+
     return DockerClient
-        .buildStartAction(config.id)
-        .setConfig(config.HostConfig)
+        .buildStartAction(id)
+        .setConfig(container.getConfigurationEntry('HostConfig'))
         .execute()
-        .then(function (info) {
-            log.info("container start").debug(info);
+        .then(function (response) {
+            return repository.containerInfo(id).then(function (configuration) {
+                container.setConfiguration(configuration);
+                container.setState('running');
 
-            return models
-                .Container
-                .update({
-                    state: "running",
-                    volumes: JSON.stringify(config.HostConfig.Binds)
-                },{
-                    where: { id: config.id }
-                }).then(function (info) {
-                    log.trace("container "+ config.id +" info update");
+                return container;
+            }, log.error);
 
-                }, log.error);
-        });
+        }, log.error);
 };
 
 /**
@@ -76,56 +80,39 @@ ContainerClient.prototype.startContainer = function (config) {
  * @param config
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.deleteContainer = function (config)
+ContainerClient.prototype.deleteContainer = function (container, rmVolume)
 {
-    var self = this;
-
-    return this.stopContainer(config.id)
-        .then(function (info) {
-            return self.removeContainer(config);
-        })
-        ;
+    return this.stopContainer(container)
+        .then(this.removeContainer(container));
 };
 
 /**
  * Stop container
  *
- * @param identifier
+ * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.stopContainer = function (identifier)
+ContainerClient.prototype.stopContainer = function (container)
 {
+    var id = container.getConfigurationEntry('Id');
+
     return DockerClient
-        .buildStopAction(identifier)
+        .buildStopAction(id)
         .execute()
         .then(function (info) {
+            return container.setState('stop');
 
-            return models
-                .Container
-                .update({
-                    "state": "stop"
-                },{
-                    where: { id: identifier }
-                }).then(function (info) {
-                    log.info("container " + containerId + " stop").debug(info);
-
-                }, function (error) {
-                    log.error("Stop " + containerId + " update Error").error(error);
-                });
-
-        }, function (error) {
-            log.error("Can't stop container " + containerId).error(error);
-        });
+        },log.error);
 
 };
 
 /**
  * Remove container
  *
- * @param config
+ * @param container
  * @returns {Bluebird.Promise|*}
  */
-ContainerClient.prototype.removeContainer = function (config)
+ContainerClient.prototype.removeContainer = function (container)
 {
     return DockerClient
         .buildRemoveAction(config.id)

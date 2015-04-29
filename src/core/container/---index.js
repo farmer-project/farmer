@@ -11,9 +11,8 @@ var Q               = require('q'),
 
 function Container (identifier) {
     this.identifier = identifier;
-    this.configuration = 'undefined';
+    this.configuration = {};
     this.metadata = {};
-    this.state = 'created';
 }
 
 /**
@@ -201,6 +200,7 @@ Container.prototype.delete = function (rmVolume) {
 
 /**
  * Save container state in database
+ *
  * @param state
  * @returns {Bluebird.Promise|*}
  */
