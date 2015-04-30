@@ -102,14 +102,21 @@ Container.prototype.run = function (config) {
         return Q.reject('Unknown container base image');
     }
     var self = this;
-    return this.containermanager.createContainer(config).then(function (containerConfig) {
-        self._setConfiguration(containerConfig);
-        self.setState('created');
+    if (!this.getConfigurationEntry('Id')) {
+        return this.containermanager.createContainer(config).then(function (containerConfig) {
+            self._setConfiguration(containerConfig);
+            self.setState('created');
+            return self.containermanager.startContainer({}).then(function (containerConfig) {
+                self._setConfiguration(containerConfig);
+                return self.setState('running');
+            });
+        });
+    } else {
         return self.containermanager.startContainer({}).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
         });
-    });
+    }
 };
 
 /**
