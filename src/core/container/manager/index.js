@@ -103,11 +103,13 @@ Manager.prototype.startContainer = function (opt) {
  * Stop the container
  *
  * @param identifier
+ * @param opt
  * @returns {Bluebird.Promise|*}
  */
-Manager.prototype.stopContainer = function (identifier) {
+Manager.prototype.stopContainer = function (identifier, opt) {
     return this.containerClient
         .buildStopAction(identifier)
+        .options(opt)
         .executeOn(this.targetServerConfig())
         .then(log.info, log.error);
 };
@@ -126,5 +128,11 @@ Manager.prototype.removeContainer = function (opt) {
         .then(log.info, log.error);
 };
 
+Manager.prototype.restartContainer = function (identifier) {
+    return this.containerClient
+        .buildRestartAction(identifier)
+        .executeOn(this.targetServerConfig())
+        .then(log.trace, log.error);
+};
 
-module.exports = new Manager();
+module.exports = Manager;

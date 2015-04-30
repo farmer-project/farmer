@@ -27,7 +27,7 @@ Repository.prototype.targetServerConfig = function () {
  * @param identifier
  * @returns {Bluebird.Promise|*}
  */
-Repository.prototype.getContainerInfo = function (identifier)
+Repository.prototype.containerInfo = function (identifier)
 {
     return this.containerClient
         .buildInfoAction(identifier)
@@ -42,7 +42,7 @@ Repository.prototype.getContainerInfo = function (identifier)
  *
  * @returns {Bluebird.Promise|*}
  */
-Repository.prototype.getImages = function ()
+Repository.prototype.images = function ()
 {
     return this.containerClient
         .buildListImagesAction()

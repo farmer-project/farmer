@@ -18,8 +18,8 @@ RemoveAction.prototype.options = function (opt) {
         throw new Error('Unknown container Id '+ opt.Id);
     }
 
-    this.identifier =  opt.id;
-    if (opt.Force)        this.queryParamiters = url.resolve(this.queryParamiters, 'force=1');
+    this.identifier =  opt.Id;
+    if (opt.ForceStop)        this.queryParamiters = url.resolve(this.queryParamiters, 'force=1');
     if (opt.RemoveVolume) this.queryParamiters = url.resolve(this.queryParamiters, '&v=1');
 
     return this;

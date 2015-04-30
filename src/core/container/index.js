@@ -5,14 +5,14 @@ var Q               = require('q'),
     models          = require('../models'),
     repository      = require('./repository'),
     log             = require(path.resolve(__dirname, '../debug/log')),
-    ContainerApiFactory = require('./manager/factory');
+    ContainerManager= require('./manager');
 
 
 function Container (type) {
     this.configuration = {};
     this.metadata = {};
     this.type = type || 'docker';
-    this.containerState = ['created', 'running', 'stop', 'destroyed'];
+    this.containermanager = new ContainerManager(this.type);
 }
 
 /**
@@ -26,14 +26,12 @@ function Container (type) {
 Container.prototype.getInstance  = function (identifier) {
     var self = this;
     return repository.containerInfo(identifier).then(function (config) {
-        return models
-            .Container
+        self.configuration = config[0];
+        return models.Container
             .find({
-                where: {id: self.identifier}
-            }).then(function (container) { self.metadata = container.metadata;
-            }).finally(function () {
-                self.configuration = config[0];
-            });
+                where: {id: identifier}
+
+            }).then(function (container) { self.metadata = container.metadata; });
     });
 };
 
@@ -93,31 +91,63 @@ Container.prototype.getMetadata = function () {
     return this.metadata;
 };
 
-// promise method
+/**
+ * Run a container
+ *
+ * @param config
+ * @returns {*}
+ */
 Container.prototype.run = function (config) {
     if (!config.Image) {
         return Q.reject('Unknown container base image');
     }
-
-    var containerClient = new ContainerApiFactory(this.type);
-    containerClient.createContainer(this);
-    return containerClient.startContainer(this);
+    var self = this;
+    return this.containermanager.createContainer(config).then(function (containerConfig) {
+        self._setConfiguration(containerConfig);
+        self.setState('created');
+        return self.containermanager.startContainer({}).then(function (containerConfig) {
+            self._setConfiguration(containerConfig);
+            return self.setState('running');
+        });
+    });
 };
 
-Container.prototype.shutdown = function () {
-
+/**
+ * Shutdown a container
+ *
+ * @param second
+ * @returns {*}
+ */
+Container.prototype.shutdown = function (second) {
+    var self = this,
+        sec = (second)? second: 0;
+    return this.containermanager.stopContainer(this.getConfigurationEntry('Id'), { t: sec }).then(function () {
+        self.setState('shutdown');
+    });
 };
 
-Container.prototype.destroy = function () {
-    if (!this.getConfigurationEntry('Id')) {
-        return Q.reject('container is not created yet');
-    }
-
-    return containerClient.deleteContainer(this);
+/**
+ * Destroy the container
+ *
+ * @param removeVolume
+ * @returns {Bluebird.Promise|*}
+ */
+Container.prototype.destroy = function (removeVolume) {
+    return this.containermanager.removeContainer({
+        Id: this.getConfigurationEntry('Id'),
+        ForceStop: true,
+        RemoveVolume: removeVolume
+    }).then(this._delete);
 };
 
-Container.prototype.restart = function () {
-
+/**
+ * Restart the container
+ *
+ * @param second
+ */
+Container.prototype.restart = function (second) {
+    var sec = (second)? second: 0;
+    this.containermanager.restartContainer(this.getConfigurationEntry('Id'), sec);
 };
 
 /**
@@ -130,8 +160,6 @@ Container.prototype.setState = function (state) {
     var self = this;
     switch (state) {
         case "created":
-        case "Created":
-        case "CREATED":
             return models.Container
                 .create({
                     id: self.getConfigurationEntry('Id'),
@@ -143,24 +171,20 @@ Container.prototype.setState = function (state) {
                     state: "created",
                     request: JSON.stringify(self.getConfiguration())
                 }).then(log.info, log.error);
+
         case "running":
-        case "Running":
-        case "RUNNING":
-            return models
-                .Container
+            return models.Container
                 .update({
                     state: "running",
                     volumes: JSON.stringify(self.getConfigurationEntry('Binds'))
                 },{
                     where: { id: self.getConfigurationEntry('id') }
                 }).then(log.info, log.error);
-        case "stop":
-        case "Stop":
-        case "STOP":
-            return models
-                .Container
+
+        case "shutdown":
+            return models.Container
                 .update({
-                    state: "stop"
+                    state: "shutdown"
                 },{
                     where: { id: self.getConfigurationEntry('id') }
                 }).then(log.info, log.error);
@@ -170,40 +194,23 @@ Container.prototype.setState = function (state) {
 
 };
 
-
-/*--------------SAMPLE----------------*/
 /**
- * Run container
+ * Delete the container from DB
  *
- * run command contain create an start command
- *
- * @param config
- * @returns {*|promise}
+ * @returns {Bluebird.Promise|*}
+ * @private
  */
-Container.prototype.runContainer = function () {
-    var deferred = Q.defer(),
-        self = this;
-
-    this.createContainer(this.configuration)
-        .then(function (info) {
-            config['id'] = info.message.Id;
-
-            self.startContainer(config)
-                .then(function (info) {
-                    log.info(info);
-
-                    info['id'] = config.id;
-                    deferred.resolve(info);
-                }, function (error) {
-                    log.error(error);
-                    deferred.reject(error);
-                });
-
-        }, deferred.reject);
-
-    return deferred.promise;
+Container.prototype._delete = function () {
+    return models.Container
+        .find({
+            where: {id: this.getConfigurationEntry('Id')}
+        }).then(function (container) {
+            return container.destroy();
+        });
 };
 
+
+/*--------------SAMPLE----------------*/
 /**
  * Execute a command on container
  *
