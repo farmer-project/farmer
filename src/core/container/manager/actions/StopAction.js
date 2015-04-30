@@ -1,53 +1,60 @@
 'use strict';
 
 var Q       = require('q'),
-    request = require('request'),
-    config  = require(require('path').resolve(__dirname, '../../../../../config'));
+    url     = require('url'),
+    request = require('request');
 
-function StopAction (identifier) {
-    this.identifier = identifier;
+function StopAction (id) {
+    this.id = id;
+    this.queryParamiters = '?';
 }
+
+/**
+ * Set request option
+ *
+ * @param opt
+ * @returns {StopAction}
+ */
+StopAction.prototype.options = function (opt) {
+    if (opt.t) this.queryParamiters = url.resolve(this.queryParamiters, 't=', opt.t);
+
+    return this;
+};
 
 /**
  * Stop a container
  *
- * Work with docker API
+ * Stop container work with docker API
+ * https://docs.docker.com/v1.5/reference/api/docker_remote_api_v1.17/#stop-a-container
  *
  * @returns {*|promise}
  */
-StopAction.prototype.execute = function ()
-{
-    if (typeof this.identifier !== 'string' || !this.identifier) {
-        throw new Error('Container identifier must be set when getting container info.');
-    }
-
+StopAction.prototype.executeOn = function (serverConfig) {
     var deferred = Q.defer(),
-        self = this;
-
-    var options = {
-        uri: config.docker_server + '/containers/' + this.identifier + '/stop',
-        method: "POST"
-    };
+        self = this,
+        options = {
+            uri: url.resolve(serverConfig.api, '/containers/', this.id, '/stop', this.queryParamiters),
+            method: "POST"
+        };
 
     request(options, function (error, response, body) {
-
         if (!error && ( response.statusCode == 204 || response.statusCode == 304)) {
             // 204 – no error
             // 304 – container already stopped
             deferred.resolve({
                 code: response.statusCode,
-                message: {
-                    "id": self.identifier
-                }
+                result: { Id: self.id },
+                message: 'successful'
             });
 
         } else {
-            var errorMessage = "";
-            if( response.statusCode == 404) errorMessage = "no such container";
-            if( response.statusCode == 500) errorMessage = "server error";
+            var errorMsg = "";
+            if( response.statusCode == 404) errorMsg = "no such container";
+            if( response.statusCode == 500) errorMsg = "docker server error";
             deferred.reject({
                 code: response.statusCode,
-                message: errorMessage
+                result: null,
+                message: errorMsg
             });
         }
 

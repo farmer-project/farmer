@@ -22,7 +22,6 @@ RemoveAction.prototype.options = function (opt) {
     if (opt.Force)        this.queryParamiters = url.resolve(this.queryParamiters, 'force=1');
     if (opt.RemoveVolume) this.queryParamiters = url.resolve(this.queryParamiters, '&v=1');
 
-
     return this;
 };
 

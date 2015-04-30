@@ -1,6 +1,8 @@
+'use strict';
+
 var Q       = require('q'),
-    request = require('request'),
-    config  = require(require('path').resolve(__dirname, '../../../../../config'));
+    url     = require('url'),
+    request = require('request');
 
 function InfoAction (identifier) {
     this.identifier = identifier;
@@ -10,37 +12,33 @@ function InfoAction (identifier) {
  * Get container Inspect information
  *
  * Get container Inspect information from docker API
+ * https://docs.docker.com/v1.5/reference/api/docker_remote_api_v1.17/#inspect-a-container
  *
  * @returns {*|promise}
  */
-InfoAction.prototype.execute = function () {
-    if (typeof this.identifier !== 'string' || !this.identifier) {
-        throw new Error('Container ID must be set when getting container info.');
-    }
-
+InfoAction.prototype.executeOn = function (serverConfig) {
     var deferred = Q.defer(),
         options = {
-        uri: config.docker_server + '/containers/' + this.identifier + '/json',
-        method: "GET"
-    };
+            uri: url.resolve(serverConfig.api, '/containers/', this.identifier, '/json'),
+            method: "GET"
+        };
 
     request(options, function (error, response, body) {
-
         if (!error && response.statusCode == 200) {
             deferred.resolve({
                 code: response.statusCode,
                 result: JSON.parse(body),
-                message: ''
+                message: 'successful'
             });
 
         } else {
-            var error = "";
-            if( response.statusCode == 404) error = "no such container";
-            if( response.statusCode == 500) error = "server error";
+            var errorMsg = "";
+            if( response.statusCode == 404) errorMsg = "no such container";
+            if( response.statusCode == 500) errorMsg = "server error";
             deferred.reject({
                 code: response.statusCode,
                 result: null,
-                message: error
+                message: errorMsg
             });
         }
 

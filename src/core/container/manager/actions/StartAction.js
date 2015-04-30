@@ -1,12 +1,11 @@
 'use strict';
 
 var Q       = require('q'),
-    request = require('request'),
-    config  = require(require('path').resolve(__dirname, '../../../../../config'));
+    url     = require('url'),
+    request = require('request');
 
-function StartAction (identifier) {
-    this.identifier = identifier;
-    this.HostConfig = {};
+function StartAction () {
+    this.configuration = {};
 }
 
 /**
@@ -15,13 +14,12 @@ function StartAction (identifier) {
  * @param HostConfig
  * @returns {StartAction}
  */
-StartAction.prototype.setConfig = function (HostConfig) {
-    this.HostConfig = HostConfig;
-    this.HostConfig["NetworkMode"] = "bridge";
+StartAction.prototype.options = function (opt) {
+    this.configuration = opt;
 
-    this.HostConfig["PublishAllPorts"] =
-        typeof this.HostConfig["PublishAllPorts"] !== 'undefined' ?
-            this.HostConfig["PublishAllPorts"] : true;
+    if (!opt.NetworkMode) {
+        this.configuration["NetworkMode"] = "bridge";
+    }
 
     return this;
 };
@@ -31,32 +29,33 @@ StartAction.prototype.setConfig = function (HostConfig) {
  *
  * @returns {*|promise}
  */
-StartAction.prototype.execute = function ()
+StartAction.prototype.executeOn = function (serverConfig)
 {
-    var deferred = Q.defer();
-
-    var options = {
-        uri: config.docker_server + '/containers/' + this.identifier + '/start',
-        method: "POST",
-        json: this.HostConfig
-    };
+    var deferred = Q.defer(),
+        id = this.configuration.Id,
+        options = {
+            uri: url.resolve(serverConfig.api, '/containers/', id, '/start'),
+            method: "POST",
+            json: this.configuration // ID is extra data!!
+        };
 
     request(options, function (error, response, body) {
-
         if (!error && response.statusCode == 204) {
             deferred.resolve({
                 code: response.statusCode,
-                message: this.identifier
+                result: { Id: id },
+                message: 'successful'
             });
 
         } else {
-            var errorMessage = "";
-            if( response.statusCode == 304) errorMessage = "container already started";
-            if( response.statusCode == 404) errorMessage = "no such container";
-            if( response.statusCode == 500) errorMessage = "server error";
+            var errorMsg = "";
+            if( response.statusCode == 304) errorMsg = "container already started";
+            if( response.statusCode == 404) errorMsg = "no such container";
+            if( response.statusCode == 500) errorMsg = "docker server error";
             deferred.reject({
                 code: response.statusCode,
-                message: error
+                result: null,
+                message: errorMsg
             });
         }
 

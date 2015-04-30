@@ -9,14 +9,19 @@ function CreateAction () {
     this.queryParamiters = '?';
 }
 
-
+/**
+ * Set request options
+ *
+ * @param opt
+ */
 CreateAction.prototype.options = function (opt) {
     if (opt.Name) {
-        this.queryParamiters = url.resolve(this.queryParamiters, opt.Name);
+        this.queryParamiters = url.resolve(this.queryParamiters, 'name=', opt.Name);
         delete opt['Name'];
     }
 
     this.configuration = opt;
+    return this;
 };
 
 /**

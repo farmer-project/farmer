@@ -11,12 +11,12 @@ function DockerClient() {
 
 }
 
-DockerClient.prototype.buildCreateAction = function (config) {
-    return new CreateAction(config);
+DockerClient.prototype.buildCreateAction = function () {
+    return new CreateAction();
 };
 
-DockerClient.prototype.buildStartAction = function (identifier) {
-    return new StartAction(identifier);
+DockerClient.prototype.buildStartAction = function () {
+    return new StartAction();
 };
 
 DockerClient.prototype.buildInfoAction = function (identifier) {
