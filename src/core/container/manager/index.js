@@ -64,11 +64,14 @@ Manager.prototype.targetServerConfig = function () {
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.createContainer = function (opt) {
+    var targetServerConfig = this.targetServerConfig();
+
     return this.containerClient
         .buildCreateAction()
         .options(opt)
-        .executeOn(this.targetServerConfig())
+        .executeOn(targetServerConfig)
         .then(function (response) {
+            var repository = new Repository(targetServerConfig);
             return repository.containerInfo(response.result.Id).then(function (configuration) {
 
                 return configuration;

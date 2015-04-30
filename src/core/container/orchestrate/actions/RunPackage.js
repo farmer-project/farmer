@@ -1,11 +1,14 @@
 'use strict';
 
-var _ = require('underscore'),
-    Q = require('q'),
-    upperCaseFirst = require('upper-case-first'),
-    Parser = require('../parser'),
-    Graph = require('../graph'),
-    ContainerManager = require(require('path').resolve(__dirname, '../../manager'));
+var _               = require('underscore'),
+    Q               = require('q'),
+    path            = require('path'),
+    upperCaseFirst  = require('upper-case-first'),
+    Parser          = require('../parser'),
+    Graph           = require('../graph'),
+    log             = require(path.resolve(__dirname, '../../../debug/log')),
+    Container       = require('../../index');
+
 
 function RunPackage () {
     this.containers = {};
@@ -32,7 +35,7 @@ RunPackage.prototype.parsAndRun = function (composeFile, vars) {
 };
 
 /**
- * get compose file json config and run them
+ * Create compose container
  *
  * @param config
  * @returns {Bluebird.Promise|*}
@@ -62,14 +65,12 @@ RunPackage.prototype._sortByCreationPriority = function (config) {
         .then(graphSortTopological)
         .then(function (sortedNodes) {
             return [sortedNodes, config];
-        }, function (reason) {
-            console.log('_sortByCreationPriority FAILED.', reason);
-        })
+        }, log.error)
     ;
 };
 
 /**
- * create array of containers
+ * Create array of containers
  *
  * @param nodes
  * @param config
@@ -125,24 +126,15 @@ RunPackage.prototype._buildContainersGraph = function (config) {
  * @private
  */
 RunPackage.prototype._runContainer = function (alias, config) {
-    var self = this;
+    var self = this,
+        container = new Container();
 
-    if (config.hasOwnProperty('image')) {
         var request = this._dockerApiRequestCreator(config);
-        return ContainerManager
-            .runContainer(request)
-            .then(function (result) {
-                return ContainerManager
-                    .getContainerInfo(result.id)
-                    .then(function (result) {
-                        self.containers[alias] = result.message.Name.replace('/', '');
-                        return result;
-                    });
+        return container.run(request)
+            .then(function (res) {
+                self.containers[alias] = container.getConfigurationEntry('Name').replace('/', '');
+                return container.getConfigurationEntry('*');
             });
-
-    } else {
-        return Q.reject('Image is not specified in package info.');
-    }
 };
 
 /**

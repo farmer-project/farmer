@@ -3,8 +3,9 @@
 var Q               = require('q'),
     path            = require('path'),
     models          = require('../models'),
-    repository      = require('./repository'),
+    Repository      = require('./repository'),
     log             = require(path.resolve(__dirname, '../debug/log')),
+    config          = require(path.resolve(__dirname, '../../config')),
     ContainerManager= require('./manager');
 
 
@@ -24,13 +25,15 @@ function Container (type) {
  * @returns {*|promise}
  */
 Container.prototype.getInstance  = function (identifier) {
-    var self = this;
+    var self = this,
+        // TODO: create system to find created container server
+        repository = new Repository({ api: config.docker_server });
+
     return repository.containerInfo(identifier).then(function (config) {
         self.configuration = config[0];
         return models.Container
             .find({
                 where: {id: identifier}
-
             }).then(function (container) { self.metadata = container.metadata; });
     });
 };
@@ -47,6 +50,11 @@ Container.prototype._setConfiguration = function (config) {
  */
 Container.prototype.getConfigurationEntry = function (entry) {
     if (this.configuration !== {}) {
+
+        if (entry == '*') {
+            return this.configuration;
+        }
+
         var found = [];
         var recurse = function (obj, key) {
             for (var p in obj) {
@@ -105,13 +113,13 @@ Container.prototype.run = function (config) {
     if (!this.getConfigurationEntry('Id')) {
         return this.containermanager.createContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
-            self.setState('created');
-            return self.containermanager.startContainer({}).then(function (containerConfig) {
-                self._setConfiguration(containerConfig);
+            self.setState('created'); // TODO: maybe this line is buggy
+            return self.containermanager.startContainer(containerConfig).then(function (conf) {
+                self._setConfiguration(conf);
                 return self.setState('running');
             });
         });
-    } else {
+    } else { // TODO: minify these code
         return self.containermanager.startContainer({}).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
@@ -216,8 +224,6 @@ Container.prototype._delete = function () {
         });
 };
 
-
-/*--------------SAMPLE----------------*/
 /**
  * Execute a command on container
  *
@@ -226,10 +232,10 @@ Container.prototype._delete = function () {
  * @param ip
  * @param command
  */
-Container.prototype.execOnContainer = function (ip, command) {
+Container.prototype.execOnContainer = function (command) {
     var deferred = Q.defer(),
         ssh = new SshClient({
-            host: ip,
+            host: this.getConfigurationEntry('IPAddress'),
             username: 'root',
             privateKey: config.container_private_key
         });
@@ -238,8 +244,9 @@ Container.prototype.execOnContainer = function (ip, command) {
         ssh.exec(command).then(function (result) {
             if (result.stderr) {
                 deferred.reject(result.stderr);
+            } else {
+                deferred.resolve(result.stdout);
             }
-            deferred.resolve(result.stdout);
 
         }, deferred.reject).finally(function () {
             ssh.exec('exit');

@@ -1,6 +1,8 @@
+'use strict';
+
 var Q       = require('q'),
-    request = require('request'),
-    config  = require(require('path').resolve(__dirname, '../../../../../config'));
+    url     = require('url'),
+    request = require('request');
 
 function ListImages () {
 
@@ -10,33 +12,34 @@ function ListImages () {
  * Get list of all available images
  *
  * Work with docker API
+ * https://docs.docker.com/v1.5/reference/api/docker_remote_api_v1.17/#22-images
  *
  * @returns {*|promise}
  */
-ListImages.prototype.execute = function ()
+ListImages.prototype.executeOn = function (serverConfig)
 {
-    var deferred = Q.defer();
-
-    var options = {
-        uri: config.docker_server + '/images/json',
-        method: "GET"
-    };
+    var deferred = Q.defer(),
+        options = {
+            uri: url.resolve(serverConfig.api, '/images/json'),
+            method: "GET"
+        };
 
     request(options, function (error, response, body) {
-
         if (!error && response.statusCode == 200) {
             // 200 – no error
             deferred.resolve({
                 code: response.statusCode,
-                message: JSON.parse(body)
+                result: JSON.parse(body),
+                message: 'successful'
             });
 
         } else {
-            var error = "";
-            if( response.statusCode == 500) error = "server error";
+            var errorMsg = "";
+            if( response.statusCode == 500) errorMsg = "server error";
             deferred.reject({
                 code: response.statusCode,
-                message: error
+                result: '',
+                message: errorMsg
             });
         }
 

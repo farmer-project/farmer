@@ -62,4 +62,4 @@ RestartAction.prototype.executeOn = function (serverConfig) {
     return deferred.promise;
 };
 
-module.exports = StopAction;
+module.exports = RestartAction;
