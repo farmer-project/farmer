@@ -1,7 +1,7 @@
 'use strict';
 
-var Q = require('q'),
-    io = require('socket.io-client'),
+var Q   = require('q'),
+    io  = require('socket.io-client'),
     log = require('../debug/log');
 
 
@@ -17,7 +17,7 @@ Publisher.prototype.TYPE = {
     NOTIFY: 'notify'
 };
 
-Publisher.prototype.roomID = function () {
+Publisher.prototype.getRoomID = function () {
     return this.roomID;
 };
 

@@ -2,10 +2,10 @@ var express     = require('express'),
     timeout     = require('connect-timeout'),
     bodyParser  = require('body-parser'),
     models      = require('./core/models'),
-    config      = require(require('path').resolve(__dirname, './config')),
+    path        = require('path'),
     api         = require('./api'),
     app         = express(),
-    path        = require('path'),
+    config      = require(path.resolve(__dirname, './config')),
     PluginRegister = require(path.resolve(__dirname, './core/plugin'));
 
 // Console colors
@@ -31,9 +31,3 @@ models.sequelize.sync().then(function () {
         console.log('Listening on port '.green, this.address().port);
     });
 });
-
-
-
-var Container = require('./core/container');
-
-var containerSample = new Container();

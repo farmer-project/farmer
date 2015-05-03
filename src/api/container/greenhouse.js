@@ -23,17 +23,18 @@ module.exports = function Greenhouse() {
                 publisher.toClient('open room');
                 res.status(200)
                     .json({
-                        room: publisher.roomID()
+                        room: publisher.getRoomID()
                     });
 
                 seed.implant(req.body, publisher)
                     .finally(publisher.subWorksFinish);
-            });
 
-        res.status(500)
-            .json({
-                result: '',
-                error: 'station server not reposed'
+            }, function () {
+                res.status(500)
+                    .json({
+                        result: '',
+                        error: 'station server not reposed'
+                    });
             });
     });
 
