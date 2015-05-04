@@ -1,3 +1,3 @@
 ---
 domain: farmer.dev
-apt_cache_proxy: http://apt-cache:3142
+#apt_cache_proxy: http://apt-cache:3142

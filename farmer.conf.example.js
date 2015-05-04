@@ -1,49 +1,26 @@
-// TODO: any config value fetch from gruop vars
-module.exports = {
-    // ### Production environment
-    "production": {
-        "port": "80",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "packages_path": "/packages",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "database_username": "root",
-        "database_password": "v3&d0raR@v@j^hmad",
-        "database_name": "farmer",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
-    },
+module.exports =
+{
+    /**
+     * Core Options
+     */
+    "domain": "ravaj.ir",
+    "port": "8080",
 
-    "staging": {
-        "port": "80",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "packages_path": "/packages",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "database_username": "root",
-        "database_password": "vendoraRavajAram",
-        "database_name": "farmer_staging",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
-    },
+    "station_server": "http://station.dev",
+    "docker_server": "http://localhost:4242",
 
-    // ### Development **(default)**
-    "development": {
-        "port": "8080",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "packages_path": "/packages",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "database_username": "root",
-        "database_password": null,
-        "database_name": "farmer_development",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
-    }
+    "log_dir": "/var/www/logs",
+    "greenhouse": "/code/stages",
+    "production": "/code/productions",
+
+    "database_username": "root",
+    "database_password": null,
+    "database_name": "farmer",
+    "database_host": "127.0.0.1",
+    "database_dialect": "mysql",
+
+    /**
+     * Plugin: Shell
+     */
+    "container_private_key": "/home/vagrant/bare/key/mykey"
 };
