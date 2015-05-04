@@ -1,7 +1,7 @@
 {
   "name": "farmer",
   "version": "0.0.0",
-  "description": "Farmer offers an API to create, deploy and manage containers. Used for a simple SaaS infrastructure$
+  "description": "Farmer offers an API to create, deploy and manage containers. Used for a simple SaaS infrastructure",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
