@@ -1,7 +1,7 @@
 'use strict';
 
 var path         = require('path'),
-    pluginServer = require('./plugin'),
+    pluginServer = require('./plugin-server'),
     emitter      = require(path.resolve(__dirname, './emmiter')),
     Bag          = require('./Bag');
 

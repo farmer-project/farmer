@@ -13,7 +13,7 @@ function PluginRegistry() {
  *
  * Register all plugin methods by call their "registerPlugin" method
  * those all defined in plugin.json file
- * any plugin must be singleton
+ * any plugin must be singleton and promisable
  *
  * @returns {{alias: string}}
  */
@@ -25,4 +25,5 @@ PluginRegistry.prototype.registerAllPlugins = function () {
         plugin.registerPlugin();
     });
 };
+
 module.exports = new PluginRegistry();

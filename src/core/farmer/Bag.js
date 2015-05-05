@@ -8,7 +8,7 @@ function Bag() {
 /**
  * Set a property value
  *
- * @param tag
+ * @param tag string
  * @param data
  * @returns {Bag}
  */

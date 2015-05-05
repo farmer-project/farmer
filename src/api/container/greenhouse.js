@@ -3,15 +3,17 @@
 var express     = require('express'),
     _           = require('underscore'),
     Q           = require('q'),
-    Seed        = require('../../core/enviroment/greenhouse/seed'),
+    path        = require('path'),
     LogCenter   = require('../../core/debug/log'),
     Publisher   = require('../../core/station'),
     auth        = require('../../core/security/auth'),
-    config      = require(require('path').resolve(__dirname, '../../config'));
+    Bag         = require('../../core/farmer/Bag'),
+    FarmerFile  = require('../../core/farmer/Farmerfile'),
+    farmer      = require(path.resolve(__dirname, '../../core/farmer')),
+    config      = require(path.resolve(__dirname, '../../config'));
 
 module.exports = function Greenhouse() {
-    var app = express(),
-        seed = new Seed();
+    var app = express();
 
     //app.use(auth.middleware);
 
@@ -26,10 +28,12 @@ module.exports = function Greenhouse() {
                         room: publisher.roomID
                     });
 
-                var farmerFile = new FarmerFile(JSONfarmerfile);
+                var bag = new Bag();
+                bag.set('farmerfile', new FarmerFile(req.body.farmerfile))
+                    .set('args', req.body.args)
+                    .set('publisher', publisher);
 
-                seed.implant(req.body, publisher)
-                    .finally(publisher.subWorksFinish);
+                farmer.fireEvent('create', bag);
 
             }, function () {
                 res.status(500)

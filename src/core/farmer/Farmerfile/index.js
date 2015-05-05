@@ -16,7 +16,8 @@ FarmerFile.prototype.get = function (tag) {
             if (typeof obj[p] === 'object') recurse(obj[p], key);
         }
     };
-    recurse(config, entry);
+
+    return recurse(this.content, tag);
 };
 
 FarmerFile.prototype.getTags = function () {

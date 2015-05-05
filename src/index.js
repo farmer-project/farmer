@@ -6,7 +6,7 @@ var express     = require('express'),
     api         = require('./api'),
     app         = express(),
     config      = require(path.resolve(__dirname, './config')),
-    farmer      = require('./core/farmer');
+    farmer      = require(path.resolve(__dirname, './core/farmer'));
 
 // Console colors
 require('colors');

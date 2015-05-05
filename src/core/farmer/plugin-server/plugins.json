@@ -1,0 +1,13 @@
+[
+  {
+    "plugin": "/core/plugins/composePlugin",
+    "name": "Compose Plugin",
+    "description": "Create new container config based on 'dirs' and 'farmerfile containers' and Add 'containers' properties to bag"
+  },
+
+  {
+    "plugin": "/plugins/shell",
+    "name": "Shell Plugin",
+    "description": "Connect to any container and run shell command or execute shell file"
+  }
+]
