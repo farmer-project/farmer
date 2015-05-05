@@ -17,10 +17,6 @@ Publisher.prototype.TYPE = {
     NOTIFY: 'notify'
 };
 
-Publisher.prototype.getRoomID = function () {
-    return this.roomID;
-};
-
 Publisher.prototype.connect = function () {
     var self = this;
     this.socket = io.connect(this.serverUrl);

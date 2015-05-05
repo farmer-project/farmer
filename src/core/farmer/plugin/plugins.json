@@ -1,0 +1,7 @@
+[
+  {
+    "plugin": "/plugins/shell",
+    "name": "shellPlugin",
+    "description": "plugin that connect to container and run shell command or execute shell file"
+  }
+]

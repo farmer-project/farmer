@@ -229,7 +229,6 @@ Container.prototype._delete = function () {
  *
  * Connect to container with ssh service and run command
  *
- * @param ip
  * @param command
  */
 Container.prototype.execOnContainer = function (command) {

@@ -6,12 +6,12 @@ var express     = require('express'),
     api         = require('./api'),
     app         = express(),
     config      = require(path.resolve(__dirname, './config')),
-    PluginRegister = require(path.resolve(__dirname, './core/plugin'));
+    farmer      = require('./core/farmer');
 
 // Console colors
 require('colors');
 
-PluginRegister.registerAllPlugins();
+farmer.run();
 
 // Create our stand-alone express app
 app.use(bodyParser.json());

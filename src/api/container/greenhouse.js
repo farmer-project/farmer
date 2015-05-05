@@ -23,8 +23,10 @@ module.exports = function Greenhouse() {
                 publisher.toClient('open room');
                 res.status(200)
                     .json({
-                        room: publisher.getRoomID()
+                        room: publisher.roomID
                     });
+
+                var farmerFile = new FarmerFile(JSONfarmerfile);
 
                 seed.implant(req.body, publisher)
                     .finally(publisher.subWorksFinish);
