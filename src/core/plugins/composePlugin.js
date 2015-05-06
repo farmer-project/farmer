@@ -19,7 +19,8 @@ ComposePlugin.prototype.containers = function (bag) {
         dirs = farmerfileObj.get('dirs'),
         host = bag.get('args')['host'];
 
-    bag.set('containers', compose.resolve(containers, dirs, host));
+    bag.set('compose', compose.resolve(containers, dirs, host));
+
     Q.when(true);
 };
 

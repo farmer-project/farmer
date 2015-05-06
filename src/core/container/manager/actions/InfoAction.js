@@ -1,7 +1,7 @@
 'use strict';
 
 var Q       = require('q'),
-    url     = require('url'),
+    urljoin = require('url-join'),
     request = require('request');
 
 function InfoAction (identifier) {
@@ -19,11 +19,12 @@ function InfoAction (identifier) {
 InfoAction.prototype.executeOn = function (serverConfig) {
     var deferred = Q.defer(),
         options = {
-            uri: url.resolve(serverConfig.api, '/containers/', this.identifier, '/json'),
+            uri: urljoin(serverConfig.api, '/containers/', this.identifier, '/json'),
             method: "GET"
         };
 
     request(options, function (error, response, body) {
+        console.log('InfoAction >>>>>>>>body', body);
         if (!error && response.statusCode == 200) {
             deferred.resolve({
                 code: response.statusCode,

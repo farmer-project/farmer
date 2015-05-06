@@ -11,8 +11,8 @@ Shell.prototype.registerPlugin = function () {
 };
 
 Shell.prototype.farmfile = function (bag) {
-    console.log('>>>>>>>>>>>>>>', require('util').inspect(bag, false, null));
-    console.log('>>>>>>>>>>>>>>>>salam from shell farmfile');
+    //console.log('>>>>>>>>>>>>>>', require('util').inspect(bag, false, null));
+    //console.log('>>>>>>>>>>>>>>>>salam from shell farmfile');
     return Q.when(true);
 };
 

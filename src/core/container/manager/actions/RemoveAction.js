@@ -1,10 +1,11 @@
 var Q       = require('q'),
-    url     = require('url'),
-    request = require('request');
+    urljoin = require('url-join'),
+    request = require('request'),
+    querystring = require('querystring');
 
 function RemoveAction () {
     this.identifier = null;
-    this.queryParamiters = '?';
+    this.queryParameters = '';
 }
 
 /**
@@ -18,9 +19,11 @@ RemoveAction.prototype.options = function (opt) {
         throw new Error('Unknown container Id '+ opt.Id);
     }
 
-    this.identifier =  opt.Id;
-    if (opt.ForceStop)        this.queryParamiters = url.resolve(this.queryParamiters, 'force=1');
-    if (opt.RemoveVolume) this.queryParamiters = url.resolve(this.queryParamiters, '&v=1');
+    this.identifier = opt.Id;
+
+    if (opt.ForceStop)      this.queryParameters['force'] = 1;
+    if (opt.RemoveVolume)   this.queryParameters['v'] = 1;
+    this.queryParameters = querystring.stringify(this.queryParameters);
 
     return this;
 };
@@ -37,7 +40,7 @@ RemoveAction.prototype.executeOn = function (serverConfig)
 {
     var deferred = Q.defer(),
         options = {
-        uri: url.resolve(serverConfig.api, '/containers/', this.identifier, this.queryParamiters),
+        uri: urljoin(serverConfig.api, '/containers/', this.identifier, this.queryParameters),
         method: "DELETE"
     };
 

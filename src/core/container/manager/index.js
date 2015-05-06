@@ -1,8 +1,8 @@
 var _           = require('underscore'),
     Q           = require('q'),
     path        = require('path'),
+    Repository  = require('../Repository'),
     DockerClient= require('./docker-client'),
-    repository  = require('../repository'),
     log         = require(path.resolve(__dirname, '../../debug/log')),
     config      = require(path.resolve(__dirname, '../../../config'));
 
@@ -42,20 +42,6 @@ Manager.prototype.targetServerConfig = function () {
     }
 };
 
-/*{
- image: IMAGE_NAME,
- hostname: HOSTNAME,
- name: NAME
- ports: [
- PORT, PORT, ...
- ],
- volumes: [
- "/tmp:/app/folder",
- "/tmp:/app/folder",
- ...
- ]
- }*/
-
 /**
  * Create container
  *
@@ -71,14 +57,17 @@ Manager.prototype.createContainer = function (opt) {
         .options(opt)
         .executeOn(targetServerConfig)
         .then(function (response) {
+            console.log('>>>response', response);
+            console.log('>>>targetServerConfig', targetServerConfig);
             var repository = new Repository(targetServerConfig);
+            console.log('>>>done');
             return repository.containerInfo(response.result.Id).then(function (configuration) {
-
+                console.log('>>>configuration', configuration);
                 return configuration;
 
             }, log.error);
 
-        },log.error);
+        }, log.error);
 };
 
 /**
@@ -93,6 +82,7 @@ Manager.prototype.startContainer = function (opt) {
         .options(opt)
         .executeOn(this.targetServerConfig())
         .then(function (response) {
+            var repository = new Repository(targetServerConfig);
             return repository.containerInfo(response.result.Id).then(function (configuration) {
 
                 return configuration;

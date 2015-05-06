@@ -1,7 +1,7 @@
 'use strict';
 
 var Q       = require('q'),
-    url     = require('url'),
+    urljoin = require('url-join'),
     request = require('request');
 
 function StartAction () {
@@ -34,7 +34,7 @@ StartAction.prototype.executeOn = function (serverConfig)
     var deferred = Q.defer(),
         id = this.configuration.Id,
         options = {
-            uri: url.resolve(serverConfig.api, '/containers/', id, '/start'),
+            uri: urljoin(serverConfig.api, '/containers/', id, '/start'),
             method: "POST",
             json: this.configuration // ID is extra data!!
         };

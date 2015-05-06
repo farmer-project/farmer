@@ -2,11 +2,13 @@
 
 var Q       = require('q'),
     url     = require('url'),
-    request = require('request');
+    urljoin = require('url-join'),
+    request = require('request'),
+    querystring = require('querystring');
 
 function RestartAction (id) {
     this.id = id;
-    this.queryParamiters = '?';
+    this.queryParameters = '';
 }
 
 /**
@@ -16,7 +18,7 @@ function RestartAction (id) {
  * @returns {StopAction}
  */
 RestartAction.prototype.options = function (opt) {
-    if (opt.t) this.queryParamiters = url.resolve(this.queryParamiters, 't=', opt.t);
+    if (opt.t) this.queryParameters = '?' + querystring.stringify({t: opt.t});
 
     return this;
 };
@@ -33,7 +35,7 @@ RestartAction.prototype.executeOn = function (serverConfig) {
     var deferred = Q.defer(),
         self = this,
         options = {
-            uri: url.resolve(serverConfig.api, '/containers/', this.id, '/restart', this.queryParamiters),
+            uri: urljoin(serverConfig.api, '/containers/', this.id, '/restart', this.queryParameters),
             method: "POST"
         };
 

@@ -13,18 +13,6 @@ function Farmland () {
 }
 
 /**
- * {
- *  "package":
- *  "name":
- *  "hostname":
- *  "seed":
- *  "type":
- * }
- * @param farmSite
- * @returns {*}
- */
-
-/**
  * Furrow farmland to implant seed in it
  *
  * @param farmSite
@@ -63,6 +51,7 @@ Farmland.prototype.furrow = function (farmSite, stage, publisher) {
                         log.error(error);
                     });
 
+                console.log('<<<<<<<<<>>>>>>>>>>>>>> before FORCE TO SAVE');
                 publisher.forceToSave(result, 'yaml', path.join(config.client_storage, 'contaienrs'));
                 return result;
             })

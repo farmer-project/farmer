@@ -2,7 +2,13 @@
   {
     "plugin": "/core/plugins/composePlugin",
     "name": "Compose Plugin",
-    "description": "Create new container config based on 'dirs' and 'farmerfile containers' and Add 'containers' properties to bag"
+    "description": "Create new container config based on 'dirs' and 'farmerfile containers' and Add 'compose' properties to bag"
+  },
+
+  {
+    "plugin": "/core/plugins/farmlandPlugin",
+    "name": "Farmland Plugin",
+    "description": "Create orchestrate containers and Add containers config as 'containers' properties to bag"
   },
 
   {

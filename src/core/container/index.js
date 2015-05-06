@@ -3,7 +3,7 @@
 var Q               = require('q'),
     path            = require('path'),
     models          = require('../models'),
-    Repository      = require('./repository'),
+    Repository      = require('./Repository'),
     log             = require(path.resolve(__dirname, '../debug/log')),
     config          = require(path.resolve(__dirname, '../../config')),
     ContainerManager= require('./manager');
@@ -45,28 +45,29 @@ Container.prototype._setConfiguration = function (config) {
 /**
  * Return container configuration entry
  *
- * @param entryName
- * @returns {Array}
+ * @param entry
+ * @returns {*}
  */
 Container.prototype.getConfigurationEntry = function (entry) {
-    if (this.configuration !== {}) {
-
-        if (entry == '*') {
-            return this.configuration;
-        }
-
-        var found = [];
-        var recurse = function (obj, key) {
-            for (var p in obj) {
-                if (p === key) {
-                    found.push(obj[p]);
-                }
-                if (typeof obj[p] === 'object') recurse(obj[p], key);
-            }
-        };
-        recurse(config, entry);
-        return found;
+    if (entry == '*') {
+        return this.configuration;
     }
+
+    var found = [];
+    var recurse = function (obj, key) {
+        for (var p in obj) {
+            if (p === key) {
+                found.push(obj[p]);
+            }
+            if (typeof obj[p] === 'object') recurse(obj[p], key);
+        }
+    };
+    recurse(this.configuration, entry);
+
+    if (2 > found.length)
+        return found[0];
+
+    return found;
 };
 
 /**
@@ -109,9 +110,13 @@ Container.prototype.run = function (config) {
     if (!config.Image) {
         return Q.reject('Unknown container base image');
     }
+
+    console.log('<<<<<<<<<>>>>>>>>>>>>>> BEFORE IF');
     var self = this;
     if (!this.getConfigurationEntry('Id')) {
+        console.log('<<<<<<<<<>>>>>>>>>>>>>> undefined ID');
         return this.containermanager.createContainer(config).then(function (containerConfig) {
+            console.log('<<<<<<<<<>>>>>>>>>>>>>> containerConfig', containerConfig);
             self._setConfiguration(containerConfig);
             self.setState('created'); // TODO: maybe this line is buggy
             return self.containermanager.startContainer(containerConfig).then(function (conf) {
@@ -120,6 +125,7 @@ Container.prototype.run = function (config) {
             });
         });
     } else { // TODO: minify these code
+        console.log('<<<<<<<<<>>>>>>>>>>>>>> Defined ID!!');
         return self.containermanager.startContainer({}).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');

@@ -1,5 +1,5 @@
 {
-  "name": "farmer",
+  "name": "farmerjs",
   "version": "0.0.0",
   "description": "Farmer offers an API to create, deploy and manage containers. Used for a simple SaaS infrastructure",
   "main": "src/index.js",
@@ -35,6 +35,7 @@
     "ssh-url": "~0.1.5",
     "underscore": "~1.8.2",
     "upper-case-first": "~1.1.0",
+    "url-join": "0.0.1",
     "ursa": "^0.8.4"
   }
 }

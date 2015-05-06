@@ -1,12 +1,13 @@
 'use strict';
 
 var Q       = require('q'),
-    url     = require('url'),
-    request = require('request');
+    urljoin = require('url-join'),
+    request = require('request'),
+    querystring= require('querystring');
 
 function CreateAction () {
     this.configuration = {};
-    this.queryParamiters = '?';
+    this.queryParameters = '';
 }
 
 /**
@@ -16,7 +17,7 @@ function CreateAction () {
  */
 CreateAction.prototype.options = function (opt) {
     if (opt.Name) {
-        this.queryParamiters = url.resolve(this.queryParamiters, 'name=', opt.Name);
+        this.queryParameters = '?' + querystring.stringify({name: opt.Name});
         delete opt['Name'];
     }
 
@@ -37,7 +38,7 @@ CreateAction.prototype.executeOn = function (serverConfig)
 {
     var deferred = Q.defer(),
         options = {
-            uri: url.resolve(serverConfig.docker_server, '/containers/create/', this.queryParamiters),
+            uri: urljoin(serverConfig.api, '/containers/create', this.queryParameters),
             method: 'POST',
             json: this.configuration
         };

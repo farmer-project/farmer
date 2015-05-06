@@ -132,7 +132,9 @@ RunPackage.prototype._runContainer = function (alias, config) {
         var request = this._dockerApiRequestCreator(config);
         return container.run(request)
             .then(function (res) {
+                console.log('<<<<<<<<<>>>>>>>>>>>>>> run result', res);
                 self.containers[alias] = container.getConfigurationEntry('Name').replace('/', '');
+                console.log('<<<<<<<<<>>>>>>>>>>>>>> self.containers', self.containers);
                 return container.getConfigurationEntry('*');
             });
 };

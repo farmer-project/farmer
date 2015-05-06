@@ -1,12 +1,13 @@
 'use strict';
 
 var Q       = require('q'),
-    url     = require('url'),
-    request = require('request');
+    urljoin = require('url-join'),
+    request = require('request'),
+    querystring = require('querystring');
 
 function StopAction (id) {
     this.id = id;
-    this.queryParamiters = '?';
+    this.queryParameters = '';
 }
 
 /**
@@ -16,7 +17,7 @@ function StopAction (id) {
  * @returns {StopAction}
  */
 StopAction.prototype.options = function (opt) {
-    if (opt.t) this.queryParamiters = url.resolve(this.queryParamiters, 't=', opt.t);
+    if (opt.t) this.queryParameters = '?' + querystring.stringify({t: opt.t});
 
     return this;
 };
@@ -33,7 +34,7 @@ StopAction.prototype.executeOn = function (serverConfig) {
     var deferred = Q.defer(),
         self = this,
         options = {
-            uri: url.resolve(serverConfig.api, '/containers/', this.id, '/stop', this.queryParamiters),
+            uri: urljoin(serverConfig.api, '/containers/', this.id, '/stop', this.queryParameters),
             method: "POST"
         };
 
