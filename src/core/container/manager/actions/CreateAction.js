@@ -56,6 +56,7 @@ CreateAction.prototype.executeOn = function (serverConfig)
             var errorMsg = "";
             if( response.statusCode == 404) errorMsg = "no such container";
             if( response.statusCode == 406) errorMsg = "impossible to attach (container not running)";
+            if( response.statusCode == 409) errorMsg = "conflict name already assigned";
             if( response.statusCode == 500) errorMsg = "server error";
             deferred.reject({
                 code: response.statusCode,

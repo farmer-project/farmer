@@ -65,8 +65,7 @@ RunPackage.prototype._sortByCreationPriority = function (config) {
         .then(graphSortTopological)
         .then(function (sortedNodes) {
             return [sortedNodes, config];
-        }, log.error)
-    ;
+        }, log.error);
 };
 
 /**
@@ -79,16 +78,13 @@ RunPackage.prototype._sortByCreationPriority = function (config) {
  */
 RunPackage.prototype._createContainers = function (nodes, config) {
     var self = this,
-        results = [];
+        results = {};
 
-    return nodes.reduce(function (prevPromise, node, index) {
+    return nodes.reduce(function (prevPromise, alias, index) {
         return prevPromise.then(function () {
-            return self._runContainer(node, config[node]).then(function (result) {
-                result.message.alias = node;
-                results.push(result.message);
-                if (nodes.size() - 1 === index) {
-                    return results;
-                }
+            return self._runContainer(alias, config[alias]).then(function (container) {
+                results[alias] = container;
+                return results;
             });
         });
     }, Q.when(true));
@@ -131,11 +127,8 @@ RunPackage.prototype._runContainer = function (alias, config) {
 
         var request = this._dockerApiRequestCreator(config);
         return container.run(request)
-            .then(function (res) {
-                console.log('<<<<<<<<<>>>>>>>>>>>>>> run result', res);
-                self.containers[alias] = container.getConfigurationEntry('Name').replace('/', '');
-                console.log('<<<<<<<<<>>>>>>>>>>>>>> self.containers', self.containers);
-                return container.getConfigurationEntry('*');
+            .then(function (container) {
+                return container;
             });
 };
 

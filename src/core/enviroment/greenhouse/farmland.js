@@ -20,44 +20,32 @@ function Farmland () {
  * @param publisher
  * @returns {Bluebird.Promise|*}
  */
-Farmland.prototype.furrow = function (farmSite, stage, publisher) {
+Farmland.prototype.furrow = function (farmSite, publisher) {
     var containersId = [];
     publisher.toClient("create containers");
 
     return packageCompose
         .run(farmSite)
-        .then(function (result) {
+        .then(function (containers) {
+            var containersData = {},
+                clientData = {};
+            for(var key in containers) {
+                containersData[key] = containers[key].getConfigurationEntry('Id');
+                clientData[key] = containers[key].getConfigurationEntry('*');
 
-            return result.reduce(function (prevPromise, inspect) {
-                return prevPromise.then(function () {
-                    containersId.push(inspect.Id);
+            }
 
-                    return models
-                        .Container
-                        .update({
-                            "type": stage
-                        },{
-                            where: { id: inspect.Id }
-                        });
-                });
-            }, Q.when(true))
-            .then(function () {
-                models
-                    .Package
-                    .create({
-                        "containers": JSON.stringify(containersId),
-                        "type": stage
-                    }).error(function (error) {
-                        log.error(error);
-                    });
+            models
+                .Package
+                .create({
+                    "containers": JSON.stringify(containersData)
+                }).then(function (resutl) {
+                    log.trace(resutl);
+                    publisher.toClient(JSON.stringify(clientData));
+                    return containers;
 
-                console.log('<<<<<<<<<>>>>>>>>>>>>>> before FORCE TO SAVE');
-                publisher.forceToSave(result, 'yaml', path.join(config.client_storage, 'contaienrs'));
-                return result;
-            })
-        ;
-
-    });
+                }).catch(log.error);
+        });
 };
 
 module.exports = new Farmland();

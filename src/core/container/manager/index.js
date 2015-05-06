@@ -57,17 +57,14 @@ Manager.prototype.createContainer = function (opt) {
         .options(opt)
         .executeOn(targetServerConfig)
         .then(function (response) {
-            console.log('>>>response', response);
-            console.log('>>>targetServerConfig', targetServerConfig);
             var repository = new Repository(targetServerConfig);
-            console.log('>>>done');
-            return repository.containerInfo(response.result.Id).then(function (configuration) {
-                console.log('>>>configuration', configuration);
-                return configuration;
+            return repository.containerInfo(response.result.Id).then(function (res) {
 
-            }, log.error);
+                return res.result;
 
-        }, log.error);
+            }).catch(log.error);
+
+        }).catch(log.error);
 };
 
 /**
@@ -77,19 +74,21 @@ Manager.prototype.createContainer = function (opt) {
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.startContainer = function (opt) {
+    var targetServerConfig = this.targetServerConfig();
+    console.log('<<<<<<<<<>>>>>>>>>>>>>> opt', opt);
     return this.containerClient
         .buildStartAction()
         .options(opt)
-        .executeOn(this.targetServerConfig())
+        .executeOn(targetServerConfig)
         .then(function (response) {
             var repository = new Repository(targetServerConfig);
-            return repository.containerInfo(response.result.Id).then(function (configuration) {
+            return repository.containerInfo(response.result.Id).then(function (res) {
 
-                return configuration;
+                return res.result;
 
-            }, log.error);
+            }).catch(log.error);
 
-        }, log.error);
+        }).catch(log.error);
 };
 
 /**
@@ -104,7 +103,8 @@ Manager.prototype.stopContainer = function (identifier, opt) {
         .buildStopAction(identifier)
         .options(opt)
         .executeOn(this.targetServerConfig())
-        .then(log.info, log.error);
+        .tap(log.trace)
+        .catch(log.error);
 };
 
 /**
@@ -125,7 +125,8 @@ Manager.prototype.restartContainer = function (identifier) {
     return this.containerClient
         .buildRestartAction(identifier)
         .executeOn(this.targetServerConfig())
-        .then(log.trace, log.error);
+        .tap(log.trace)
+        .catch(log.error);
 };
 
 module.exports = Manager;

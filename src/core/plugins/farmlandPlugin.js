@@ -17,12 +17,10 @@ FarmlandPlugin.prototype.furrow = function (bag) {
         publisher = bag.get('publisher');
 
     console.log('FarmlandPlugin >>>>>>>>>>>>>>>>>> compose', compose);
-    return farmland.furrow(compose, 'staging', publisher).then(function (containersInfo) {
+    return farmland.furrow(compose, publisher).then(function (containersInfo) {
         console.log('FarmlandPlugin >>>>>>>>>>>>>>>>>> farmland.furrow', containersInfo);
         bag.set('containers', containersInfo);
-    }, function (error) {
-        console.log('FarmlandPlugin >>>>>>>>>>>>>>>>>>> error', error);
-    });
+    }).catch(log.error);
 };
 
 module.exports = new FarmlandPlugin();

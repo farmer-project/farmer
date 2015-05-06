@@ -8,9 +8,7 @@ module.exports = function(sequelize, DataTypes) {
             autoIncrement: true,
             primaryKey: true
         },
-        containers: DataTypes.TEXT,
-        type: DataTypes.STRING(128),
-        domain: DataTypes.STRING(128)
+        containers: DataTypes.TEXT
     },{
         tableName: 'packages',
 

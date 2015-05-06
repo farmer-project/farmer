@@ -49,7 +49,7 @@ Container.prototype._setConfiguration = function (config) {
  * @returns {*}
  */
 Container.prototype.getConfigurationEntry = function (entry) {
-    if (entry == '*') {
+    if ('*' === entry) {
         return this.configuration;
     }
 
@@ -111,17 +111,15 @@ Container.prototype.run = function (config) {
         return Q.reject('Unknown container base image');
     }
 
-    console.log('<<<<<<<<<>>>>>>>>>>>>>> BEFORE IF');
     var self = this;
     if (!this.getConfigurationEntry('Id')) {
-        console.log('<<<<<<<<<>>>>>>>>>>>>>> undefined ID');
         return this.containermanager.createContainer(config).then(function (containerConfig) {
-            console.log('<<<<<<<<<>>>>>>>>>>>>>> containerConfig', containerConfig);
             self._setConfiguration(containerConfig);
             self.setState('created'); // TODO: maybe this line is buggy
             return self.containermanager.startContainer(containerConfig).then(function (conf) {
                 self._setConfiguration(conf);
-                return self.setState('running');
+                self.setState('running');
+                return self;
             });
         });
     } else { // TODO: minify these code
@@ -187,19 +185,20 @@ Container.prototype.setState = function (state) {
                     name: self.getConfigurationEntry('Name'),
                     ports: JSON.stringify(self.getConfigurationEntry('ExposedPorts')),
                     public: self.getConfigurationEntry('PublishAllPorts'),
-                    image: self.getConfigurationEntry('Image'),
-                    metadata: JSON.stringify(self.metadata),
+                    image: self.getConfigurationEntry('Image')[0],
                     state: "created",
-                    request: JSON.stringify(self.getConfiguration())
+                    metadata: JSON.stringify(self.metadata),
+                    configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }).then(log.info, log.error);
 
         case "running":
             return models.Container
                 .update({
                     state: "running",
-                    volumes: JSON.stringify(self.getConfigurationEntry('Binds'))
+                    volumes: JSON.stringify(self.getConfigurationEntry('Binds')),
+                    configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 },{
-                    where: { id: self.getConfigurationEntry('id') }
+                    where: { id: self.getConfigurationEntry('Id') }
                 }).then(log.info, log.error);
 
         case "shutdown":
@@ -207,7 +206,7 @@ Container.prototype.setState = function (state) {
                 .update({
                     state: "shutdown"
                 },{
-                    where: { id: self.getConfigurationEntry('id') }
+                    where: { id: self.getConfigurationEntry('Id') }
                 }).then(log.info, log.error);
         default :
             return Q.reject('unknown state ' + state);

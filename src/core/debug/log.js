@@ -3,10 +3,10 @@
 var log4js = require('log4js'),
     config = require(require('path').resolve(__dirname, '../../config'));
 
-function LogCenter() {
-    this.ERROR_LOG_FILE_TAG = "error";
-    this.ACCESS_LOG_FILE_TAG = "access";
+var ERROR_LOG_FILE_TAG = "error",
+    ACCESS_LOG_FILE_TAG = "access";
 
+function LogCenter() {
     log4js.configure({
         appenders: [
             { type: 'console' },
@@ -16,7 +16,7 @@ function LogCenter() {
                 "filename": config.log_dir + "/access.log",
                 "maxLogSize": 20480,
                 "backups": 3,
-                "category": this.ACCESS_LOG_FILE_TAG
+                "category": ACCESS_LOG_FILE_TAG
             },
             {
                 "type": "file",
@@ -24,7 +24,7 @@ function LogCenter() {
                 "filename": config.log_dir + "/error.log",
                 "maxLogSize": 20480,
                 "backups": 3,
-                "category": this.ERROR_LOG_FILE_TAG
+                "category": ERROR_LOG_FILE_TAG
             }
         ]
     });
@@ -40,10 +40,8 @@ function LogCenter() {
  */
 LogCenter.prototype.trace = function (log)
 {
-    var logger = log4js.getLogger(this.ACCESS_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ACCESS_LOG_FILE_TAG);
     logger.trace(log);
-
-    return this;
 };
 
 /**
@@ -56,10 +54,8 @@ LogCenter.prototype.trace = function (log)
  */
 LogCenter.prototype.debug = function (log)
 {
-    var logger = log4js.getLogger(this.ACCESS_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ACCESS_LOG_FILE_TAG);
     logger.debug(log);
-
-    return this;
 };
 
 /**
@@ -70,10 +66,8 @@ LogCenter.prototype.debug = function (log)
  */
 LogCenter.prototype.info = function (log)
 {
-    var logger = log4js.getLogger(this.ACCESS_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ACCESS_LOG_FILE_TAG);
     logger.info(log);
-
-    return this;
 };
 
 /**
@@ -84,10 +78,8 @@ LogCenter.prototype.info = function (log)
  */
 LogCenter.prototype.warn = function (log)
 {
-    var logger = log4js.getLogger(this.ERROR_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ERROR_LOG_FILE_TAG);
     logger.warn(log);
-
-    return this;
 };
 
 /**
@@ -98,10 +90,8 @@ LogCenter.prototype.warn = function (log)
  */
 LogCenter.prototype.error = function (log)
 {
-    var logger = log4js.getLogger(this.ERROR_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ERROR_LOG_FILE_TAG);
     logger.error(log);
-
-    return this;
 };
 
 /**
@@ -112,10 +102,8 @@ LogCenter.prototype.error = function (log)
  */
 LogCenter.prototype.fatal = function (log)
 {
-    var logger = log4js.getLogger(this.ERROR_LOG_FILE_TAG);
+    var logger = log4js.getLogger(ERROR_LOG_FILE_TAG);
     logger.fatal(log);
-
-    return this;
 };
 
 module.exports = new LogCenter();
