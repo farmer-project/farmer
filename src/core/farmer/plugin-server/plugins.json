@@ -9,11 +9,5 @@
     "plugin": "/core/plugins/farmlandPlugin",
     "name": "Farmland Plugin",
     "description": "Create orchestrate containers and Add created containers object as 'containers' properties to bag"
-  },
-
-  {
-    "plugin": "/plugins/shell",
-    "name": "Shell Plugin",
-    "description": "Connect to any container and run shell command or execute shell file"
   }
 ]

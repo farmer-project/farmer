@@ -204,7 +204,7 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
         }
 
     });
-
+    console.log("request to create container from compose file >>>>>", request);
     return request;
 };
 

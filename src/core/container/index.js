@@ -2,7 +2,7 @@
 
 var Q               = require('q'),
     path            = require('path'),
-    SshClient       = require('node-ssh'),
+    SshClient       = require('ssh2').Client,
     models          = require('../models'),
     Repository      = require('./Repository'),
     log             = require(path.resolve(__dirname, '../debug/log')),
@@ -236,28 +236,41 @@ Container.prototype._delete = function () {
  *
  * @param command
  */
-Container.prototype.execShell = function (command) {
-    var deferred = Q.defer(),
-        ssh = new SshClient({
-            host: this.getConfigurationEntry('IPAddress'),
-            username: 'root',
-            privateKey: config.container_private_key
-        });
+Container.prototype.execShell = function (command, publisher) {
+    var self = this,
+        deferred = Q.defer(),
+        host = this.getConfigurationEntry('IPAddress'),
+        conn = new SshClient();
 
-    return ssh.connect().then(function () {
-        return ssh.exec(command).then(function (result) {
-            if (result.stderr) {
-                deferred.reject(result.stderr);
-            } else {
-                deferred.resolve(result.stdout);
-            }
-
-        }, deferred.reject).finally(function () {
-            ssh.exec('exit');
-        });
-
-        return deferred.promise;
+    conn.connect({
+        host: host,
+        port: 22,
+        username: 'root',
+        privateKey: require('fs').readFileSync(config.container_private_key)
     });
+
+    conn.on('ready', function () {
+        conn.exec(command, function (err, stream) {
+            if (err) deferred.reject(err);
+
+            stream.on('close', function (code, signal) {
+                conn.end();
+                deferred.resolve(signal);
+
+            }).on('data', function (data) {
+                publisher.toClient(data.toString());
+
+            }).stderr.on('data', function (data) {
+                    publisher.toClient(data.toString());
+                });
+        });
+
+    }).on('error', function (error) {
+        publisher.toClient(error);
+        deferred.reject(error);
+    });
+
+    return deferred.promise;
 };
 
 module.exports = Container;

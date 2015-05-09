@@ -29,6 +29,9 @@ Emitter.prototype.register = function (event, priority, action) {
 /**
  * Dispatch an event
  *
+ * Get all priority, sort them and exec all method in same priority level
+ * when all done go to the next priority functions
+ *
  * @param event
  * @param context
  */

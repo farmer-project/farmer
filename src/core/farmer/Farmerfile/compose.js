@@ -50,7 +50,7 @@ Compose.prototype._dirBinding = function (container, dirs) {
     _.each(dirs, function (dir, index) {
         bind.push(config.storage + '/' + String.fromCharCode(index+97) + container['hostname'] + ':' + dir);
     });
-    container['bind'] = bind;
+    container['binds'] = bind;
 };
 
 module.exports = new Compose();
