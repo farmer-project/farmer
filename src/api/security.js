@@ -9,7 +9,6 @@ module.exports = function Security() {
         var username = req.body.username;
         
         AES.newKey(username).then(function (key) {
-            console.log('key>>>>', key);
             RSA.encrypt(key, username, 'base64').then(function (encryptData) {
                 res.status(200)
                     .json({

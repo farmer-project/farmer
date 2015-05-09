@@ -12,9 +12,7 @@ Client.prototype.listen = function () {
     var self = this,
         socket = io.connect(self.serverUrl);
 
-    console.log('>>>>>>>>>> listen');
     socket.on('connect', function() {
-        console.log('>>>>>>>>>> listener connected');
         socket.on('event', function (data) {
             console.log('>>>>>>>>>> client receive data', data);
         });

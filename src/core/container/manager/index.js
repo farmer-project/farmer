@@ -75,7 +75,7 @@ Manager.prototype.createContainer = function (opt) {
  */
 Manager.prototype.startContainer = function (opt) {
     var targetServerConfig = this.targetServerConfig();
-    console.log('<<<<<<<<<>>>>>>>>>>>>>> opt', opt);
+
     return this.containerClient
         .buildStartAction()
         .options(opt)

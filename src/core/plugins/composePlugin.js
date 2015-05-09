@@ -21,7 +21,7 @@ ComposePlugin.prototype.containers = function (bag) {
 
     bag.set('compose', compose.resolve(containers, dirs, host));
 
-    Q.when(true);
+    return Q.when(true);
 };
 
 module.exports = new ComposePlugin();

@@ -10,7 +10,7 @@ module.exports = function(sequelize, DataTypes) {
         name: DataTypes.STRING(128),
         volumes: DataTypes.STRING(256),
         ports: DataTypes.STRING(256),
-        public: DataTypes.STRING(8),
+        public: DataTypes.INTEGER(8),
         image: DataTypes.STRING(128),
         domain: DataTypes.STRING(128),
         state: DataTypes.STRING(128),

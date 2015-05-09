@@ -35,15 +35,18 @@ Emitter.prototype.register = function (event, priority, action) {
 Emitter.prototype.dispatch = function (event, context) {
     var priorityGraph = this.channel[event];
 
-    _.each(this._getSortPriority(priorityGraph), function (priority) {
-        _(priorityGraph[priority]).reduce(function (prevPromise, action) {
-            return prevPromise.then(function () {
-
-                return action(context);
-
+    _(this._getSortPriority(priorityGraph)).reduce(function (prevPromise, priority) {
+        return prevPromise.then(function() {
+            var promiseArr = [];
+            priorityGraph[priority].forEach(function (action) {
+                var deferred = Q.defer();
+                action(context).then(deferred.resolve, deferred.reject);
+                promiseArr.push(deferred.promise);
             });
-        }, Q.when(true));
-    });
+            return Q.all(promiseArr);
+        });
+    }, Q.when(true));
+
 };
 
 /**

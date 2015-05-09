@@ -35,7 +35,7 @@ Farmland.prototype.furrow = function (farmSite, publisher) {
 
             }
 
-            models
+            return models
                 .Package
                 .create({
                     "containers": JSON.stringify(containersData)

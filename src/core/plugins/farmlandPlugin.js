@@ -13,14 +13,14 @@ FarmlandPlugin.prototype.registerPlugin = function () {
 };
 
 FarmlandPlugin.prototype.furrow = function (bag) {
-    var compose = bag.get('compose'),
+    console.log('>>>>> farmland plugin');
+    var deferred = Q.defer(),
+        compose = bag.get('compose'),
         publisher = bag.get('publisher');
 
-    console.log('FarmlandPlugin >>>>>>>>>>>>>>>>>> compose', compose);
-    return farmland.furrow(compose, publisher).then(function (containersInfo) {
-        console.log('FarmlandPlugin >>>>>>>>>>>>>>>>>> farmland.furrow', containersInfo);
-        bag.set('containers', containersInfo);
-    }).catch(log.error);
+    return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
+        bag.set('containers', createdContainersObj);
+    });
 };
 
 module.exports = new FarmlandPlugin();

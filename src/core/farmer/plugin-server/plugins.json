@@ -8,7 +8,7 @@
   {
     "plugin": "/core/plugins/farmlandPlugin",
     "name": "Farmland Plugin",
-    "description": "Create orchestrate containers and Add containers config as 'containers' properties to bag"
+    "description": "Create orchestrate containers and Add created containers object as 'containers' properties to bag"
   },
 
   {

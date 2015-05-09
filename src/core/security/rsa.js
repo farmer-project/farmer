@@ -30,22 +30,18 @@ RSA.prototype.encrypt = function (data, username, type) {
             try {
                 var publicKey = ursa.createPublicKey(new Buffer(user.publicKey));
                 if (typeof type === 'undefined') {
-                    console.log('encrypt data without type >>>>>>>');
                     return publicKey.encrypt(data);
                 }
 
-                console.log('encrypt data with type >>>>>>>');
                 var enc = publicKey.encrypt(data, 'utf8', type);
 
                 var fs = require('fs');
                 var privateKey = ursa.createPrivateKey(fs.readFileSync('/home/vagrant/private.key.pem'));
                 var dec = privateKey.decrypt(new Buffer(enc, 'base64'), 'utf8', 'base64');
-                console.log('reverse key >>>>', dec);
 
                 return enc;
 
             } catch (e) {
-                console.log(e);
                 return Q.reject('invalid public key');
             }
         })

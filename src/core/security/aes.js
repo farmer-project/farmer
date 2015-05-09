@@ -99,7 +99,6 @@ AES.prototype._genKey = function (username) {
         },{
             where: { username: username }
         }).then(function () {
-            console.log("new Key is >>>>>", aesKey);
             return aesKey;
         });
 };

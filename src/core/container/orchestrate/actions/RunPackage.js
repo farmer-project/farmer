@@ -126,10 +126,7 @@ RunPackage.prototype._runContainer = function (alias, config) {
         container = new Container();
 
         var request = this._dockerApiRequestCreator(config);
-        return container.run(request)
-            .then(function (container) {
-                return container;
-            });
+        return container.run(request);
 };
 
 /**

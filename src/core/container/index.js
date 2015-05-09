@@ -2,6 +2,7 @@
 
 var Q               = require('q'),
     path            = require('path'),
+    SshClient       = require('node-ssh'),
     models          = require('../models'),
     Repository      = require('./Repository'),
     log             = require(path.resolve(__dirname, '../debug/log')),
@@ -123,7 +124,6 @@ Container.prototype.run = function (config) {
             });
         });
     } else { // TODO: minify these code
-        console.log('<<<<<<<<<>>>>>>>>>>>>>> Defined ID!!');
         return self.containermanager.startContainer({}).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
@@ -236,7 +236,7 @@ Container.prototype._delete = function () {
  *
  * @param command
  */
-Container.prototype.execOnContainer = function (command) {
+Container.prototype.execShell = function (command) {
     var deferred = Q.defer(),
         ssh = new SshClient({
             host: this.getConfigurationEntry('IPAddress'),
@@ -244,8 +244,8 @@ Container.prototype.execOnContainer = function (command) {
             privateKey: config.container_private_key
         });
 
-    ssh.connect().then(function () {
-        ssh.exec(command).then(function (result) {
+    return ssh.connect().then(function () {
+        return ssh.exec(command).then(function (result) {
             if (result.stderr) {
                 deferred.reject(result.stderr);
             } else {
