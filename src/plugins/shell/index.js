@@ -7,11 +7,21 @@ var _       = require('underscore'),
 function Shell () {
 }
 
+/**
+ * Register plugin methods on different events
+ */
 Shell.prototype.registerPlugin = function () {
     emitter.register('create', 5, this.farmfile);
     emitter.register('deploy', 5, this.farmfile);
 };
 
+/**
+ * Run shell
+ *
+ * Run shell commands on container
+ *
+ * @param bag
+ */
 Shell.prototype.farmfile = function (bag) {
     var farmerfile = bag.get('farmerfile');
 

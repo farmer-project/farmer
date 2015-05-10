@@ -37,6 +37,7 @@ Repository.prototype.images = function ()
     return this.containerClient
         .buildListImagesAction()
         .executeOn(this.targetServerConfig)
+        .then(function (response) {return Q.when(response.result); })
         .tap(log.trace)
         .catch(log.error);
 };
