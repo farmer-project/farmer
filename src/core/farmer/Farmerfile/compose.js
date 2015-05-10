@@ -32,7 +32,7 @@ Compose.prototype.resolve = function (containers, dirs, hostname) {
  */
 Compose.prototype._publishPorts = function (container) {
     if (container['ports']) {
-        container['publishAllPorts'] = true;
+        container['publishAllPorts'] = 'true';
     }
 };
 
@@ -48,7 +48,7 @@ Compose.prototype._dirBinding = function (container, dirs) {
 
     var bind = [];
     _.each(dirs, function (dir, index) {
-        bind.push(config.storage + '/' + String.fromCharCode(index+97) + container['hostname'] + ':' + dir);
+        bind.push(config.storage + '/' + container['hostname'] + '_' + String.fromCharCode(index+97) + ':' + dir);
     });
     container['binds'] = bind;
 };

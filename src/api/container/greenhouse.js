@@ -44,6 +44,33 @@ module.exports = function Greenhouse() {
             });
     });
 
+    app.post('/deploy', function (req, res) {
+        var publisher = new Publisher(config.station_server);
+        publisher
+            .connect()
+            .then(function () {
+                publisher.toClient('open room');
+                res.status(200)
+                    .json({
+                        room: publisher.roomID
+                    });
+
+                var bag = new Bag();
+                bag.set('farmerfile', new FarmerFile(req.body.farmerfile))
+                    .set('args', req.body.args)
+                    .set('publisher', publisher);
+
+                farmer.fireEvent('deploy', bag);
+
+            }, function () {
+                res.status(500)
+                    .json({
+                        result: '',
+                        error: 'station server not reposed'
+                    });
+            });
+    });
+
     app.get('/list', function (req, res) {
         models
             .Container

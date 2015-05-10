@@ -80,7 +80,7 @@ RunPackage.prototype._createContainers = function (nodes, config) {
     var self = this,
         results = {};
 
-    return nodes.reduce(function (prevPromise, alias, index) {
+    return nodes.reduce(function (prevPromise, alias) {
         return prevPromise.then(function () {
             return self._runContainer(alias, config[alias]).then(function (container) {
                 results[alias] = container;
@@ -123,10 +123,12 @@ RunPackage.prototype._buildContainersGraph = function (config) {
  */
 RunPackage.prototype._runContainer = function (alias, config) {
     var self = this,
-        container = new Container();
+        container = new Container(),
+        request = this._dockerApiRequestCreator(config);
 
-        var request = this._dockerApiRequestCreator(config);
-        return container.run(request);
+        return container.run(request).tap(function (containerObj) {
+            self.containers[alias] = containerObj.getConfigurationEntry('Name').replace('/', '');
+        });
 };
 
 /**

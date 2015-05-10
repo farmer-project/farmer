@@ -9,6 +9,7 @@ function Shell () {
 
 Shell.prototype.registerPlugin = function () {
     emitter.register('create', 5, this.farmfile);
+    emitter.register('deploy', 5, this.farmfile);
 };
 
 Shell.prototype.farmfile = function (bag) {

@@ -20,6 +20,7 @@ Repository.prototype.containerInfo = function (identifier)
     return this.containerClient
         .buildInfoAction(identifier)
         .executeOn(this.targetServerConfig)
+        .then(function (response) {return Q.when(response.result); })
         .tap(log.trace)
         .catch(log.error);
 };

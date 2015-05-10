@@ -31,11 +31,14 @@ Container.prototype.getInstance  = function (identifier) {
         repository = new Repository({ api: config.docker_server });
 
     return repository.containerInfo(identifier).then(function (config) {
-        self.configuration = config[0];
+        self.configuration = config;
         return models.Container
             .find({
                 where: {id: identifier}
-            }).then(function (container) { self.metadata = container.metadata; });
+            }).then(function (container) {
+                self.metadata = JSON.parse(container.metadata);
+                return self;
+            });
     });
 };
 
@@ -114,6 +117,7 @@ Container.prototype.run = function (config) {
 
     var self = this;
     if (!this.getConfigurationEntry('Id')) {
+        console.log('container config >>>', config);
         return this.containermanager.createContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             self.setState('created'); // TODO: maybe this line is buggy
@@ -123,12 +127,12 @@ Container.prototype.run = function (config) {
                 return self;
             });
         });
-    } else { // TODO: minify these code
+    } /*else { // TODO: minify these code
         return self.containermanager.startContainer({}).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
         });
-    }
+    }*/
 };
 
 /**

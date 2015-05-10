@@ -42,7 +42,7 @@ CreateAction.prototype.executeOn = function (serverConfig)
             method: 'POST',
             json: this.configuration
         };
-
+    console.log('create container this.configuration >>>>', this.configuration);
     request(options, function (error, response, body) {
         if (!error && response.statusCode == 201) {
             // 201 – no error
@@ -55,7 +55,7 @@ CreateAction.prototype.executeOn = function (serverConfig)
         } else {
             var errorMsg = "";
             if( response.statusCode == 404) errorMsg = "no such container";
-            if( response.statusCode == 406) errorMsg = "impossible to attach (container not running)";
+            if( response.statusCode == 406) errorMsg = "impossible to attach (image is not available)";
             if( response.statusCode == 409) errorMsg = "conflict name already assigned";
             if( response.statusCode == 500) errorMsg = "server error";
             deferred.reject({

@@ -28,17 +28,19 @@ Farmland.prototype.furrow = function (farmSite, publisher) {
         .run(farmSite)
         .then(function (containers) {
             var containersData = {},
-                clientData = {};
+                clientData = {},
+                hostname = '';
             for(var key in containers) {
                 containersData[key] = containers[key].getConfigurationEntry('Id');
+                hostname = containers[key].getConfigurationEntry('Hostname');
                 clientData[key] = containers[key].getConfigurationEntry('*');
-
             }
 
             return models
                 .Package
                 .create({
-                    "containers": JSON.stringify(containersData)
+                    "containers": JSON.stringify(containersData),
+                    "hostname": hostname
                 }).then(function (resutl) {
                     log.trace(resutl);
                     publisher.toClient(JSON.stringify(clientData));
