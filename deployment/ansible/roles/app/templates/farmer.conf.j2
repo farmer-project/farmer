@@ -1,68 +1,19 @@
 // TODO: any config value fetch from gruop vars
 module.exports = {
-    // ### Production environment
-    "production": {
-        "port": "80",
-        "station_server": "http://station.dev",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "domain": "ravaj.ir",
-        "git_public_key": "/home/vagrant/.ssh/id_rsa.pub",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "container_private_key": "/home/vagrant/bare/key/mykey",
-
-        "client_storage": '.farmer',
-
-        "database_username": "root",
-        "database_password": "v3&d0raR@v@j^hmad",
-        "database_name": "farmer",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
-    },
-
-    "staging": {
-        "port": "80",
-        "station_server": "http://station.dev",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "domain": "ravaj.ir",
-        "git_public_key": "/home/vagrant/.ssh/id_rsa.pub",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "container_private_key": "/home/vagrant/bare/key/mykey",
-
-        "client_storage": '.farmer',
-
-        "database_username": "root",
-        "database_password": "vendoraRavajAram",
-        "database_name": "farmer_staging",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
-    },
-
     // ### Development **(default)**
-    "development": {
-        "port": "8080",
-
-        "station_server": "http://station.dev",
-        "docker_server": "http://localhost:4242",
-        "log_dir": "/var/www/logs",
-        "greenhouse": "/code/stages",
-        "production": "/code/productions",
-        "domain": "ravaj.ir",
-        "git_public_key": "/home/vagrant/.ssh/id_rsa.pub",
-        "git_private_key": "/home/vagrant/.ssh/id_rsa",
-        "container_private_key": "/home/vagrant/bare/key/mykey",
-
-        "client_storage": '.farmer',
-
-        "database_username": "root",
-        "database_password": null,
-        "database_name": "farmer_development",
-        "database_host": "127.0.0.1",
-        "database_dialect": "mysql"
+    development: {
+        PORT: "8080",
+        STATION_SERVER: "http://station.dev",
+        CONTAINER_SERVER_API: "http://localhost:4242",
+        LOG_DIR: "/var/www/logs",
+        STORAGE: "/code",
+        DOMAIN: "ravaj.ir",
+        CONTAINER_PRIVATE_KEY: "/home/vagrant/bare/key/devops_rsa",
+        DB_USERNAME: "root",
+        DB_PASSWORD: null,
+        DB_NAME: "farmer_development",
+        DB_HOST: "127.0.0.1",
+        DB_DIALECT: "mysql",
+        DB_PORT: "3306"
     }
 };

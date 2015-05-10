@@ -2,29 +2,39 @@
 
 var log4js = require('log4js'),
     config = require(require('path').resolve(__dirname, '../../config'));
+/**
+ * @const
+ * @define {string}
+ * @type {string}
+ */
+var ERROR_LOG_FILE_TAG = 'error';
 
-var ERROR_LOG_FILE_TAG = "error",
-    ACCESS_LOG_FILE_TAG = "access";
+/**
+ * @const
+ * @define {string}
+ * @type {string}
+ */
+var ACCESS_LOG_FILE_TAG = 'access';
 
 function LogCenter() {
     log4js.configure({
         appenders: [
             //{ type: 'console' },
             {
-                "type": "file",
-                "absolute": true,
-                "filename": config.log_dir + "/access.log",
-                "maxLogSize": 20480,
-                "backups": 3,
-                "category": ACCESS_LOG_FILE_TAG
+                type: 'file',
+                absolute: true,
+                filename: config.LOG_DIR + '/access.log',
+                maxLogSize: 20480,
+                backups: 3,
+                category: ACCESS_LOG_FILE_TAG
             },
             {
-                "type": "file",
-                "absolute": true,
-                "filename": config.log_dir + "/error.log",
-                "maxLogSize": 20480,
-                "backups": 3,
-                "category": ERROR_LOG_FILE_TAG
+                type: 'file',
+                absolute: true,
+                filename: config.LOG_DIR + '/error.log',
+                maxLogSize: 20480,
+                backups: 3,
+                category: ERROR_LOG_FILE_TAG
             }
         ]
     });
@@ -32,10 +42,8 @@ function LogCenter() {
 
 /**
  * Log system trace
- *
  * Log info to help developer to trace workflow in system
- *
- * @param log {String|Object}
+ * @param {string|Object} log
  * @returns {LogCenter}
  */
 LogCenter.prototype.trace = function (log)
@@ -46,10 +54,8 @@ LogCenter.prototype.trace = function (log)
 
 /**
  * Log system debug
- *
  * Log info to help developer to debug system
- *
- * @param log
+ * @param {Object|string} log
  * @returns {LogCenter}
  */
 LogCenter.prototype.debug = function (log)
@@ -60,8 +66,7 @@ LogCenter.prototype.debug = function (log)
 
 /**
  * Log system info
- *
- * @param log {String|Object}
+ * @param {Object|string} log
  * @returns {LogCenter}
  */
 LogCenter.prototype.info = function (log)
@@ -72,8 +77,7 @@ LogCenter.prototype.info = function (log)
 
 /**
  * Log system warning
- *
- * @param log {String|Object}
+ * @param {Object|string} log
  * @returns {LogCenter}
  */
 LogCenter.prototype.warn = function (log)
@@ -84,9 +88,7 @@ LogCenter.prototype.warn = function (log)
 
 /**
  * Log system error
- *
- * @param log {String|Object}
- * @returns {LogCenter}
+ * @param {string|Object} log
  */
 LogCenter.prototype.error = function (log)
 {
@@ -96,9 +98,7 @@ LogCenter.prototype.error = function (log)
 
 /**
  * Log system fatal error
- *
- * @param log {String|Object}
- * @returns {LogCenter}
+ * @param {string|Object} log
  */
 LogCenter.prototype.fatal = function (log)
 {

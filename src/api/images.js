@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function Images() {
     var express = require('express'),
         ContainerManager = require(require('path').resolve(__dirname, '../core/container/manager')),
@@ -12,15 +14,15 @@ module.exports = function Images() {
                 res
                     .status(response.code)
                     .json({
-                        "result": response.message,
-                        "error": ""
+                        result: response.message,
+                        error: ''
                     });
             }, function (error) {
                 res
                     .status(error.code)
                     .json({
-                        "result": "",
-                        "error": error.message
+                        result: '',
+                        error: error.message
                     });
             });
     });

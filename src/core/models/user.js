@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = function(sequelize, DataTypes) {
 
-    var User = sequelize.define("User", {
+    var User = sequelize.define('User', {
         username: {
             type: DataTypes.STRING(128),
             primaryKey: true,
@@ -14,7 +14,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         aes: DataTypes.STRING(256),
         ip: DataTypes.STRING(16)
-    },{
+    }, {
         tableName: 'users',
 
         updatedAt: 'last_update',

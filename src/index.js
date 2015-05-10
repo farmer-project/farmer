@@ -15,7 +15,7 @@ farmer.run();
 
 // Create our stand-alone express app
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(timeout('180s'));
 
 // TODO: Set up authentication
@@ -27,7 +27,7 @@ app.use('/api', api());
 // check tables existence
 models.sequelize.sync().then(function () {
     // Start application
-    app.listen(config.port, function () {
+    app.listen(config.PORT, function () {
         console.log('Listening on port '.green, this.address().port);
     });
 });

@@ -1,23 +1,24 @@
 'use strict';
 
-var _ = require('underscore'),
-    Q = require('q'),
+var _       = require('underscore'),
+    Q       = require('q'),
     SshClient = require('node-ssh'),
-    path = require('path'),
-    config = require(path.resolve(__dirname, '../../config')),
-    log = require(path.resolve(__dirname, '../debug/log'));
+    path    = require('path'),
+    config  = require(path.resolve(__dirname, '../../config')),
+    log     = require(path.resolve(__dirname, '../debug/log'));
 
-
+/**
+ * @constructor
+ */
 function Commander () {
 
 }
 
 /**
  * Run array of command on specific container
- *
- * @param ip
- * @param commands
- * @param publisher
+ * @param {string} ip - Ip
+ * @param {Array} commands - Commands array
+ * @param {Publisher} publisher - Publisher object
  * @returns {*|promise}
  */
 Commander.prototype.shell = function (ip, commands, publisher) {
@@ -25,7 +26,7 @@ Commander.prototype.shell = function (ip, commands, publisher) {
         ssh = new SshClient({
         host: ip,
         username: 'root',
-        privateKey: config.container_private_key
+        privateKey: config.CONTAINER_PRIVATE_KEY
     });
 
     //  in order to disconnect from container at the end

@@ -4,16 +4,19 @@ var _           = require('underscore'),
     Q           = require('q'),
     jsonHelper  = require('../helper/json');
 
+/**
+ * Emitter object
+ * @constructor
+ */
 function Emitter() {
     this.channel = {};
 }
 
 /**
  * Register plugin method
- *
- * @param event event hierarchy like 'create.shell'
- * @param priority Integer number
- * @param action method
+ * @param {string} event - Event hierarchy like 'create.shell'
+ * @param {Number} priority - Integer number
+ * @param {Function} action - The method that will be run
  */
 Emitter.prototype.register = function (event, priority, action) {
     this.channel = jsonHelper.create([event, priority], this.channel);
@@ -28,12 +31,10 @@ Emitter.prototype.register = function (event, priority, action) {
 
 /**
  * Dispatch an event
- *
  * Get all priority, sort them and exec all method in same priority level
  * when all done go to the next priority functions
- *
- * @param event
- * @param context
+ * @param {string} event - Event
+ * @param {Bag} context - Bag object
  */
 Emitter.prototype.dispatch = function (event, context) {
     var priorityGraph = this.channel[event];
@@ -54,14 +55,13 @@ Emitter.prototype.dispatch = function (event, context) {
 
 /**
  * Return priority
- *
- * @param priorityGraph
+ * @param {Object} priorityGraph - Object contain priority number and an array of method
  * @returns {Array.<T>}
  * @private
  */
 Emitter.prototype._getSortPriority = function (priorityGraph) {
     var keys = [];
-    for(var key in priorityGraph) {
+    for (var key in priorityGraph) {
         keys.push(key);
     }
 

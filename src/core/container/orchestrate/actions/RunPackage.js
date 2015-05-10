@@ -4,40 +4,20 @@ var _               = require('underscore'),
     Q               = require('q'),
     path            = require('path'),
     upperCaseFirst  = require('upper-case-first'),
-    Parser          = require('../parser'),
     Graph           = require('../graph'),
     log             = require(path.resolve(__dirname, '../../../debug/log')),
     Container       = require('../../index');
 
-
+/**
+ * @constructor
+ */
 function RunPackage () {
     this.containers = {};
 }
 
 /**
- * pars compose yaml file and run their containers
- *
- * @param composeFile
- * @param vars
- * @returns {Bluebird.Promise|*}
- */
-RunPackage.prototype.parsAndRun = function (composeFile, vars) {
-    var self = this;
-
-    return Parser.parse(composeFile, vars)
-        .then(function (config) {
-            return self._sortByCreationPriority(config);
-        })
-        .spread(function (nodes, config) {
-            return self._createContainers(nodes, config);
-        })
-    ;
-};
-
-/**
  * Create compose container
- *
- * @param config
+ * @param {Object} config
  * @returns {Bluebird.Promise|*}
  */
 RunPackage.prototype.execute = function (config) {
@@ -53,8 +33,7 @@ RunPackage.prototype.execute = function (config) {
 
 /**
  * Sort container based on topological priority
- *
- * @param config
+ * @param {Object} config
  * @returns {Bluebird.Promise|*}
  * @private
  */
@@ -70,9 +49,8 @@ RunPackage.prototype._sortByCreationPriority = function (config) {
 
 /**
  * Create array of containers
- *
- * @param nodes
- * @param config
+ * @param {Array} nodes
+ * @param {Object} config
  * @returns {*}
  * @private
  */
@@ -92,8 +70,7 @@ RunPackage.prototype._createContainers = function (nodes, config) {
 
 /**
  * Create a graph based on compose file content
- *
- * @param config
+ * @param {Object} config
  * @returns {*}
  * @private
  */
@@ -115,9 +92,8 @@ RunPackage.prototype._buildContainersGraph = function (config) {
 
 /**
  * Run containers
- *
- * @param alias
- * @param config
+ * @param {string} alias
+ * @param {Object} config
  * @returns {*}
  * @private
  */
@@ -126,15 +102,14 @@ RunPackage.prototype._runContainer = function (alias, config) {
         container = new Container(),
         request = this._dockerApiRequestCreator(config);
 
-        return container.run(request).tap(function (containerObj) {
-            self.containers[alias] = containerObj.getConfigurationEntry('Name').replace('/', '');
-        });
+    return container.run(request).tap(function (containerObj) {
+        self.containers[alias] = containerObj.getConfigurationEntry('Name').replace('/', '');
+    });
 };
 
 /**
  * Manipulate compose config to docker API config
- *
- * @param config
+ * @param {Object} config - docker config
  * @returns {{HostConfig: {}}}
  * @private
  */
@@ -144,55 +119,34 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
             'HostConfig': {}
         },
         HostConfig = [
-            "binds",
-            "links",
-            "lxcConf",
-            "portBindings",
-            "publishAllPorts",
-            "privileged",
-            "readonlyRootfs",
-            "dns",
-            "dnsSearch",
-            "extraHosts",
-            "volumesFrom",
-            "capAdd",
-            "capdrop",
-            "restartPolicy",
-            "networkMode",
-            "devices"
+            'binds',
+            'links',
+            'lxcConf',
+            'portBindings',
+            'publishAllPorts',
+            'privileged',
+            'readonlyRootfs',
+            'dns',
+            'dnsSearch',
+            'extraHosts',
+            'volumesFrom',
+            'capAdd',
+            'capdrop',
+            'restartPolicy',
+            'networkMode',
+            'devices'
         ];
 
     _.each(config, function (value, key) {
         if (key == 'links') {
             _.each(value, function (link) {
                 var parts = link.split(':'),
-                    pkgAlias = parts[0],
-                    containerAlias = typeof parts[1] !== 'undefined'
-                        ? parts[1] : pkgAlias;
+                    alias = parts[0],
+                    containerAlias = typeof parts[1] !== 'undefined' ? parts[1] : alias;
 
                 request['HostConfig']['Links'] =
-                    self.containers[pkgAlias] + ':' + containerAlias;
+                    self.containers[alias] + ':' + containerAlias;
             });
-
-        } else if (key == 'ports') {
-            var portBindings = {};
-            _.each(value, function (port) {
-                if (port.indexOf('/') > 0) {
-                    portBindings[port] = [];
-                } else {
-                    portBindings[port + '/tcp'] = [];
-                }
-
-                request['ExposedPorts'] = portBindings;
-            });
-
-        } else if (key == 'volumes') {
-            var volBindings = [];
-            _.each(value, function (vol) {
-                volBindings.push(vol);
-            });
-
-            request['HostConfig']['Binds'] = volBindings;
 
         } else if (HostConfig.indexOf(key) > -1) {
             request['HostConfig'][upperCaseFirst(key)] = value;
@@ -206,7 +160,7 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
         }
 
     });
-    console.log("request to create container from compose file >>>>>", request);
+
     return request;
 };
 

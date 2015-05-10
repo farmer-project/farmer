@@ -2,7 +2,6 @@
 
 var io = require('socket.io-client');
 
-
 function Client (stationServer, workID) {
     this.serverUrl = stationServer + '/' + workID;
     this.stage = 0;
@@ -17,7 +16,6 @@ Client.prototype.listen = function () {
             console.log('>>>>>>>>>> client receive data', data);
         });
     });
-
 
     socket.on('error', function (error) {
         console.log('error >', error);

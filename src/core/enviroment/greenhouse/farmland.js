@@ -9,28 +9,25 @@ var _       = require('underscore'),
     config  = require(path.resolve(__dirname, '../../../config'));
 
 function Farmland () {
-
 }
 
 /**
- * Furrow farmland to implant seed in it
- *
- * @param farmSite
- * @param stage
- * @param publisher
+ * Furrow farmland to implant seed in it :)
+ * @param {Object} containersSite
+ * @param {Publisher} publisher - station publisher
  * @returns {Bluebird.Promise|*}
  */
-Farmland.prototype.furrow = function (farmSite, publisher) {
+Farmland.prototype.furrow = function (containersSite, publisher) {
     var containersId = [];
-    publisher.toClient("create containers");
+    publisher.toClient('create containers');
 
     return packageCompose
-        .run(farmSite)
+        .run(containersSite)
         .then(function (containers) {
             var containersData = {},
                 clientData = {},
                 hostname = '';
-            for(var key in containers) {
+            for (var key in containers) {
                 containersData[key] = containers[key].getConfigurationEntry('Id');
                 hostname = containers[key].getConfigurationEntry('Hostname');
                 clientData[key] = containers[key].getConfigurationEntry('*');
@@ -39,8 +36,8 @@ Farmland.prototype.furrow = function (farmSite, publisher) {
             return models
                 .Package
                 .create({
-                    "containers": JSON.stringify(containersData),
-                    "hostname": hostname
+                    containers: JSON.stringify(containersData),
+                    hostname: hostname
                 }).then(function (resutl) {
                     log.trace(resutl);
                     publisher.toClient(JSON.stringify(clientData));

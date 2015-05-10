@@ -1,15 +1,17 @@
 'use strict';
 
-
+/**
+ * Bag object constructor
+ * @constructor
+ */
 function Bag() {
     this.data = {};
 }
 
 /**
  * Set a property value
- *
- * @param tag string
- * @param data
+ * @param {string} tag - Tag name
+ * @param {Object|string|*} data - Any data with any structure
  * @returns {Bag}
  */
 Bag.prototype.set = function (tag, data) {
@@ -20,8 +22,7 @@ Bag.prototype.set = function (tag, data) {
 
 /**
  * Get property value
- *
- * @param tag
+ * @param {string} tag - Saved object tag name
  * @returns {*}
  */
 Bag.prototype.get = function (tag) {
@@ -30,7 +31,6 @@ Bag.prototype.get = function (tag) {
 
 /**
  * Get all properties value
- *
  * @returns {{}|*}
  */
 Bag.prototype.getAll = function () {

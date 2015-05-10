@@ -1,15 +1,18 @@
 'use strict';
 
-var Q               = require('q'),
-    path            = require('path'),
-    SshClient       = require('ssh2').Client,
-    models          = require('../models'),
-    Repository      = require('./Repository'),
-    log             = require(path.resolve(__dirname, '../debug/log')),
-    config          = require(path.resolve(__dirname, '../../config')),
-    ContainerManager= require('./manager');
+var Q                = require('q'),
+    path             = require('path'),
+    SshClient        = require('ssh2').Client,
+    models           = require('../models'),
+    Repository       = require('./Repository'),
+    log              = require(path.resolve(__dirname, '../debug/log')),
+    config           = require(path.resolve(__dirname, '../../config')),
+    ContainerManager = require('./manager');
 
-
+/**
+ * @param {string} [type = docker] - container type
+ * @constructor
+ */
 function Container (type) {
     this.configuration = {};
     this.metadata = {};
@@ -18,17 +21,15 @@ function Container (type) {
 }
 
 /**
- * Get container configuration
- *
  * Get container configuration based on container identifier.
  * this identifier can be container name or id
- *
+ * @param {string} identifier - Container identifier
  * @returns {*|promise}
  */
 Container.prototype.getInstance  = function (identifier) {
     var self = this,
         // TODO: create system to find created container server
-        repository = new Repository({ api: config.docker_server });
+        repository = new Repository({api: config.CONTAINER_SERVER_API});
 
     return repository.containerInfo(identifier).then(function (config) {
         self.configuration = config;
@@ -42,14 +43,18 @@ Container.prototype.getInstance  = function (identifier) {
     });
 };
 
+/**
+ * Set container configuration
+ * @param {Object} config
+ * @private
+ */
 Container.prototype._setConfiguration = function (config) {
     this.configuration = config;
 };
 
 /**
  * Return container configuration entry
- *
- * @param entry
+ * @param {string} entry - entry tag name get all container config with '*' input
  * @returns {*}
  */
 Container.prototype.getConfigurationEntry = function (entry) {
@@ -63,22 +68,24 @@ Container.prototype.getConfigurationEntry = function (entry) {
             if (p === key) {
                 found.push(obj[p]);
             }
-            if (typeof obj[p] === 'object') recurse(obj[p], key);
+            if (typeof obj[p] === 'object') {
+                recurse(obj[p], key);
+            }
         }
     };
     recurse(this.configuration, entry);
 
-    if (2 > found.length)
+    if (2 > found.length) {
         return found[0];
+    }
 
     return found;
 };
 
 /**
  * Update container configuration entry data
- *
- * @param entry
- * @param data
+ * @param {string} entry - Container entry tag name
+ * @param {string|Object} data - New data
  */
 Container.prototype.updateConfigurationEntry = function (entry, data) {
     if (this.configuration !== {}) {
@@ -88,7 +95,9 @@ Container.prototype.updateConfigurationEntry = function (entry, data) {
                     obj[p] = data;
                     break;
                 }
-                if (typeof obj[p] === 'object') recurse(obj[p], key);
+                if (typeof obj[p] === 'object') {
+                    recurse(obj[p], key);
+                }
             }
         };
         recurse(this.configuration, entry);
@@ -97,7 +106,6 @@ Container.prototype.updateConfigurationEntry = function (entry, data) {
 
 /**
  * Get container metadata
- *
  * @returns {*}
  */
 Container.prototype.getMetadata = function () {
@@ -106,8 +114,7 @@ Container.prototype.getMetadata = function () {
 
 /**
  * Run a container
- *
- * @param config
+ * @param {Object} config - Container config
  * @returns {*}
  */
 Container.prototype.run = function (config) {
@@ -117,7 +124,6 @@ Container.prototype.run = function (config) {
 
     var self = this;
     if (!this.getConfigurationEntry('Id')) {
-        console.log('container config >>>', config);
         return this.containermanager.createContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             self.setState('created'); // TODO: maybe this line is buggy
@@ -137,22 +143,21 @@ Container.prototype.run = function (config) {
 
 /**
  * Shutdown a container
- *
- * @param second
+ * @param {Number} second - Number of seconds to wait before killing the container
  * @returns {*}
  */
 Container.prototype.shutdown = function (second) {
     var self = this,
-        sec = (second)? second: 0;
-    return this.containermanager.stopContainer(this.getConfigurationEntry('Id'), { t: sec }).then(function () {
+        sec = (second) ? second : 0;
+    return this.containermanager.stopContainer(
+        this.getConfigurationEntry('Id'), {t: sec}).then(function () {
         self.setState('shutdown');
     });
 };
 
 /**
  * Destroy the container
- *
- * @param removeVolume
+ * @param {boolean} removeVolume - true to force remove container with their volumes
  * @returns {Bluebird.Promise|*}
  */
 Container.prototype.destroy = function (removeVolume) {
@@ -165,24 +170,22 @@ Container.prototype.destroy = function (removeVolume) {
 
 /**
  * Restart the container
- *
- * @param second
+ * @param {Number} second - Number of seconds to wait before restart the container
  */
 Container.prototype.restart = function (second) {
-    var sec = (second)? second: 0;
+    var sec = (second) ? second : 0;
     this.containermanager.restartContainer(this.getConfigurationEntry('Id'), sec);
 };
 
 /**
  * Save container state in database
- *
- * @param state
+ * @param {string} state
  * @returns {Bluebird.Promise|*}
  */
 Container.prototype.setState = function (state) {
     var self = this;
     switch (state) {
-        case "created":
+        case 'created':
             return models.Container
                 .create({
                     id: self.getConfigurationEntry('Id'),
@@ -190,27 +193,27 @@ Container.prototype.setState = function (state) {
                     ports: JSON.stringify(self.getConfigurationEntry('ExposedPorts')),
                     public: self.getConfigurationEntry('PublishAllPorts'),
                     image: self.getConfigurationEntry('Image')[0],
-                    state: "created",
+                    state: 'created',
                     metadata: JSON.stringify(self.metadata),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }).then(log.info, log.error);
 
-        case "running":
+        case 'running':
             return models.Container
                 .update({
-                    state: "running",
+                    state: 'running',
                     volumes: JSON.stringify(self.getConfigurationEntry('Binds')),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
-                },{
-                    where: { id: self.getConfigurationEntry('Id') }
+                }, {
+                    where: {id: self.getConfigurationEntry('Id')}
                 }).then(log.info, log.error);
 
-        case "shutdown":
+        case 'shutdown':
             return models.Container
                 .update({
-                    state: "shutdown"
-                },{
-                    where: { id: self.getConfigurationEntry('Id') }
+                    state: 'shutdown'
+                }, {
+                    where: {id: self.getConfigurationEntry('Id')}
                 }).then(log.info, log.error);
         default :
             return Q.reject('unknown state ' + state);
@@ -220,7 +223,6 @@ Container.prototype.setState = function (state) {
 
 /**
  * Delete the container from DB
- *
  * @returns {Bluebird.Promise|*}
  * @private
  */
@@ -235,10 +237,9 @@ Container.prototype._delete = function () {
 
 /**
  * Execute a command on container
- *
- * Connect to container with ssh service and run command
- *
- * @param command
+ * Connect to container with ssh and run command
+ * @param {string} command - Shell command
+ * @param {Publisher} publisher - Publisher object
  */
 Container.prototype.execShell = function (command, publisher) {
     var self = this,
@@ -250,12 +251,14 @@ Container.prototype.execShell = function (command, publisher) {
         host: host,
         port: 22,
         username: 'root',
-        privateKey: require('fs').readFileSync(config.container_private_key)
+        privateKey: require('fs').readFileSync(config.CONTAINER_PRIVATE_KEY)
     });
 
     conn.on('ready', function () {
         conn.exec(command, function (err, stream) {
-            if (err) deferred.reject(err);
+            if (err) {
+                deferred.reject(err);
+            }
 
             stream.on('close', function (code, signal) {
                 conn.end();

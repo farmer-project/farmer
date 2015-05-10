@@ -8,7 +8,7 @@ function Shell () {
 }
 
 /**
- * Register plugin methods on different events
+ * Register plugin methods on emitter events thrower
  */
 Shell.prototype.registerPlugin = function () {
     emitter.register('create', 5, this.farmfile);
@@ -17,10 +17,8 @@ Shell.prototype.registerPlugin = function () {
 
 /**
  * Run shell
- *
  * Run shell commands on container
- *
- * @param bag
+ * @param {Bag} bag
  */
 Shell.prototype.farmfile = function (bag) {
     var farmerfile = bag.get('farmerfile');
@@ -37,7 +35,8 @@ Shell.prototype.farmfile = function (bag) {
                 return prevPromise.then(function () {
                     _(commands[alias]).reduce(function (prevPromise2, command) {
                         return prevPromise2.then(function () {
-                            return containerObj.execShell(command, publisher).tap(publisher.toClient).catch(publisher.toClient);
+                            return containerObj.execShell(command, publisher)
+                                .tap(publisher.toClient).catch(publisher.toClient);
                         });
                     }, Q.when(true));
 

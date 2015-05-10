@@ -19,8 +19,8 @@ function JsonObj() {
 /**
  * Create sub object if it's not exist
  *
- * @param hierarchy array of properties sequence
- * @param json
+ * @param {Array} hierarchy - Properties sequence array
+ * @param {Object} json
  * @returns {Object}
  */
 JsonObj.prototype.create = function (hierarchy, json) {

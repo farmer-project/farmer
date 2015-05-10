@@ -18,8 +18,8 @@
   },
 
   {
-    "plugin": "/core/plugins/basicInfoResolverPlugin",
-    "name": "Deploy Plugin",
+    "plugin": "/core/plugins/packagePlugin",
+    "name": "package Plugin",
     "description": "Get package containers information based on hostname and add containers object as 'containers' properties to bag"
   }
 ]

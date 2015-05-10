@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = function(sequelize, DataTypes) {
 
-    var Container = sequelize.define("Container", {
+    var Container = sequelize.define('Container', {
         id: {
             type: DataTypes.STRING(128),
             primaryKey: true
@@ -16,7 +16,7 @@ module.exports = function(sequelize, DataTypes) {
         state: DataTypes.STRING(128),
         metadata: DataTypes.TEXT,
         configuration: DataTypes.TEXT
-    },{
+    }, {
         tableName: 'containers',
 
         updatedAt: 'last_update',

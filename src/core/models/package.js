@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = function(sequelize, DataTypes) {
 
-    var Package = sequelize.define("Package", {
+    var Package = sequelize.define('Package', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -10,7 +10,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         containers: DataTypes.TEXT,
         hostname: DataTypes.STRING(128)
-    },{
+    }, {
         tableName: 'packages',
 
         updatedAt: 'last_update',

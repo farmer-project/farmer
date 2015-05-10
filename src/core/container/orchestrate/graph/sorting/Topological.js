@@ -3,6 +3,11 @@
 var _ = require('underscore'),
     sortByOutDegree = require('./OutDegree');
 
+/**
+ * Sort graph object based on topology
+ * @param {Object} graph - Graph object
+ * @returns {*}
+ */
 module.exports = function (graph) {
     var sortedNodes  = [],
         node,
@@ -11,7 +16,7 @@ module.exports = function (graph) {
     while (graph.getNodes().length) {
         found = false;
         _.each(sortByOutDegree(graph), function (node) {
-            if (node.out_deg == 0) {
+            if (0 == node.outDeg) {
                 found = true;
                 sortedNodes.push(node.label);
                 graph.removeNode(node.label);

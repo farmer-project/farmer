@@ -8,18 +8,25 @@ var Q       = require('q'),
 function ComposePlugin() {
 }
 
+/**
+ * Register plugin methods on emitter events thrower
+ */
 ComposePlugin.prototype.registerPlugin = function () {
-    emitter.register('create', 1, this.containers)
+    emitter.register('create', 1, this.composeToContainerApiMapper);
 };
 
-ComposePlugin.prototype.containers = function (bag) {
+/**
+ * Map compose json data to container creator
+ * @param {Bag} bag
+ * @returns {*}
+ */
+ComposePlugin.prototype.composeToContainerApiMapper = function (bag) {
     var farmerfileObj = bag.get('farmerfile'),
-
         containers = farmerfileObj.get('containers'),
         dirs = farmerfileObj.get('dirs'),
         host = bag.get('args')['host'];
 
-    bag.set('compose', compose.resolve(containers, dirs, host));
+    bag.set('compose', compose.mapDataToContainerApi(containers, dirs, host));
 
     return Q.when(true);
 };

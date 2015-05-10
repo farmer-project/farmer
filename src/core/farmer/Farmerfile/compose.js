@@ -4,53 +4,97 @@ var _       = require('underscore'),
     path    = require('path'),
     config  = require(path.resolve(__dirname, '../../../config'));
 
-
 function Compose() {
 }
 
 /**
  * Initialize compose data structure with container and dirs
- *
- * @param containers
- * @param dirs
+ * @param {Object} containers - compose json
+ * @param {Object} dirs
+ * @param {string} [hostname = farmerTIME_DOMAIN  ]
  */
-Compose.prototype.resolve = function (containers, dirs, hostname) {
-    hostname = (hostname) ? hostname : 'farmer' + (new Date).getTime() + '_' + config.domain.replace(/\./g, '_');
-
-    for (var alias in containers) {
-        this._publishPorts(containers[alias]);
-        this._isolateContainer(containers[alias], alias, hostname);
-        this._dirBinding(containers[alias], dirs[alias]);
+Compose.prototype.mapDataToContainerApi  = function (containers, dirs, hostname) {
+    var containersConfig = {};
+    if (!hostname) {
+        hostname = 'farmer' + (new Date).getTime() + '_' + config.DOMAIN;
+        hostname = hostname.replace(/\./g, '_');
     }
 
-    return containers;
+    for (var alias in containers) {
+        var dockerConf = containers[alias];
+        this._publishPorts(dockerConf);
+        this._isolateContainer(dockerConf, alias, hostname);
+        this._dirBinding(dockerConf, dirs[alias]);
+
+        containersConfig[alias] = dockerConf;
+    }
+
+    return containersConfig;
 };
 
 /**
- * @param container
+ * Set container open port
+ * @param {Object} dockerConf - docker config
  * @private
  */
-Compose.prototype._publishPorts = function (container) {
-    if (container['ports']) {
-        container['publishAllPorts'] = 'true';
+Compose.prototype._publishPorts = function (dockerConf) {
+    var ports = dockerConf['ports'];
+
+    if (!ports) {
+        return;
     }
+
+    delete dockerConf['ports'];
+    dockerConf['publishAllPorts'] = true;
+
+    var exposedPorts = {};
+    _.each(ports, function (portAndProtocol) {
+        if (-1 === portAndProtocol.indexOf('/')) {
+            portAndProtocol += '/tcp';
+        }
+
+        exposedPorts[portAndProtocol] = {};
+    });
+
+    dockerConf['exposedPorts'] = exposedPorts;
 };
 
-Compose.prototype._isolateContainer = function (container, alias, hostname) {
-    if (!container['name']) container['name'] = alias + '_' + hostname;
-    container['hostname'] = hostname;
+/**
+ * Isolate container
+ * In-order ot isolate container assign it specific name and hostname
+ * @param {Object} dockerConf - docker config object
+ * @param {string} alias
+ * @param {string} hostname
+ * @private
+ */
+Compose.prototype._isolateContainer = function (dockerConf, alias, hostname) {
+    if (!dockerConf['name']) {
+        dockerConf['name'] = hostname + '_' + alias;
+    }
+
+    dockerConf['hostname'] = hostname;
 };
 
-Compose.prototype._dirBinding = function (container, dirs) {
+/**
+ * Bind directories to container
+ * @param {Object} dockerConf
+ * @param {Array} dirs - array of directories
+ * @private
+ */
+Compose.prototype._dirBinding = function (dockerConf, dirs) {
+    var hostVol = config.STORAGE,
+        bind = [];
+
     if (!dirs) {
         return;
     }
 
-    var bind = [];
     _.each(dirs, function (dir, index) {
-        bind.push(config.storage + '/' + container['hostname'] + '_' + String.fromCharCode(index+97) + ':' + dir);
+        hostVol = hostVol + '/' + dockerConf['hostname'] + '_' + String.fromCharCode(index + 97);
+        bind.push(hostVol + ':' + dir);
     });
-    container['binds'] = bind;
+
+    dockerConf['binds'] = bind;
 };
 
 module.exports = new Compose();

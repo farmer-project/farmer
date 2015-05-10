@@ -1,6 +1,5 @@
 'use strict';
 
-
 var AES = require('./aes');
 
 function Auth() {

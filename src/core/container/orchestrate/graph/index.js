@@ -7,8 +7,8 @@ var _ = require('underscore');
  *       {
  *          "label": "A",
  *          "weight": 12,
- *          "out_deg": 2,
- *          "in_deg": 10,
+ *          "outDeg": 2,
+ *          "inDeg": 10,
  *          "edges": [],
  *          ...
  *      },
@@ -31,7 +31,7 @@ GraphDataSource.prototype.getNodesArray = function () {
 };
 
 GraphDataSource.prototype.getNode = function (label, forceCreate) {
-    var node = _.findWhere(this.nodes, { label: label });
+    var node = _.findWhere(this.nodes, {label: label});
 
     if (!node && forceCreate) {
         node = this.addNode(label);
@@ -58,8 +58,8 @@ GraphDataSource.prototype.addNode = function (label) {
     node = {
         label: label,
         weight: 0,
-        out_deg: 0,
-        in_deg: 0,
+        outDeg: 0,
+        inDeg: 0,
         edges: []
     };
 
@@ -108,9 +108,9 @@ GraphDataSource.prototype._addNodeEdge = function (label, edge) {
     var node = this.getNode(label, true);
 
     if (label === edge.src) {
-        node.out_deg++;
+        node.outDeg++;
     } else if (label === edge.dest) {
-        node.in_deg++;
+        node.inDeg++;
     }
 
     node.edges.push(edge);
@@ -121,9 +121,9 @@ GraphDataSource.prototype._removeNodeEdge = function (label, edge) {
     var node = this.getNode(label);
 
     if (label === edge.src) {
-        node.out_deg--;
+        node.outDeg--;
     } else if (label === edge.dest) {
-        node.in_deg--;
+        node.inDeg--;
     }
 
     node.edges = _.reject(node.edges, edge);

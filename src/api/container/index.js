@@ -1,9 +1,11 @@
+'use strict';
+
 module.exports = function Container() {
     var express = require('express'),
-        models = require('.././index'),
+        path    = require('path'),
         greenhouse = require('./greenhouse'),
         production = require('./production'),
-        ContainerManager = require(require('path').resolve(__dirname, '../../core/container/manager')),
+        ContainerManager = require(path.resolve(__dirname, '../../core/container/manager')),
         app = express();
 
     /*
@@ -42,8 +44,8 @@ module.exports = function Container() {
         ContainerManager
             .deleteContainer(
             {
-                "id": req.params.containerId,
-                "removeVolume": req.query.v
+                id: req.params.containerId,
+                removeVolume: req.query.v
             })
             .then(function (info) {
                 res.json({

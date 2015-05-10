@@ -2,8 +2,13 @@ var _           = require('underscore'),
     Q           = require('q'),
     path        = require('path'),
     log         = require(path.resolve(__dirname, '../debug/log')),
-    ContainerClient= require('./manager/docker-client');
+    ContainerClient = require('./manager/docker-client');
 
+/**
+ *
+ * @param {Object} targetServerConfig - Target server config
+ * @constructor
+ */
 function Repository(targetServerConfig) {
     this.targetServerConfig = targetServerConfig;
     this.containerClient = new ContainerClient();
@@ -11,8 +16,7 @@ function Repository(targetServerConfig) {
 
 /**
  * Get container info
- *
- * @param identifier
+ * @param {string} identifier
  * @returns {Bluebird.Promise|*}
  */
 Repository.prototype.containerInfo = function (identifier)
@@ -26,10 +30,7 @@ Repository.prototype.containerInfo = function (identifier)
 };
 
 /**
- * Get list of images
- *
- * Get list of image form docker API
- *
+ * Get list of image
  * @returns {Bluebird.Promise|*}
  */
 Repository.prototype.images = function ()

@@ -11,7 +11,7 @@ function PackagePlugin() {
 }
 
 /**
- * Register plugin methods on different events
+ * Register plugin methods on emitter events thrower
  */
 PackagePlugin.prototype.registerPlugin = function () {
     emitter.register('deploy', 1, this.getContainers);
@@ -22,12 +22,9 @@ PackagePlugin.prototype.registerPlugin = function () {
 
 /**
  * Get package containers info
- *
  * Get package containers object and set them as containers object in Bag obj
- *
  * (*)need: args.hostname
- *
- * @param bag
+ * @param {Bag} bag - Bag object
  * @returns {Bluebird.Promise|*}
  */
 PackagePlugin.prototype.getContainers = function (bag) {
@@ -38,12 +35,12 @@ PackagePlugin.prototype.getContainers = function (bag) {
 
     return models
         .Package.find({
-            where: { hostname: args.hostname }
+            where: {hostname: args.hostname}
         }).then(function (packageRow) {
             var containerID = JSON.parse(packageRow.containers),
                 getInstancesPromise = [];
 
-            for(var alias in containerID) {
+            for (var alias in containerID) {
                 var container = new Container();
 
                 getInstancesPromise.push(
@@ -58,13 +55,10 @@ PackagePlugin.prototype.getContainers = function (bag) {
 
 /**
  * Delete package
- *
  * Delete package containers and remove that row from DB
- *
  * (*)need: args.hostname
  * (*)need: args.deleteVolume
- *
- * @param bag
+ * @param {Bag} bag - Bag object
  * @returns {*}
  */
 PackagePlugin.prototype.delete = function (bag) {
@@ -77,7 +71,7 @@ PackagePlugin.prototype.delete = function (bag) {
     }
 
     return models.Package.find({
-        where: { hostname: args.hostname }
+        where: {hostname: args.hostname}
     }).then(function (packageRow) {
         packageRow.destroy();
         return Q.all(promiseArray);

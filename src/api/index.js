@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function Api() {
     var express = require('express'),
         container = require('./container'),

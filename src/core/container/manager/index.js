@@ -1,11 +1,15 @@
-var _           = require('underscore'),
-    Q           = require('q'),
-    path        = require('path'),
-    Repository  = require('../Repository'),
-    DockerClient= require('./docker-client'),
-    log         = require(path.resolve(__dirname, '../../debug/log')),
-    config      = require(path.resolve(__dirname, '../../../config'));
+var _            = require('underscore'),
+    Q            = require('q'),
+    path         = require('path'),
+    Repository   = require('../Repository'),
+    DockerClient = require('./docker-client'),
+    log          = require(path.resolve(__dirname, '../../debug/log')),
+    config       = require(path.resolve(__dirname, '../../../config'));
 
+/**
+ * @param {string} type - Container manager type
+ * @constructor
+ */
 function Manager(type) {
     switch (type) {
         case 'docker':
@@ -20,10 +24,7 @@ function Manager(type) {
 
 /**
  * return manager type
- *
  * Container manager can be moderator container technology
- * today we use docker only
- *
  * @returns {*|string}
  */
 Manager.prototype.type = function () {
@@ -32,21 +33,18 @@ Manager.prototype.type = function () {
 
 /**
  * Return target server configuration to send request
- *
  * @returns {{api: string}}
  */
 Manager.prototype.targetServerConfig = function () {
     // TODO: in future version this method change by a class that it will be decide which server must be responsible for this request
     return {
-        api: config.docker_server
+        api: config.CONTAINER_SERVER_API
     }
 };
 
 /**
  * Create container
- *
- * @param opt
- *      a Container Object
+ * @param {Object} opt - A container Object
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.createContainer = function (opt) {
@@ -69,8 +67,7 @@ Manager.prototype.createContainer = function (opt) {
 
 /**
  * Start the created container
- *
- * @param opt
+ * @param {Object} opt - Start container options
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.startContainer = function (opt) {
@@ -93,9 +90,8 @@ Manager.prototype.startContainer = function (opt) {
 
 /**
  * Stop the container
- *
- * @param identifier
- * @param opt
+ * @param {string} identifier - Container identifier
+ * @param {Object} opt - Stop container options
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.stopContainer = function (identifier, opt) {
@@ -109,8 +105,7 @@ Manager.prototype.stopContainer = function (identifier, opt) {
 
 /**
  * Remove container
- *
- * @param opt
+ * @param {Object} opt - Remove container options
  * @returns {Bluebird.Promise|*}
  */
 Manager.prototype.removeContainer = function (opt) {
@@ -121,6 +116,11 @@ Manager.prototype.removeContainer = function (opt) {
         .then(log.info, log.error);
 };
 
+/**
+ * Restart container
+ * @param {string} identifier - container identifier
+ * @returns {Bluebird.Promise}
+ */
 Manager.prototype.restartContainer = function (identifier) {
     return this.containerClient
         .buildRestartAction(identifier)

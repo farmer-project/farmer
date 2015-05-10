@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function Production() {
     var express = require('express'),
         path = require('path'),
@@ -5,7 +7,7 @@ module.exports = function Production() {
         ContainerManager = require(path.resolve(__dirname, '../../core/container/manager')),
         log = require(path.resolve(__dirname, '../../core/debug/log')),
         app = express(),
-        TYPE = "production";
+        TYPE = 'production';
 
     app.post('/create', function (req, res) {
         req.body['type'] = TYPE;
@@ -35,24 +37,24 @@ module.exports = function Production() {
                 }
             })
             .complete(function (err, result) {
-                var message = "";
+                var message = '';
                 if (!!err) {
-                    message = "An error occurred while select on containers ";
+                    message = 'An error occurred while select on containers ';
                     log.error(message + err);
 
                     res
                         .status(500)
                         .json({
-                            "result": [],
-                            "error": message
+                            result: [],
+                            error: message
                         });
 
                 } else {
 
                     if (!result) {
-                        log.info("No container found");
+                        log.info('No container found');
                     } else {
-                        log.info("production container found");
+                        log.info('production container found');
                     }
 
                     log.debug(result);
@@ -60,8 +62,8 @@ module.exports = function Production() {
                     res
                         .status(200)
                         .json({
-                            "result": result,
-                            "error": ''
+                            result: result,
+                            error: ''
                         });
 
                 }
