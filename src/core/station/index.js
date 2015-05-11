@@ -71,15 +71,15 @@ Publisher.prototype.toClient = function (data, type) {
  * @param {string|Object} content - file content
  * @param {string} type - file type example: .yml .json
  */
-Publisher.prototype.forceToSave = function (content, type) {
-    this._emitEvent({
-        type: this.TYPE.FILE,
-        file: {
-            content: content,
-            type: type
-        }
-    });
-};
+//Publisher.prototype.forceToSave = function (content, type) {
+//    this._emitEvent({
+//        type: this.TYPE.FILE,
+//        file: {
+//            content: content,
+//            type: type
+//        }
+//    });
+//};
 
 /**
  * Notify client that next reports are sub events of last operation

@@ -56,9 +56,8 @@ Manager.prototype.createContainer = function (opt) {
         .executeOn(targetServerConfig)
         .then(function (response) {
             var repository = new Repository(targetServerConfig);
-            return repository.containerInfo(response.result.Id).then(function (res) {
-
-                return res.result;
+            return repository.containerInfo(response.result.Id).then(function (containerInfo) {
+                return containerInfo;
 
             }).catch(log.error);
 
@@ -72,12 +71,12 @@ Manager.prototype.createContainer = function (opt) {
  */
 Manager.prototype.startContainer = function (opt) {
     var targetServerConfig = this.targetServerConfig();
-
     return this.containerClient
         .buildStartAction()
         .options(opt)
         .executeOn(targetServerConfig)
         .then(function (response) {
+            console.log('start response >>>', response);
             var repository = new Repository(targetServerConfig);
             return repository.containerInfo(response.result.Id).then(function (res) {
 

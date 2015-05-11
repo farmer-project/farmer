@@ -114,7 +114,7 @@ Container.prototype.getMetadata = function () {
 
 /**
  * Run a container
- * @param {Object} config - Container config
+ * @param {Object} [config] - Container config is Optional for stopped container object
  * @returns {*}
  */
 Container.prototype.run = function (config) {
@@ -122,23 +122,25 @@ Container.prototype.run = function (config) {
         return Q.reject('Unknown container base image');
     }
 
-    var self = this;
-    if (!this.getConfigurationEntry('Id')) {
+    var self = this,
+        id   = this.getConfigurationEntry('Id');
+    if (!id) {
         return this.containermanager.createContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
-            self.setState('created'); // TODO: maybe this line is buggy
-            return self.containermanager.startContainer(containerConfig).then(function (conf) {
+            self.setState('created');
+            config.Id = self.getConfigurationEntry('Id');
+            return self.containermanager.startContainer(config).then(function (conf) {
                 self._setConfiguration(conf);
                 self.setState('running');
                 return self;
             });
         });
-    } /*else { // TODO: minify these code
-        return self.containermanager.startContainer({}).then(function (containerConfig) {
+    } else {
+        return self.containermanager.startContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
         });
-    }*/
+    }
 };
 
 /**
@@ -188,14 +190,14 @@ Container.prototype.setState = function (state) {
         case 'created':
             return models.Container
                 .create({
-                    id: self.getConfigurationEntry('Id'),
-                    name: self.getConfigurationEntry('Name'),
-                    ports: JSON.stringify(self.getConfigurationEntry('ExposedPorts')),
-                    public: self.getConfigurationEntry('PublishAllPorts'),
-                    image: self.getConfigurationEntry('Image')[0],
+                    id: self.configuration.Id,
+                    name: self.configuration.Name.replace('/', ''),
+                    ports: JSON.stringify(self.configuration.Config.ExposedPorts),
+                    public: self.configuration.HostConfig.PublishAllPorts,
+                    image: self.configuration.Config.Image,
                     state: 'created',
                     metadata: JSON.stringify(self.metadata),
-                    configuration: JSON.stringify(self.getConfigurationEntry('*'))
+                    configuration: JSON.stringify(self.configuration)
                 }).then(log.info, log.error);
 
         case 'running':

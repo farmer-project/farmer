@@ -27,8 +27,7 @@ RunPackage.prototype.execute = function (config) {
         ._sortByCreationPriority(config)
         .spread(function (nodes, config) {
             return self._createContainers(nodes, config);
-        })
-    ;
+        });
 };
 
 /**
@@ -116,12 +115,16 @@ RunPackage.prototype._runContainer = function (alias, config) {
 RunPackage.prototype._dockerApiRequestCreator = function (config) {
     var self = this,
         request = {
-            'HostConfig': {}
+            HostConfig: {}
         },
         HostConfig = [
             'binds',
             'links',
             'lxcConf',
+            'memory',
+            'memorySwap',
+            'cpuShares',
+            'cpusetCpus',
             'portBindings',
             'publishAllPorts',
             'privileged',
@@ -131,10 +134,13 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
             'extraHosts',
             'volumesFrom',
             'capAdd',
-            'capdrop',
+            'capDrop',
             'restartPolicy',
             'networkMode',
-            'devices'
+            'devices',
+            'ulimits',
+            'logConfig',
+            'cgroupParent'
         ];
 
     _.each(config, function (value, key) {

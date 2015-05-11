@@ -24,9 +24,9 @@ ComposePlugin.prototype.composeToContainerApiMapper = function (bag) {
     var farmerfileObj = bag.get('farmerfile'),
         containers = farmerfileObj.get('containers'),
         dirs = farmerfileObj.get('dirs'),
-        host = bag.get('args')['host'];
+        hostname = bag.get('args')['hostname'];
 
-    bag.set('compose', compose.mapDataToContainerApi(containers, dirs, host));
+    bag.set('compose', compose.mapDataToContainerApi(containers, dirs, hostname));
 
     return Q.when(true);
 };
