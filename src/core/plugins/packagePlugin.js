@@ -17,7 +17,7 @@ PackagePlugin.prototype.registerPlugin = function () {
     emitter.register('deploy', 1, this.getContainers);
 
     emitter.register('delete', 1, this.getContainers);
-    emitter.register('delete', 2, this.getContainers);
+    emitter.register('delete', 2, this.delete);
 };
 
 /**

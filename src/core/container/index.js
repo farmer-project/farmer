@@ -114,7 +114,7 @@ Container.prototype.getMetadata = function () {
 
 /**
  * Run a container
- * @param {Object} [config] - Container config is Optional for stopped container object
+ * @param {Object} [config] - Container config is optional for stopped container object
  * @returns {*}
  */
 Container.prototype.run = function (config) {
@@ -122,6 +122,7 @@ Container.prototype.run = function (config) {
         return Q.reject('Unknown container base image');
     }
 
+    console.log('in run config >>', config);
     var self = this,
         id   = this.getConfigurationEntry('Id');
     if (!id) {
@@ -136,6 +137,7 @@ Container.prototype.run = function (config) {
             });
         });
     } else {
+        config['Id'] = id;
         return self.containermanager.startContainer(config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
             return self.setState('running');
@@ -190,21 +192,21 @@ Container.prototype.setState = function (state) {
         case 'created':
             return models.Container
                 .create({
-                    id: self.configuration.Id,
+                    id: self.getConfigurationEntry('Id'),
                     name: self.configuration.Name.replace('/', ''),
-                    ports: JSON.stringify(self.configuration.Config.ExposedPorts),
-                    public: self.configuration.HostConfig.PublishAllPorts,
+                    ports: JSON.stringify(self.getConfigurationEntry('ExposedPorts')),
+                    public: self.getConfigurationEntry('PublishAllPorts'),
                     image: self.configuration.Config.Image,
                     state: 'created',
                     metadata: JSON.stringify(self.metadata),
-                    configuration: JSON.stringify(self.configuration)
+                    configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }).then(log.info, log.error);
 
         case 'running':
             return models.Container
                 .update({
                     state: 'running',
-                    volumes: JSON.stringify(self.getConfigurationEntry('Binds')),
+                    volumes: JSON.stringify(self.getConfigurationEntry('Binds') && null),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }, {
                     where: {id: self.getConfigurationEntry('Id')}
