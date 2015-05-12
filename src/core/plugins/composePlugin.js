@@ -27,7 +27,6 @@ ComposePlugin.prototype.composeToContainerApiMapper = function (bag) {
         hostname = bag.get('args')['hostname'];
 
     bag.set('compose', compose.mapDataToContainerApi(containers, dirs, hostname));
-
     return Q.when(true);
 };
 

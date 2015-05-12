@@ -42,10 +42,11 @@ PackagePlugin.prototype.getContainers = function (bag) {
 
             for (var alias in containerID) {
                 var container = new Container();
-
                 getInstancesPromise.push(
                     container.getInstance(containerID[alias])
-                        .then(function (containerObj) { containers[alias] = containerObj; })
+                        .then(function (containerObj) {
+                            containers[alias] = containerObj;
+                        })
                 );
             }
 
@@ -66,8 +67,8 @@ PackagePlugin.prototype.delete = function (bag) {
         args = bag.get('args'),
         promiseArray = [];
 
-    for (var key in containers) {
-        promiseArray.push(containers[key].destroy(args.deleteVolume));
+    for (var alias in containers) {
+        promiseArray.push(containers[alias].destroy(args.deleteVolume));
     }
 
     return models.Package.find({

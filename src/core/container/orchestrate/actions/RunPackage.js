@@ -100,7 +100,7 @@ RunPackage.prototype._runContainer = function (alias, config) {
     var self = this,
         container = new Container(),
         request = this._dockerApiRequestCreator(config);
-
+    console.log('<< request >>', request);
     return container.run(request).tap(function (containerObj) {
         self.containers[alias] = containerObj.getConfigurationEntry('Name')[1].replace('/', '');
     });
@@ -145,14 +145,15 @@ RunPackage.prototype._dockerApiRequestCreator = function (config) {
 
     _.each(config, function (value, key) {
         if (key == 'links') {
+            var links = [];
             _.each(value, function (link) {
                 var parts = link.split(':'),
                     alias = parts[0],
                     containerAlias = typeof parts[1] !== 'undefined' ? parts[1] : alias;
 
-                request['HostConfig']['Links'] =
-                    self.containers[alias] + ':' + containerAlias;
+                links.push(self.containers[alias] + ':' + containerAlias);
             });
+            request['HostConfig']['Links'] = links;
 
         } else if (HostConfig.indexOf(key) > -1) {
             request['HostConfig'][upperCaseFirst(key)] = value;

@@ -31,8 +31,8 @@ Container.prototype.getInstance  = function (identifier) {
         // TODO: create system to find created container server
         repository = new Repository({api: config.CONTAINER_SERVER_API});
 
-    return repository.containerInfo(identifier).then(function (config) {
-        self.configuration = config;
+    return repository.containerInfo(identifier).then(function (configuration) {
+        self.configuration = configuration;
         return models.Container
             .find({
                 where: {id: identifier}
@@ -122,7 +122,6 @@ Container.prototype.run = function (config) {
         return Q.reject('Unknown container base image');
     }
 
-    console.log('in run config >>', config);
     var self = this,
         id   = this.getConfigurationEntry('Id');
     if (!id) {
@@ -165,11 +164,13 @@ Container.prototype.shutdown = function (second) {
  * @returns {Bluebird.Promise|*}
  */
 Container.prototype.destroy = function (removeVolume) {
+    var self = this;
+    console.log('>>> ID destroy >>>', self.getConfigurationEntry('Id'));
     return this.containermanager.removeContainer({
-        Id: this.getConfigurationEntry('Id'),
+        Id: self.getConfigurationEntry('Id'),
         ForceStop: true,
         RemoveVolume: removeVolume
-    }).then(this._delete);
+    }).then(self._delete);
 };
 
 /**
@@ -231,10 +232,12 @@ Container.prototype.setState = function (state) {
  * @private
  */
 Container.prototype._delete = function () {
+    var self = this;
     return models.Container
         .find({
             where: {id: this.getConfigurationEntry('Id')}
         }).then(function (container) {
+            console.log(' >>>> >>>> ', container);
             return container.destroy();
         });
 };
