@@ -24,14 +24,9 @@ RemoveAction.prototype.options = function (opt) {
     }
 
     this.identifier = opt.Id;
-console.log('>> opt >>', opt);
-    if (opt.ForceStop)     {
-        console.log('>in force >');
-        this.queryParameters['force'] = 1;
-        console.log('>this.queryParameters>', this.queryParameters);
-    }
-    if (opt.RemoveVolume)  { console.log('>in remove volume >'); this.queryParameters['v'] = 1; }
-    console.log('>> this.queryParameters >>', this.queryParameters);
+
+    if (opt.ForceStop)     { this.queryParameters['force'] = 1; }
+    if (opt.RemoveVolume)  { this.queryParameters['v'] = 1; }
     this.queryParameters = '?' + querystring.stringify(this.queryParameters);
 
     return this;
@@ -49,9 +44,8 @@ RemoveAction.prototype.executeOn = function (serverConfig) {
         uri: urljoin(serverConfig.api, '/containers/', this.identifier, this.queryParameters),
         method: 'DELETE'
     };
-    console.log('RemoveAction >>>> options >>>> ', options);
+
     request(options, function (error, response, body) {
-        console.log('RemoveAction >>>> body >>>> ', body);
         if (!error && response.statusCode == 204) {
             // 204 – no error
             deferred.resolve({

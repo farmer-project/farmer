@@ -16,6 +16,9 @@ function PackagePlugin() {
 PackagePlugin.prototype.registerPlugin = function () {
     emitter.register('deploy', 1, this.getContainers);
 
+    emitter.register('inspect', 1, this.getContainers);
+    emitter.register('inspect', 2, this.toClient);
+
     emitter.register('delete', 1, this.getContainers);
     emitter.register('delete', 2, this.delete);
 };
@@ -29,6 +32,7 @@ PackagePlugin.prototype.registerPlugin = function () {
  */
 PackagePlugin.prototype.getContainers = function (bag) {
     var args        = bag.get('args'),
+        publisher   = bag.get('publisher'),
         containers  = {};
 
     bag.set('containers', containers);
@@ -51,6 +55,8 @@ PackagePlugin.prototype.getContainers = function (bag) {
             }
 
             return Q.all(getInstancesPromise);
+        }, function () {
+            publisher.toClient(args.hostname + 'does not exist');
         });
 };
 
@@ -77,6 +83,17 @@ PackagePlugin.prototype.delete = function (bag) {
         packageRow.destroy();
         return Q.all(promiseArray);
     });
+};
+
+
+PackagePlugin.prototype.toClient = function (bag) {
+    var containers  = bag.get('containers'),
+        publisher   = bag.get('publisher');
+    for(var alias in containers) {
+        containers[alias] = containers[alias].getConfigurationEntry('*');
+    }
+
+    publisher.toClient(containers);
 };
 
 module.exports = new PackagePlugin();
