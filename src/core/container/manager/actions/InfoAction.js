@@ -26,7 +26,6 @@ InfoAction.prototype.executeOn = function (serverConfig) {
         };
 
     request(options, function (error, response, body) {
-        console.log('body >>>>>', body)
         if (!error && response.statusCode == 200) {
             deferred.resolve({
                 code: response.statusCode,

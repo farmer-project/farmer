@@ -29,5 +29,6 @@ models.sequelize.sync().then(function () {
     // Start application
     app.listen(config.PORT, function () {
         console.log('Listening on port '.green, this.address().port);
+        require('./core/station/server');
     });
 });
