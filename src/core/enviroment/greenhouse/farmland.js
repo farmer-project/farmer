@@ -20,6 +20,7 @@ function Farmland () {
 Farmland.prototype.furrow = function (containersSite, publisher) {
     var containersId = [];
     publisher.toClient('create containers');
+    publisher.subWorksStart();
 
     return packageCompose
         .run(containersSite)
@@ -40,11 +41,12 @@ Farmland.prototype.furrow = function (containersSite, publisher) {
                     hostname: hostname
                 }).then(function (resutl) {
                     log.trace(resutl);
-                    publisher.toClient(JSON.stringify(clientData));
+                    publisher.toClient(clientData);
                     return containers;
 
                 }).catch(log.error);
-        });
+        }).catch(publisher.toClient)
+        .finally(publisher.subWorksFinish);
 };
 
 module.exports = new Farmland();

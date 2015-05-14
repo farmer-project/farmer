@@ -18,11 +18,10 @@ module.exports = function Greenhouse() {
     //app.use(auth.middleware);
 
     app.post('/create', function (req, res) {
-        var publisher = new Publisher(config.STATION_SERVER);
+        var publisher = new Publisher(config.RABBITMQ_CONFIG);
         publisher
             .connect()
             .then(function () {
-                publisher.toClient('open room');
                 res.status(200)
                     .json({
                         room: publisher.roomID
@@ -39,13 +38,13 @@ module.exports = function Greenhouse() {
                 res.status(500)
                     .json({
                         result: '',
-                        error: 'station server not reposed'
+                        error: 'station server not respond'
                     });
             });
     });
 
     app.post('/deploy', function (req, res) {
-        var publisher = new Publisher(config.STATION_SERVER);
+        var publisher = new Publisher(config.RABBITMQ_CONFIG);
         publisher
             .connect()
             .then(function () {
@@ -72,7 +71,7 @@ module.exports = function Greenhouse() {
     });
 
     app.get('/inspect', function (req, res) {
-        var publisher = new Publisher(config.STATION_SERVER);
+        var publisher = new Publisher(config.RABBITMQ_CONFIG);
         publisher
             .connect()
             .then(function () {
@@ -98,7 +97,7 @@ module.exports = function Greenhouse() {
     });
 
     app.post('/delete', function (req, res) {
-        var publisher = new Publisher(config.STATION_SERVER);
+        var publisher = new Publisher(config.RABBITMQ_CONFIG);
         publisher
             .connect()
             .then(function () {

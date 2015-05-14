@@ -48,7 +48,7 @@ Shell.prototype.farmfile = function (bag) {
         }, 1000);
     }
 
-    Q.when(true);
+    return Q.when(true);
 };
 
 module.exports = new Shell();

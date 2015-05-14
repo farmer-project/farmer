@@ -56,7 +56,8 @@ PackagePlugin.prototype.getContainers = function (bag) {
 
             return Q.all(getInstancesPromise);
         }, function () {
-            publisher.toClient(args.hostname + 'does not exist');
+            publisher.toClient('package ' + args.hostname + ' does not exist');
+            publisher.subWorksFinish();
         });
 };
 
@@ -87,13 +88,17 @@ PackagePlugin.prototype.delete = function (bag) {
 
 
 PackagePlugin.prototype.toClient = function (bag) {
-    var containers  = bag.get('containers'),
+    var deferred    = Q.defer(),
+        containers  = bag.get('containers'),
         publisher   = bag.get('publisher');
+
     for(var alias in containers) {
         containers[alias] = containers[alias].getConfigurationEntry('*');
     }
 
     publisher.toClient(containers);
+
+    return Q.when(true);
 };
 
 module.exports = new PackagePlugin();

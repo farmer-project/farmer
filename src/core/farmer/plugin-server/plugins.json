@@ -18,6 +18,12 @@
   },
 
   {
+    "plugin": "/core/plugins/endLinePlugin",
+    "name": "endline Plugin",
+    "description": "Call client that event flow finished"
+  },
+
+  {
     "plugin": "/core/plugins/packagePlugin",
     "name": "package Plugin",
     "description": "Get package containers information based on hostname and add containers object as 'containers' properties to bag"

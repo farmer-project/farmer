@@ -17,6 +17,7 @@ FarmlandPlugin.prototype.registerPlugin = function () {
 
 /**
  * Create farmland based on compose config
+ * Add 'container' tag to bag with created container list objects
  * @param {Bag} bag - Bag object
  * @returns {Q.Promise}
  */

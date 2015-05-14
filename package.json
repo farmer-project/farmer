@@ -13,6 +13,7 @@
   "author": "Majid Golshadi <golshadi.majid@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "amqp": "^0.2.4",
     "body-parser": "^1.11.0",
     "colors": "^1.0.3",
     "connect-timeout": "~1.6.1",
