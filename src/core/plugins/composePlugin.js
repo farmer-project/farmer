@@ -21,12 +21,14 @@ ComposePlugin.prototype.registerPlugin = function () {
  * @returns {*}
  */
 ComposePlugin.prototype.composeToContainerApiMapper = function (bag) {
-    var farmerfileObj = bag.get('farmerfile'),
-        containers = farmerfileObj.get('containers'),
-        dirs = farmerfileObj.get('dirs'),
-        hostname = bag.get('args')['hostname'];
+    var farmerfileObj   = bag.get('farmerfile'),
+        containers      = farmerfileObj.get('containers'),
+        dirs            = farmerfileObj.get('dirs'),
+        hostname        = bag.get('args')['hostname'],
+        publisher       = bag.get('publisher');
 
     bag.set('compose', compose.mapDataToContainerApi(containers, dirs, hostname));
+    publisher.toClient('containers orchestrated');
     return Q.when(true);
 };
 

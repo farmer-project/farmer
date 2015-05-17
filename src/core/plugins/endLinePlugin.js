@@ -29,6 +29,8 @@ EndLinePlugin.prototype.eventEnd = function (bag) {
         publisher.subWorksFinish();
     }
     publisher.disconnect();
+    console.log();
+    console.log('<<< eventEnd >>>');
     return Q.when(true);
 };
 

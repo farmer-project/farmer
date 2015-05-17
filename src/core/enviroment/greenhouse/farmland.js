@@ -19,7 +19,7 @@ function Farmland () {
  */
 Farmland.prototype.furrow = function (containersSite, publisher) {
     var containersId = [];
-    publisher.toClient('create containers');
+    publisher.toClient('creating containers ...');
     publisher.subWorksStart();
 
     return packageCompose

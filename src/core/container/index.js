@@ -165,12 +165,13 @@ Container.prototype.shutdown = function (second) {
  */
 Container.prototype.destroy = function (removeVolume) {
     var self = this;
-    console.log('>>> ID destroy >>>', self.getConfigurationEntry('Id'));
     return this.containermanager.removeContainer({
         Id: self.getConfigurationEntry('Id'),
         ForceStop: true,
         RemoveVolume: removeVolume
-    }).then(self._delete);
+    }).tap(function () {
+        self._delete();
+    });
 };
 
 /**
@@ -232,12 +233,10 @@ Container.prototype.setState = function (state) {
  * @private
  */
 Container.prototype._delete = function () {
-    var self = this;
     return models.Container
         .find({
             where: {id: this.getConfigurationEntry('Id')}
         }).then(function (container) {
-            console.log(' >>>> >>>> ', container);
             return container.destroy();
         });
 };

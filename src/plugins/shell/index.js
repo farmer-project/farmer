@@ -11,8 +11,8 @@ function Shell () {
  * Register plugin methods on emitter events thrower
  */
 Shell.prototype.registerPlugin = function () {
-    emitter.register('create', 5, this.farmfile);
-    emitter.register('deploy', 5, this.farmfile);
+    emitter.register('create', 100, this.farmfile);
+    emitter.register('deploy', 100, this.farmfile);
 };
 
 /**

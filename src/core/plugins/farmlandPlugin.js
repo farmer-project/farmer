@@ -3,7 +3,8 @@
 var Q        = require('q'),
     path     = require('path'),
     emitter  = require(path.resolve(__dirname, '../farmer/emmiter')),
-    farmland = require('../enviroment/greenhouse/farmland');
+    farmland = require('../enviroment/greenhouse/farmland'),
+    models   = require('../models');
 
 function FarmlandPlugin() {
 }
@@ -22,13 +23,26 @@ FarmlandPlugin.prototype.registerPlugin = function () {
  * @returns {Q.Promise}
  */
 FarmlandPlugin.prototype.furrow = function (bag) {
-    var deferred = Q.defer(),
-        compose = bag.get('compose'),
-        publisher = bag.get('publisher');
+    var compose     = bag.get('compose'),
+        publisher   = bag.get('publisher'),
+        firstProKey = Object.keys(compose)[0];
 
-    return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
-        bag.set('containers', createdContainersObj);
-    });
+    return models
+        .Package.find({
+            where: {hostname: compose[firstProKey].hostname}
+        }).then(function (packageRow) {
+            if (null !== packageRow) {
+                publisher.toClient('package ' + args.hostname + ' exist');
+                return Q.when(true);
+            }
+
+            return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
+                bag.set('containers', createdContainersObj);
+                publisher.toClient('package containers created');
+            }).catch(function (error) {
+                publisher.toClient(error);
+            });
+        });
 };
 
 module.exports = new FarmlandPlugin();

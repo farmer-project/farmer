@@ -14,6 +14,8 @@ function PackagePlugin() {
  * Register plugin methods on emitter events thrower
  */
 PackagePlugin.prototype.registerPlugin = function () {
+    emitter.register('create', 3, this.toClient);
+
     emitter.register('deploy', 1, this.getContainers);
 
     emitter.register('inspect', 1, this.getContainers);
@@ -35,16 +37,20 @@ PackagePlugin.prototype.getContainers = function (bag) {
         publisher   = bag.get('publisher'),
         containers  = {};
 
-    bag.set('containers', containers);
-
     return models
         .Package.find({
             where: {hostname: args.hostname}
         }).then(function (packageRow) {
+            if (null == packageRow) {
+                publisher.toClient(args.hostname + ' package does not exist');
+                return Q.when(true);
+            }
+
+            bag.set('containers', containers);
             var containerID = JSON.parse(packageRow.containers),
                 promiseArray = [];
             for (var alias in containerID) {
-                (function(alias) {
+                (function(alias) { // Create a closure to save alias until code block finish
                     var container = new Container();
                     promiseArray.push(
                         container.getInstance(containerID[alias])
@@ -71,8 +77,8 @@ PackagePlugin.prototype.getContainers = function (bag) {
  * @returns {*}
  */
 PackagePlugin.prototype.delete = function (bag) {
-    var containers = bag.get('containers'),
-        args = bag.get('args'),
+    var containers  = bag.get('containers'),
+        args        = bag.get('args'),
         promiseArray = [];
 
     for (var alias in containers) {
@@ -93,15 +99,15 @@ PackagePlugin.prototype.delete = function (bag) {
  * @returns {*}
  */
 PackagePlugin.prototype.toClient = function (bag) {
-    var deferred    = Q.defer(),
-        containers  = bag.get('containers'),
+    var containers  = bag.get('containers'),
         publisher   = bag.get('publisher');
 
-    for (var alias in containers) {
-        containers[alias] = containers[alias].getConfigurationEntry('*');
+    if (containers) {
+        for (var alias in containers) {
+            containers[alias] = containers[alias].getConfigurationEntry('*');
+        }
+        publisher.toClient(containers);
     }
-    publisher.toClient(containers);
-
     return Q.when(true);
 };
 

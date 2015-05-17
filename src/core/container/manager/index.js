@@ -112,7 +112,8 @@ Manager.prototype.removeContainer = function (opt) {
         .buildRemoveAction()
         .options(opt)
         .executeOn(this.targetServerConfig())
-        .then(log.info, log.error);
+        .tap(log.trace)
+        .catch(log.error);
 };
 
 /**

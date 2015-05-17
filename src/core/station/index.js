@@ -36,8 +36,11 @@ Publisher.prototype.connect = function () {
         connection = amqp.createConnection(this.connectionOpt);
 
     connection.on('ready', function () {
-        self.connection = connection;
-        deferred.resolve(self.roomID);
+        connection.queue(self.roomID, {autoDelete: false}, function (queue) {
+            queue.bind(self.roomID);
+            self.connection = connection;
+            deferred.resolve(self.roomID);
+        });
     });
 
     connection.on('close', function () {
@@ -112,8 +115,11 @@ Publisher.prototype.subWorksFinish = function () {
 Publisher.prototype._emitEvent = function (data) {
     if (this.connection) {
         this.connection.publish(this.roomID, data,
-            {contentType: 'application/json', confirm: true});
+            {contentType: 'application/json'});
         log.trace('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
+        console.log('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
+        console.log('---------------------------');
+        console.log();
     }
 };
 

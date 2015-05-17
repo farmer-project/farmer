@@ -22,6 +22,7 @@ module.exports = function Greenhouse() {
         publisher
             .connect()
             .then(function () {
+                publisher.toClient('open room');
                 res.status(200)
                     .json({
                         room: publisher.roomID
