@@ -100,13 +100,14 @@ PackagePlugin.prototype.delete = function (bag) {
  */
 PackagePlugin.prototype.toClient = function (bag) {
     var containers  = bag.get('containers'),
-        publisher   = bag.get('publisher');
+        publisher   = bag.get('publisher'),
+        result      = {};
 
     if (containers) {
         for (var alias in containers) {
-            containers[alias] = containers[alias].getConfigurationEntry('*');
+            result[alias] = containers[alias].getConfigurationEntry('*');
         }
-        publisher.toClient(containers);
+        publisher.toClient(result);
     }
     return Q.when(true);
 };

@@ -36,8 +36,7 @@ Publisher.prototype.connect = function () {
         connection = amqp.createConnection(this.connectionOpt);
 
     connection.on('ready', function () {
-        connection.queue(self.roomID, {autoDelete: false}, function (queue) {
-            queue.bind(self.roomID);
+        connection.queue(self.roomID , function (queue) {
             self.connection = connection;
             deferred.resolve(self.roomID);
         });
@@ -117,9 +116,6 @@ Publisher.prototype._emitEvent = function (data) {
         this.connection.publish(this.roomID, data,
             {contentType: 'application/json'});
         log.trace('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
-        console.log('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
-        console.log('---------------------------');
-        console.log();
     }
 };
 
