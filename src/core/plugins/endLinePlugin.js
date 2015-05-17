@@ -12,24 +12,23 @@ function EndLinePlugin() {
  * Register plugin methods on emitter events thrower
  */
 EndLinePlugin.prototype.registerPlugin = function () {
-    emitter.register('create', 12, this.eventEnd);
-    emitter.register('deploy', 12, this.eventEnd);
-    emitter.register('inspect', 12, this.eventEnd);
-    emitter.register('delete', 12, this.eventEnd);
+    emitter.register('create', 999, this.eventEnd);
+    emitter.register('deploy', 999, this.eventEnd);
+    emitter.register('inspect', 999, this.eventEnd);
+    emitter.register('delete', 999, this.eventEnd);
 };
 
 /**
- *
- * @param bag
+ * Call client that everything is finished
+ * @param {Object} bag - Bag object
  * @returns {*}
  */
 EndLinePlugin.prototype.eventEnd = function (bag) {
     var publisher   = bag.get('publisher');
-
-    while(publisher.subLevel > 0) {
+    while (publisher.subLevel > 0) {
         publisher.subWorksFinish();
     }
-
+    publisher.disconnect();
     return Q.when(true);
 };
 

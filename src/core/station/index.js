@@ -1,8 +1,8 @@
 'use strict';
 
-var Q    = require('q'),
-    amqp = require('amqp'),
-    log  = require('../debug/log');
+var Q       = require('q'),
+    amqp    = require('amqp'),
+    log     = require('../debug/log');
 
 /**
  * Create an publisher object for unique station server
@@ -12,7 +12,7 @@ var Q    = require('q'),
 function Publisher (connectionOpt) {
     this.connectionOpt = connectionOpt;
     this.roomID = (new Date).getTime().toString() + Math.floor((Math.random() * 100) + 1);
-    this.pub = null;
+    this.connection = null;
     this.subLevel = 1;
 }
 
@@ -36,7 +36,7 @@ Publisher.prototype.connect = function () {
         connection = amqp.createConnection(this.connectionOpt);
 
     connection.on('ready', function () {
-        self.pub = connection;
+        self.connection = connection;
         deferred.resolve(self.roomID);
     });
 
@@ -59,6 +59,10 @@ Publisher.prototype.toClient = function (data, type) {
     this._emitEvent(data);
 
     return this;
+};
+
+Publisher.prototype.disconnect = function () {
+    this.connection.disconnect();
 };
 
 /**
@@ -106,8 +110,9 @@ Publisher.prototype.subWorksFinish = function () {
  * @private
  */
 Publisher.prototype._emitEvent = function (data) {
-    if (this.pub) {
-        this.pub.publish(this.roomID, data, {contentType: 'application/json', confirm: true});
+    if (this.connection) {
+        this.connection.publish(this.roomID, data,
+            {contentType: 'application/json', confirm: true});
         log.trace('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
     }
 };

@@ -38,7 +38,6 @@ Emitter.prototype.register = function (event, priority, action) {
  */
 Emitter.prototype.dispatch = function (event, context) {
     var priorityGraph = this.channel[event];
-
     _(this._getSortPriority(priorityGraph)).reduce(function (prevPromise, priority) {
         return prevPromise.then(function() {
             var promiseArr = [];
@@ -62,10 +61,12 @@ Emitter.prototype.dispatch = function (event, context) {
 Emitter.prototype._getSortPriority = function (priorityGraph) {
     var keys = [];
     for (var key in priorityGraph) {
-        keys.push(key);
+        keys.push(parseInt(key));
     }
 
-    return keys.sort();
+    return keys.sort(function (a, b) {
+        return a - b;
+    });
 };
 
 module.exports = new Emitter();

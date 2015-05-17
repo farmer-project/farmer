@@ -42,11 +42,10 @@ PackagePlugin.prototype.getContainers = function (bag) {
             where: {hostname: args.hostname}
         }).then(function (packageRow) {
             var containerID = JSON.parse(packageRow.containers),
-                getInstancesPromise = [];
-
+                promiseArray = [];
             for (var alias in containerID) {
                 var container = new Container();
-                getInstancesPromise.push(
+                promiseArray.push(
                     container.getInstance(containerID[alias])
                         .then(function (containerObj) {
                             containers[alias] = containerObj;
@@ -54,7 +53,7 @@ PackagePlugin.prototype.getContainers = function (bag) {
                 );
             }
 
-            return Q.all(getInstancesPromise);
+            return Q.all(promiseArray);
         }, function () {
             publisher.toClient('package ' + args.hostname + ' does not exist');
             publisher.subWorksFinish();
@@ -86,16 +85,22 @@ PackagePlugin.prototype.delete = function (bag) {
     });
 };
 
-
+/**
+ * Send container configuration to client
+ * @param {Object} bag - Bag object
+ * @returns {*}
+ */
 PackagePlugin.prototype.toClient = function (bag) {
     var deferred    = Q.defer(),
         containers  = bag.get('containers'),
         publisher   = bag.get('publisher');
 
-    for(var alias in containers) {
+    //console.log('containers >>>>>>>>>>>>>>', require('util').inspect(containers, false, null));
+    for (var alias in containers) {
         containers[alias] = containers[alias].getConfigurationEntry('*');
+        console.log('>> alias >>>', alias);
     }
-
+    //console.log(containers);
     publisher.toClient(containers);
 
     return Q.when(true);
