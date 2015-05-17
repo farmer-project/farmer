@@ -44,13 +44,15 @@ PackagePlugin.prototype.getContainers = function (bag) {
             var containerID = JSON.parse(packageRow.containers),
                 promiseArray = [];
             for (var alias in containerID) {
-                var container = new Container();
-                promiseArray.push(
-                    container.getInstance(containerID[alias])
-                        .then(function (containerObj) {
-                            containers[alias] = containerObj;
-                        })
-                );
+                (function(alias) {
+                    var container = new Container();
+                    promiseArray.push(
+                        container.getInstance(containerID[alias])
+                            .then(function (containerObj) {
+                                containers[alias] = containerObj;
+                            })
+                    );
+                })(alias);
             }
 
             return Q.all(promiseArray);
@@ -95,12 +97,9 @@ PackagePlugin.prototype.toClient = function (bag) {
         containers  = bag.get('containers'),
         publisher   = bag.get('publisher');
 
-    //console.log('containers >>>>>>>>>>>>>>', require('util').inspect(containers, false, null));
     for (var alias in containers) {
         containers[alias] = containers[alias].getConfigurationEntry('*');
-        console.log('>> alias >>>', alias);
     }
-    //console.log(containers);
     publisher.toClient(containers);
 
     return Q.when(true);
