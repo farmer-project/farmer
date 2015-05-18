@@ -1,19 +1,24 @@
-// TODO: any config value fetch from gruop vars
 module.exports = {
-    // ### Development **(default)**
-    development: {
-        PORT: "8080",
-        STATION_SERVER: "http://station.dev",
-        CONTAINER_SERVER_API: "http://localhost:4242",
-        LOG_DIR: "/var/www/logs",
-        STORAGE: "/code",
-        DOMAIN: "ravaj.ir",
-        CONTAINER_PRIVATE_KEY: "/home/vagrant/bare/key/devops_rsa",
-        DB_USERNAME: "root",
-        DB_PASSWORD: null,
-        DB_NAME: "farmer_development",
-        DB_HOST: "127.0.0.1",
-        DB_DIALECT: "mysql",
-        DB_PORT: "3306"
-    }
+    PORT: '8080',
+    CONTAINER_SERVER_API: 'http://xxxxxxx:4242',
+    RABBITMQ_CONFIG: {
+        host: 'amqp://localhost:5657',
+        login: 'xxxx',
+        password: 'xxxxx'
+    },
+    LOG_DIR: '/xx/xxx/xxx',
+    STORAGE: '/xxx',
+    DOMAIN: 'xxxx.xx',
+    SSH_CONFIG: {
+        privateKey: '/xxx/xxx/xxx/xxx',
+        username: 'xxxx',
+        port: 22,
+        passphrase: 'xxxxx'
+    },
+    DB_USERNAME: 'xxxx',
+    DB_PASSWORD: 'xxxxx',
+    DB_NAME: 'farmer',
+    DB_HOST: 'xxxx.xxxx.xxxx.xxxx',
+    DB_DIALECT: 'mysql',
+    DB_PORT: '3306'
 };

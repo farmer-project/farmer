@@ -250,16 +250,13 @@ Container.prototype._delete = function () {
 Container.prototype.execShell = function (command, publisher) {
     var self = this,
         deferred = Q.defer(),
-        host = this.getConfigurationEntry('IPAddress'),
-        conn = new SshClient();
+        conn = new SshClient(),
+        sshConfig = config.SSH_CONFIG;
 
-    conn.connect({
-        host: host,
-        port: 22,
-        username: 'root',
-        privateKey: require('fs').readFileSync(config.CONTAINER_PRIVATE_KEY)
-    });
+    sshConfig['privateKey'] = require('fs').readFileSync(sshConfig.privateKey);
+    sshConfig['host'] = this.getConfigurationEntry('IPAddress');
 
+    conn.connect(sshConfig);
     conn.on('ready', function () {
         conn.exec(command, function (err, stream) {
             if (err) {

@@ -11,7 +11,3 @@
 - name: Add root user from anywhere to MySQL
   sudo: yes
   command: mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'; FLUSH PRIVILEGES;"
-
-#- name: create database
-#  sudo: yes
-#  command: mysql -u root CREATE DATABASE IF NOT EXISTS "farmer_development"
