@@ -42,8 +42,7 @@ module.exports = function Container() {
     app.delete('/:containerId', function (req, res) {
 
         ContainerManager
-            .deleteContainer(
-            {
+            .deleteContainer({
                 id: req.params.containerId,
                 removeVolume: req.query.v
             })

@@ -2,6 +2,7 @@
 
 var Q                = require('q'),
     path             = require('path'),
+    del              = require('del'),
     SshClient        = require('ssh2').Client,
     models           = require('../models'),
     Repository       = require('./Repository'),
@@ -208,7 +209,8 @@ Container.prototype.setState = function (state) {
             return models.Container
                 .update({
                     state: 'running',
-                    volumes: JSON.stringify(self.getConfigurationEntry('Binds') && null),
+                    ports: JSON.stringify(self.getConfigurationEntry('Ports')),
+                    volumes: JSON.stringify(self.getConfigurationEntry('Binds')),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }, {
                     where: {id: self.getConfigurationEntry('Id')}
@@ -237,6 +239,14 @@ Container.prototype._delete = function () {
         .find({
             where: {id: this.getConfigurationEntry('Id')}
         }).then(function (container) {
+            // TODO: Remove this code part when docker api remove volume issue solved
+            var volArr = JSON.parse(container.volumes);
+            if (null !== volArr) {
+                volArr.forEach(function (mountPoints) {
+                    del.sync(mountPoints.split(':')[0] + '/*', {force: true});
+                    del.sync(mountPoints.split(':')[0] + '/', {force: true});
+                });
+            }
             return container.destroy();
         });
 };

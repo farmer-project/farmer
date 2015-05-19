@@ -44,7 +44,7 @@ RemoveAction.prototype.executeOn = function (serverConfig) {
         uri: urljoin(serverConfig.api, '/containers/', this.identifier, this.queryParameters),
         method: 'DELETE'
     };
-    console.log('options> >>>> >>>', options);
+
     request(options, function (error, response, body) {
         if (!error && response.statusCode == 204) {
             // 204 – no error

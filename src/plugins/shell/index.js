@@ -11,8 +11,8 @@ function Shell () {
  * Register plugin methods on emitter events thrower
  */
 Shell.prototype.registerPlugin = function () {
-    //emitter.register('create', 100, this.farmfile);
-    //emitter.register('deploy', 100, this.farmfile);
+    emitter.register('create', 100, this.farmfile);
+    emitter.register('deploy', 100, this.farmfile);
 };
 
 /**
@@ -32,9 +32,12 @@ Shell.prototype.farmfile = function (bag) {
         setTimeout(function() {
 
             _(containers).reduce(function (prevPromise, containerObj, alias) {
+                console.log('>>> alias >>>', alias);
                 return prevPromise.then(function () {
+                    console.log('>>> commands[alias]>>>', commands[alias]);
                     _(commands[alias]).reduce(function (prevPromise2, command) {
                         return prevPromise2.then(function () {
+                            console.log('>>> command >>>', command);
                             return containerObj.execShell(command, publisher)
                                 .tap(publisher.toClient).catch(publisher.toClient);
                         });
@@ -46,9 +49,9 @@ Shell.prototype.farmfile = function (bag) {
             }, Q.when(true));
 
         }, 1000);
+    } else {
+        return Q.when(true);
     }
-
-    return Q.when(true);
 };
 
 module.exports = new Shell();
