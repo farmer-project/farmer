@@ -7,6 +7,7 @@ var fs        = require('fs'),
     db        = {},
 
 sequelize = new Sequelize(config.DB_NAME, config.DB_USERNAME, config.DB_PASSWORD, {
+    logging: false,
     port: config.DB_PORT,
     host: config.DB_HOST
 });

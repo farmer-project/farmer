@@ -1,9 +1,11 @@
 'use strict';
 
-var Q                = require('q'),
+var _                = require('underscore'),
+    Q                = require('q'),
     path             = require('path'),
     del              = require('del'),
     SshClient        = require('ssh2').Client,
+    fs               = require('fs'),
     models           = require('../models'),
     Repository       = require('./Repository'),
     log              = require(path.resolve(__dirname, '../debug/log')),
@@ -254,40 +256,81 @@ Container.prototype._delete = function () {
 /**
  * Execute a command on container
  * Connect to container with ssh and run command
- * @param {string} command - Shell command
+ * @param {string[]} commands - Shell command
  * @param {Publisher} publisher - Publisher object
  */
-Container.prototype.execShell = function (command, publisher) {
+Container.prototype.execShell = function (commands, publisher) {
     var self = this,
         deferred = Q.defer(),
         conn = new SshClient(),
         sshConfig = config.SSH_CONFIG;
 
-    sshConfig['privateKey'] = require('fs').readFileSync(sshConfig.privateKey);
-    sshConfig['host'] = this.getConfigurationEntry('IPAddress');
+    if (typeof commands !== 'object' || !commands.length) {
+        return Q.when(0);
+    }
 
-    conn.connect(sshConfig);
-    conn.on('ready', function () {
-        conn.exec(command, function (err, stream) {
-            if (err) {
-                deferred.reject(err);
-            }
+    fs.readFile(sshConfig.privateKey, function (error, privateKey) {
 
-            stream.on('close', function (code, signal) {
-                conn.end();
-                deferred.resolve(signal);
+        if (error) {
+            console.log('read privateKey error', error);
+            deferred.reject(error);
+            return;
+        }
 
-            }).on('data', function (data) {
-                publisher.toClient(data.toString());
+        sshConfig['privateKey'] = privateKey;
+        sshConfig['host'] = self.getConfigurationEntry('IPAddress');
 
-            }).stderr.on('data', function (data) {
-                    publisher.toClient(data.toString());
-                });
-        });
+        conn.connect(sshConfig);
 
-    }).on('error', function (error) {
-        publisher.toClient(error);
-        deferred.reject(error);
+        conn
+            .on('ready', function () {
+                _(commands).reduce(function (prevCommandPromise, command) {
+                    return prevCommandPromise.then(function () {
+                        var commandDeferred = Q.defer();
+
+                        console.log('   * Issue Command: ' + command);
+                        conn.exec(command, function (error, stream) {
+                            console.log('   * Command Started: ' + command);
+
+                            if (error) {
+                                commandDeferred.reject(error);
+                                return;
+                            }
+
+                            stream
+                                .on('close', function (code) {
+                                    console.log('STREAM CLOSED', code);
+                                    if (0 === code) {
+                                        commandDeferred.resolve(code);
+                                    } else {
+                                        commandDeferred.reject(code);
+                                    }
+                                })
+                                .on('data', function (data) {
+                                    console.log('DATA', data.toString());
+                                    publisher.toClient(data.toString());
+                                })
+                                .stderr.on('data', function (data) {
+                                    console.log('ERROR', data.toString());
+                                    publisher.toClient(data.toString());
+                                });
+                        });
+
+                        return commandDeferred.promise;
+                    });
+                }, Q.when(true))
+                    .then(deferred.resolve, deferred.reject)
+                    .finally(function () {
+                        console.log('END');
+                        conn.end();
+                    })
+                ;
+            })
+            .on('error', function (error) {
+                publisher.toClient(error);
+                deferred.reject(error);
+            })
+        ;
     });
 
     return deferred.promise;

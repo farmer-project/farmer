@@ -21,37 +21,34 @@ Shell.prototype.registerPlugin = function () {
  * @param {Bag} bag
  */
 Shell.prototype.farmfile = function (bag) {
-    var farmerfile = bag.get('farmerfile');
+    var farmerfile = bag.get('farmerfile'),
+        deferred   = Q.defer();
 
     if (farmerfile.get('shell')) {
         var containers = bag.get('containers'),
             publisher  = bag.get('publisher'),
-            commands = farmerfile.get('shell');
+            commands   = farmerfile.get('shell');
 
         // pause executing command till containers ready to use
         setTimeout(function() {
-
-            _(containers).reduce(function (prevPromise, containerObj, alias) {
-                console.log('>>> alias >>>', alias);
-                return prevPromise.then(function () {
-                    console.log('>>> commands[alias]>>>', commands[alias]);
-                    _(commands[alias]).reduce(function (prevPromise2, command) {
-                        return prevPromise2.then(function () {
-                            console.log('>>> command >>>', command);
-                            return containerObj.execShell(command, publisher)
-                                .tap(publisher.toClient).catch(publisher.toClient);
-                        });
-                    }, Q.when(true));
-
-                    return Q.when(true);
+             _(containers).reduce(function (prevContainerPromise, containerObj, alias) {
+                return prevContainerPromise.then(function () {
+                    console.log('Running shells on [' + alias + ']:');
+                    return containerObj.execShell(commands[alias], publisher)
+                        .tap(console.log)
+                        .catch(console.log);
                 });
-
-            }, Q.when(true));
+            }, Q.when(true))
+                .then(deferred.resolve, deferred.reject)
+            ;
 
         }, 1000);
+
     } else {
-        return Q.when(true);
+        deferred.resolve(true);
     }
+
+    return deferred.promise;
 };
 
 module.exports = new Shell();
