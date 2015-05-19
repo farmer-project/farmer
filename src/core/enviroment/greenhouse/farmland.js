@@ -41,12 +41,13 @@ Farmland.prototype.furrow = function (containersSite, publisher) {
                     hostname: hostname
                 }).then(function (resutl) {
                     log.trace(resutl);
-                    //publisher.toClient(clientData);
+                    publisher.toClient(clientData);
                     return containers;
 
                 }).catch(log.error);
         }).catch(function (err) {
-            publisher.toClient(err);
+            log.error(err);
+            publisher.toClient(String(err));
         })
         .finally(function () {
             publisher.subWorksFinish();

@@ -14,15 +14,20 @@ function PackagePlugin() {
  * Register plugin methods on emitter events thrower
  */
 PackagePlugin.prototype.registerPlugin = function () {
+    var self = this;
     emitter.register('create', 3, this.toClient);
 
-    emitter.register('deploy', 1, this.getContainers);
+    emitter.register('deploy', 1, getContainers);
 
-    emitter.register('inspect', 1, this.getContainers);
+    emitter.register('inspect', 1, getContainers);
     emitter.register('inspect', 2, this.toClient);
 
-    emitter.register('delete', 1, this.getContainers);
+    emitter.register('delete', 1, getContainers);
     emitter.register('delete', 2, this.delete);
+
+    function getContainers(bag) {
+        return self.getContainers(bag);
+    }
 };
 
 /**
@@ -37,35 +42,27 @@ PackagePlugin.prototype.getContainers = function (bag) {
         publisher   = bag.get('publisher'),
         containers  = {};
 
-    return models
-        .Package.find({
-            where: {hostname: args.hostname}
-        }).then(function (packageRow) {
-            if (null == packageRow) {
-                publisher.toClient(args.hostname + ' package does not exist');
-                return Q.when(true);
-            }
+    bag.set('containers', containers);
+    return this.isExist(args.hostname).then(function (packageRow) {
+        var containerID = JSON.parse(packageRow.containers),
+            promiseArray = [];
+        for (var alias in containerID) {
+            (function(alias) { // Create a closure to save alias until code block finish
+                var container = new Container();
+                promiseArray.push(
+                    container.getInstance(containerID[alias])
+                        .then(function (containerObj) {
+                            containers[alias] = containerObj;
+                        })
+                );
+            })(alias);
+        }
 
-            bag.set('containers', containers);
-            var containerID = JSON.parse(packageRow.containers),
-                promiseArray = [];
-            for (var alias in containerID) {
-                (function(alias) { // Create a closure to save alias until code block finish
-                    var container = new Container();
-                    promiseArray.push(
-                        container.getInstance(containerID[alias])
-                            .then(function (containerObj) {
-                                containers[alias] = containerObj;
-                            })
-                    );
-                })(alias);
-            }
-
-            return Q.all(promiseArray);
-        }, function () {
-            publisher.toClient('package ' + args.hostname + ' does not exist');
-            publisher.subWorksFinish();
-        });
+        return Q.all(promiseArray);
+    }, function (error) {
+        publisher.toClient(args.hostname + ' package does not exist');
+        return Q.when(true);
+    });
 };
 
 /**
@@ -110,6 +107,19 @@ PackagePlugin.prototype.toClient = function (bag) {
         publisher.toClient(result);
     }
     return Q.when(true);
+};
+
+PackagePlugin.prototype.isExist = function (packageName) {
+    return models
+        .Package.find({
+            where: {hostname: packageName}
+        }).then(function (packageRow) {
+            if (null == packageRow) {
+                return Q.reject(packageName + ' does not exist');
+            } else {
+                return Q.when(packageRow);
+            }
+        });
 };
 
 module.exports = new PackagePlugin();

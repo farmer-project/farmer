@@ -63,8 +63,14 @@ Publisher.prototype.toClient = function (data, type) {
     return this;
 };
 
+/**
+ * Any connection can be live for 5 sec after finished their work
+ */
 Publisher.prototype.disconnect = function () {
-    this.connection.disconnect();
+    var self = this;
+    setTimeout(function () {
+        self.connection.disconnect();
+    }, 5000);
 };
 
 /**
@@ -112,9 +118,7 @@ Publisher.prototype.subWorksFinish = function () {
  * @private
  */
 Publisher.prototype._emitEvent = function (data) {
-    console.log('data 1>>>', data);
     if (this.connection) {
-        console.log('data 2>>>', data);
         this.connection.publish(this.roomID, data,
             {contentType: 'application/json'});
         log.trace('room >>' + this.roomID + ' data >>' + JSON.stringify(data));

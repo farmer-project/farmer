@@ -25,8 +25,8 @@ RemoveAction.prototype.options = function (opt) {
 
     this.identifier = opt.Id;
 
-    if (opt.ForceStop)     { this.queryParameters['force'] = 1; }
-    if (opt.RemoveVolume)  { this.queryParameters['v'] = 1; }
+    if (opt.RemoveVolume)  { this.queryParameters['v'] = true; }
+    if (opt.ForceStop)     { this.queryParameters['force'] = true; }
     this.queryParameters = '?' + querystring.stringify(this.queryParameters);
 
     return this;
@@ -44,7 +44,7 @@ RemoveAction.prototype.executeOn = function (serverConfig) {
         uri: urljoin(serverConfig.api, '/containers/', this.identifier, this.queryParameters),
         method: 'DELETE'
     };
-
+    console.log('options> >>>> >>>', options);
     request(options, function (error, response, body) {
         if (!error && response.statusCode == 204) {
             // 204 – no error

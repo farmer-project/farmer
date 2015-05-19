@@ -25,23 +25,22 @@ FarmlandPlugin.prototype.registerPlugin = function () {
 FarmlandPlugin.prototype.furrow = function (bag) {
     var compose     = bag.get('compose'),
         publisher   = bag.get('publisher'),
-        firstProKey = Object.keys(compose)[0];
+        args        = bag.get('args');
 
     return models
         .Package.find({
-            where: {hostname: compose[firstProKey].hostname}
+            where: {hostname: args.hostname}
         }).then(function (packageRow) {
             if (null !== packageRow) {
                 publisher.toClient('package ' + args.hostname + ' exist');
                 return Q.when(true);
+            } else {
+                return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
+                    bag.set('containers', createdContainersObj);
+                }).catch(function (error) {
+                    publisher.toClient(error);
+                });
             }
-
-            return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
-                bag.set('containers', createdContainersObj);
-                publisher.toClient('package containers created');
-            }).catch(function (error) {
-                publisher.toClient(error);
-            });
         });
 };
 

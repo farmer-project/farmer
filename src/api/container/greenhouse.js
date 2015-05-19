@@ -74,7 +74,6 @@ module.exports = function Greenhouse() {
         publisher
             .connect()
             .then(function () {
-                console.log('<<go to connect>>');
                 res.status(200)
                     .json({
                         room: publisher.roomID
