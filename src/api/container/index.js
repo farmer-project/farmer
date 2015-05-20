@@ -5,7 +5,6 @@ module.exports = function Container() {
         path                = require('path'),
         greenhouse          = require('./greenhouse'),
         production          = require('./production'),
-        ContainerManager    = require(path.resolve(__dirname, '../../core/container/manager')),
         models              = require('../../core/models'),
         app = express();
 
