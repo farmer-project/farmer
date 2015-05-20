@@ -1,11 +1,12 @@
 'use strict';
 
 module.exports = function Container() {
-    var express = require('express'),
-        path    = require('path'),
-        greenhouse = require('./greenhouse'),
-        production = require('./production'),
-        ContainerManager = require(path.resolve(__dirname, '../../core/container/manager')),
+    var express             = require('express'),
+        path                = require('path'),
+        greenhouse          = require('./greenhouse'),
+        production          = require('./production'),
+        ContainerManager    = require(path.resolve(__dirname, '../../core/container/manager')),
+        models              = require('../../core/models'),
         app = express();
 
     /*
@@ -15,47 +16,23 @@ module.exports = function Container() {
     app.use('/greenhouse', greenhouse());
     app.use('/production', production());
 
-    // Regular routes
-    app.get('/:containerId', function (req, res) {
-
-        ContainerManager
-            .getContainerInfo(req.params.containerId)
-            .then(function (response) {
-                res
-                    .status(response.code)
+    app.get('/list', function (req, res) {
+        models.
+            Package.
+            findAll({
+                attributes: ['hostname']
+            }).then(function (packages) {
+                res.status(200)
                     .json({
-                        'result': response.message,
-                        'error' : ''
+                        result: JSON.stringify(packages),
+                        error: ''
                     });
-
-            }, function (error) {
-                res
-                    .status(error.code)
+            }, function (err) {
+                return res.status(500)
                     .json({
-                        'result': '',
-                        'error' : error.message
+                        result: '',
+                        error: 'Cant not fetch packages'
                     });
-            });
-    });
-
-    // send 'v' as a query  params "1/0"
-    app.delete('/:containerId', function (req, res) {
-
-        ContainerManager
-            .deleteContainer({
-                id: req.params.containerId,
-                removeVolume: req.query.v
-            })
-            .then(function (info) {
-                res.json({
-                    success: true,
-                    info: info
-                });
-            }, function (error) {
-                res.json({
-                    success: false,
-                    error: error
-                });
             });
     });
 

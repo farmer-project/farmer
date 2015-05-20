@@ -27,49 +27,5 @@ module.exports = function Production() {
             });
     });
 
-    app.get('/list', function (req, res) {
-        models
-            .Container
-            .findAll({
-                where: {
-                    type: TYPE,
-                    state: 'running'
-                }
-            })
-            .complete(function (err, result) {
-                var message = '';
-                if (!!err) {
-                    message = 'An error occurred while select on containers ';
-                    log.error(message + err);
-
-                    res
-                        .status(500)
-                        .json({
-                            result: [],
-                            error: message
-                        });
-
-                } else {
-
-                    if (!result) {
-                        log.info('No container found');
-                    } else {
-                        log.info('production container found');
-                    }
-
-                    log.debug(result);
-
-                    res
-                        .status(200)
-                        .json({
-                            result: result,
-                            error: ''
-                        });
-
-                }
-            })
-        ;
-    });
-
     return app;
 };
