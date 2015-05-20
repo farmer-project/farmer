@@ -260,17 +260,16 @@ Container.prototype._delete = function () {
  * @param {Publisher} publisher - Publisher object
  */
 Container.prototype.execShell = function (commands, publisher) {
-    var self = this,
-        deferred = Q.defer(),
-        conn = new SshClient(),
-        sshConfig = config.SSH_CONFIG;
-
     if (typeof commands !== 'object' || !commands.length) {
         return Q.when(0);
     }
 
-    fs.readFile(sshConfig.privateKey, function (error, privateKey) {
+    var self = this,
+        deferred = Q.defer(),
+        conn = new SshClient(),
+        sshConfig = _.clone(config.SSH_CONFIG);
 
+    fs.readFile(sshConfig.privateKey, function (error, privateKey) {
         if (error) {
             console.log('read privateKey error', error);
             deferred.reject(error);
@@ -288,7 +287,6 @@ Container.prototype.execShell = function (commands, publisher) {
                     return prevCommandPromise.then(function () {
                         var commandDeferred = Q.defer();
 
-                        console.log('   * Issue Command: ' + command);
                         conn.exec(command, function (error, stream) {
                             console.log('   * Command Started: ' + command);
 
@@ -299,7 +297,6 @@ Container.prototype.execShell = function (commands, publisher) {
 
                             stream
                                 .on('close', function (code) {
-                                    console.log('STREAM CLOSED', code);
                                     if (0 === code) {
                                         commandDeferred.resolve(code);
                                     } else {
@@ -307,11 +304,9 @@ Container.prototype.execShell = function (commands, publisher) {
                                     }
                                 })
                                 .on('data', function (data) {
-                                    console.log('DATA', data.toString());
                                     publisher.toClient(data.toString());
                                 })
                                 .stderr.on('data', function (data) {
-                                    console.log('ERROR', data.toString());
                                     publisher.toClient(data.toString());
                                 });
                         });
@@ -321,7 +316,6 @@ Container.prototype.execShell = function (commands, publisher) {
                 }, Q.when(true))
                     .then(deferred.resolve, deferred.reject)
                     .finally(function () {
-                        console.log('END');
                         conn.end();
                     })
                 ;
@@ -329,6 +323,12 @@ Container.prototype.execShell = function (commands, publisher) {
             .on('error', function (error) {
                 publisher.toClient(error);
                 deferred.reject(error);
+            })
+            .on('connect', function () {
+                log.trace('STREAM CONNECT');
+            })
+            .on('end', function () {
+                log.trace('STREAM END');
             })
         ;
     });

@@ -29,17 +29,15 @@ Shell.prototype.farmfile = function (bag) {
             publisher  = bag.get('publisher'),
             commands   = farmerfile.get('shell');
 
-        // pause executing command till containers ready to use
+        // pause executing flow till containers ready to use
         setTimeout(function() {
-             _(containers).reduce(function (prevContainerPromise, containerObj, alias) {
+             _(containers).reduce(function (prevContainerPromise, containerObject, alias) {
                 return prevContainerPromise.then(function () {
                     console.log('Running shells on [' + alias + ']:');
-                    return containerObj.execShell(commands[alias], publisher)
-                        .tap(console.log)
-                        .catch(console.log);
+                    return containerObject.execShell(commands[alias], publisher);
                 });
             }, Q.when(true))
-                .then(deferred.resolve, deferred.reject)
+                .then(deferred.resolve, deferred.resolve)
             ;
 
         }, 1000);

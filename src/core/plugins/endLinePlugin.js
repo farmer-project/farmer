@@ -25,6 +25,7 @@ EndLinePlugin.prototype.registerPlugin = function () {
  */
 EndLinePlugin.prototype.eventEnd = function (bag) {
     var publisher   = bag.get('publisher');
+
     while (publisher.subLevel > 0) {
         if (1 === publisher.subLevel) {publisher.toClient('done');}
         publisher.subWorksFinish();
