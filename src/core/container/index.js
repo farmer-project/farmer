@@ -19,6 +19,7 @@ var _                = require('underscore'),
 function Container (type) {
     this.configuration = {};
     this.metadata = {};
+    this.domain = null;
     this.type = type || 'docker';
     this.containermanager = new ContainerManager(this.type);
 }
@@ -41,6 +42,7 @@ Container.prototype.getInstance  = function (identifier) {
                 where: {id: identifier}
             }).then(function (container) {
                 self.metadata = JSON.parse(container.metadata);
+                self.domain   = container.domain;
                 return self;
             });
     });
@@ -304,10 +306,10 @@ Container.prototype.execShell = function (commands, publisher) {
                                     }
                                 })
                                 .on('data', function (data) {
-                                    publisher.toClient(data.toString());
+                                    publisher.sendString(data.toString());
                                 })
                                 .stderr.on('data', function (data) {
-                                    publisher.toClient(data.toString());
+                                    publisher.sendString(data.toString());
                                 });
                         });
 
@@ -321,7 +323,7 @@ Container.prototype.execShell = function (commands, publisher) {
                 ;
             })
             .on('error', function (error) {
-                publisher.toClient(error);
+                publisher.sendRaw(error);
                 deferred.reject(error);
             })
             .on('connect', function () {
@@ -334,6 +336,31 @@ Container.prototype.execShell = function (commands, publisher) {
     });
 
     return deferred.promise;
+};
+
+/**
+ * Set container domain
+ * @param {string} domain - url
+ * @param {Number} port - container http port
+ */
+Container.prototype.setDomain = function (domain, port) {
+    var self        = this,
+        ports       = this.getConfigurationEntry('Ports'),
+        httpPort    = ports[port + '/tcp'][0]['HostPort'],
+        containerIp = this.getConfigurationEntry('IPAddress');
+
+    this.domain = domain;
+
+    return models
+        .Container
+        .update({
+            domain: domain
+        }, {
+            where: {id: self.getConfigurationEntry('Id')}
+
+        }).then(function () {
+            return 'http://' + containerIp + ':' + httpPort;
+        });
 };
 
 module.exports = Container;

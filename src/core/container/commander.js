@@ -37,16 +37,16 @@ Commander.prototype.shell = function (ip, commands, publisher) {
             return prevPromise.then(function () {
                 var cmdDeferred = Q.defer();
 
-                publisher.toClient(
+                publisher.sendRaw(
                     'container: ' + ip +
                     ' command: ' + cmd
                 );
                 ssh.exec(cmd).then(function (result) {
                     if (result.stderr) {
-                        publisher.toClient('error: ' + result.stderr);
+                        publisher.sendString('error: ' + result.stderr);
                         cmdDeferred.reject(result.stderr);
                     }
-                    publisher.toClient('output: ' + result.stdout);
+                    publisher.sendString('output: ' + result.stdout);
                     cmdDeferred.resolve(result.stdout);
                 }, function (reason) {
                     cmdDeferred.reject(reason);

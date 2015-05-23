@@ -55,8 +55,16 @@ Publisher.prototype.connect = function () {
  * @param {string} [type = message] - message types are defined at Publisher.prototype.TYPE
  * @returns {Publisher}
  */
-Publisher.prototype.toClient = function (data, type) {
+Publisher.prototype.sendRaw = function (data, type) {
     data = this._dataResolver(data);
+    data['type'] = (type == undefined) ? this.TYPE.MESSAGE : type;
+    this._emitEvent(data);
+
+    return this;
+};
+
+Publisher.prototype.sendString = function (data, type) {
+    data = this._dataResolver(data + '\n');
     data['type'] = (type == undefined) ? this.TYPE.MESSAGE : type;
     this._emitEvent(data);
 

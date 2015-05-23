@@ -15,12 +15,13 @@ function PackagePlugin() {
  */
 PackagePlugin.prototype.registerPlugin = function () {
     var self = this;
-    emitter.register('create', 3, this.toClient);
 
     emitter.register('deploy', 1, getContainers);
 
     emitter.register('inspect', 1, getContainers);
     emitter.register('inspect', 2, this.toClient);
+
+    emitter.register('setDomain', 1, getContainers);
 
     emitter.register('delete', 1, getContainers);
     emitter.register('delete', 2, this.delete);
@@ -60,7 +61,7 @@ PackagePlugin.prototype.getContainers = function (bag) {
 
         return Q.all(promiseArray);
     }, function (error) {
-        publisher.toClient(args.hostname + ' package does not exist');
+        publisher.sendString(args.hostname + ' package does not exist');
         return Q.when(true);
     });
 };
@@ -102,9 +103,18 @@ PackagePlugin.prototype.toClient = function (bag) {
 
     if (containers) {
         for (var alias in containers) {
-            result[alias] = containers[alias].getConfigurationEntry('*');
+            var tempContainer = containers[alias];
+
+            result[alias] = {
+                Id: tempContainer.getConfigurationEntry('Id'),
+                Domain: tempContainer.domain,
+                Name: tempContainer.getConfigurationEntry('Name')[1],
+                Ports: tempContainer.getConfigurationEntry('Ports'),
+                Image: tempContainer.getConfigurationEntry('Image')[0],
+                State: tempContainer.getConfigurationEntry('State')
+            };
         }
-        publisher.toClient(result);
+        publisher.sendRaw(result);
     }
     return Q.when(true);
 };

@@ -28,7 +28,7 @@ ComposePlugin.prototype.composeToContainerApiMapper = function (bag) {
         publisher       = bag.get('publisher');
 
     bag.set('compose', compose.mapDataToContainerApi(containers, dirs, hostname));
-    publisher.toClient('containers orchestrated');
+    publisher.sendString('containers orchestrated');
     return Q.when(true);
 };
 

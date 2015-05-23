@@ -16,6 +16,7 @@ EndLinePlugin.prototype.registerPlugin = function () {
     emitter.register('deploy', 999, this.eventEnd);
     emitter.register('inspect', 999, this.eventEnd);
     emitter.register('delete', 999, this.eventEnd);
+    emitter.register('setDomain', 999, this.eventEnd);
 };
 
 /**
@@ -27,7 +28,7 @@ EndLinePlugin.prototype.eventEnd = function (bag) {
     var publisher   = bag.get('publisher');
 
     while (publisher.subLevel > 0) {
-        if (1 === publisher.subLevel) {publisher.toClient('done');}
+        if (1 === publisher.subLevel) { publisher.sendString('done'); }
         publisher.subWorksFinish();
     }
     publisher.disconnect();

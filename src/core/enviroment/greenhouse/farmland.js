@@ -19,37 +19,37 @@ function Farmland () {
  */
 Farmland.prototype.furrow = function (containersSite, publisher) {
     var containersId = [];
-    publisher.toClient('creating containers ...');
+    publisher.sendString('creating containers ...');
     publisher.subWorksStart();
 
     return packageCompose
         .run(containersSite)
         .then(function (containers) {
-            var containersData = {},
-                clientData = {},
+            var containersID = {},
                 hostname = '';
+
             for (var key in containers) {
-                containersData[key] = containers[key].getConfigurationEntry('Id');
+                containersID[key] = containers[key].getConfigurationEntry('Id');
                 hostname = containers[key].getConfigurationEntry('Hostname');
-                clientData[key] = containers[key].getConfigurationEntry('*');
             }
 
             return models
-                .Package
-                .create({
-                    containers: JSON.stringify(containersData),
+                .Package.create({
+                    containers: JSON.stringify(containersID),
                     hostname: hostname
                 }).then(function (resutl) {
-                    log.trace(resutl);
-                    publisher.toClient(clientData);
+
+                    publisher.sendString(containersID);
                     return containers;
 
                 }).catch(log.error);
+
         }).catch(function (err) {
+
             log.error(err);
-            publisher.toClient(String(err));
-        })
-        .finally(function () {
+            publisher.sendString(String(err));
+
+        }).finally(function () {
             publisher.subWorksFinish();
         });
 };

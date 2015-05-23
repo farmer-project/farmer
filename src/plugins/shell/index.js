@@ -31,9 +31,8 @@ Shell.prototype.farmfile = function (bag) {
 
         // pause executing flow till containers ready to use
         setTimeout(function() {
-             _(containers).reduce(function (prevContainerPromise, containerObject, alias) {
+            _(containers).reduce(function (prevContainerPromise, containerObject, alias) {
                 return prevContainerPromise.then(function () {
-                    console.log('Running shells on [' + alias + ']:');
                     return containerObject.execShell(commands[alias], publisher);
                 });
             }, Q.when(true))

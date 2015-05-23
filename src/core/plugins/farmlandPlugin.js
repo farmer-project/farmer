@@ -28,20 +28,28 @@ FarmlandPlugin.prototype.furrow = function (bag) {
         args        = bag.get('args');
 
     return models
-        .Package.find({
+        .Package
+        .find({
             where: {hostname: args.hostname}
         }).then(function (packageRow) {
+
             if (null !== packageRow) {
-                publisher.toClient('package ' + args.hostname + ' exist');
+                publisher.sendString('package ' + args.hostname + ' exist');
                 return Q.when(true);
-            } else {
-                return farmland.furrow(compose, publisher).tap(function (createdContainersObj) {
-                    bag.set('containers', createdContainersObj);
-                }).catch(function (error) {
-                    publisher.toClient(error);
-                });
             }
-        });
+
+            return farmland
+                .furrow(compose, publisher)
+                .tap(function (createdContainersObj) {
+                        bag.set('containers', createdContainersObj);
+                        publisher.sendString('Containers created');
+
+                    }).catch(function (error) {
+                        publisher.sendRaw(error);
+                    })
+                ;
+        })
+    ;
 };
 
 module.exports = new FarmlandPlugin();

@@ -4,6 +4,7 @@ var express     = require('express'),
     _           = require('underscore'),
     Q           = require('q'),
     path        = require('path'),
+    domain      = require('./domain'),
     LogCenter   = require('../../core/debug/log'),
     Publisher   = require('../../core/station'),
     auth        = require('../../core/security/auth'),
@@ -118,6 +119,8 @@ module.exports = function Greenhouse() {
                     });
             });
     });
+
+    app.use('/domain', domain());
 
     return app;
 };
