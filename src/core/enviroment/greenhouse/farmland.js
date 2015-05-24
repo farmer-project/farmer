@@ -19,7 +19,7 @@ function Farmland () {
  */
 Farmland.prototype.furrow = function (containersSite, publisher) {
     var containersId = [];
-    publisher.sendString('creating containers ...');
+    publisher.sendString('Creating containers...');
     publisher.subWorksStart();
 
     return packageCompose
@@ -39,7 +39,7 @@ Farmland.prototype.furrow = function (containersSite, publisher) {
                     hostname: hostname
                 }).then(function (resutl) {
 
-                    publisher.sendString(containersID);
+                    publisher.sendRaw(containersID);
                     return containers;
 
                 }).catch(log.error);

@@ -34,7 +34,7 @@ FarmlandPlugin.prototype.furrow = function (bag) {
         }).then(function (packageRow) {
 
             if (null !== packageRow) {
-                publisher.sendString('package ' + args.hostname + ' exist');
+                publisher.sendString('Package ' + args.hostname + ' exist');
                 return Q.when(true);
             }
 
