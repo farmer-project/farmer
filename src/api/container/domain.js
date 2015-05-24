@@ -18,8 +18,11 @@ module.exports = function Domain() {
         var args     = req.body.args,
             hostname = args.hostname || '',
             alias    = args.alias,
-            deferred = Q.defer;
+            deferred = Q.defer();
 
+        console.log('hostname', hostname);
+        console.log('alias', alias);
+        console.log('args', args);
         models.
             Package.
             find({
@@ -78,7 +81,7 @@ module.exports = function Domain() {
                 where: {hostname: hostname}
             }).then(function (packageRow) {
                 if (!packageRow) {
-                    deferred.reject('Package not found');
+                    deferred.reject('Package does not exists');
 
                 } else {
                     var containersID = JSON.parse(packageRow.containers),
