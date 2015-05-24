@@ -12,8 +12,7 @@ module.exports = function Domain() {
     var app = express();
 
     /**
-     * Set domain for a package container
-     * port, alias,
+     * Assign domain for a package container
      */
     app.post('/', function (req, res) {
         var args     = req.body.args,
@@ -38,7 +37,7 @@ module.exports = function Domain() {
 
                     } else {
                         container.getInstance(containersID[alias]).then(function (containerObj) {
-                            domainManager.setDomain(containerObj, args)
+                            domainManager.assign(containerObj, args)
                                 .then(deferred.resolve, deferred.reject);
                         });
                     }
@@ -47,7 +46,6 @@ module.exports = function Domain() {
                 return deferred.promise;
 
             }).then(function (result) {
-                console.log('LAST SUCCESS');
                 return res.status(200)
                     .json({
                         result: result,
@@ -55,7 +53,6 @@ module.exports = function Domain() {
                     });
 
             }, function (error) {
-                console.log('LAST ERROR');
                 return res.status(500)
                     .json({
                         result: '',
@@ -65,6 +62,59 @@ module.exports = function Domain() {
         ;
 
     });
+
+    /**
+     * Unassign a domain form a package container
+     */
+    app.delete('/', function (req, res) {
+        var args     = req.body.args,
+            hostname = args.hostname || '',
+            alias    = args.alias,
+            deferred = Q.defer;
+
+        models.
+            Package.
+            find({
+                where: {hostname: hostname}
+            }).then(function (packageRow) {
+                if (!packageRow) {
+                    deferred.reject('Package not found');
+
+                } else {
+                    var containersID = JSON.parse(packageRow.containers),
+                        container = new Container();
+
+                    if (!containersID[alias]) {
+                        deferred.reject(args.alias + ' container does not exists');
+
+                    } else {
+                        container.getInstance(containersID[alias]).then(function (containerObj) {
+                            domainManager.unassign(containerObj, args)
+                                .then(deferred.resolve, deferred.reject);
+                        });
+                    }
+                }
+
+                return deferred.promise;
+
+            }).then(function (result) {
+                return res.status(200)
+                    .json({
+                        result: result,
+                        error: ''
+                    });
+
+            }, function (error) {
+                return res.status(500)
+                    .json({
+                        result: '',
+                        error: error
+                    });
+            })
+        ;
+
+    });
+
 
     return app;
 };

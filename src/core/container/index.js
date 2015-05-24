@@ -185,7 +185,7 @@ Container.prototype.destroy = function (removeVolume) {
  */
 Container.prototype.restart = function (second) {
     var sec = (second) ? second : 0;
-    this.containermanager.restartContainer(this.getConfigurationEntry('Id'), sec);
+    return this.containermanager.restartContainer(this.getConfigurationEntry('Id'), sec);
 };
 
 /**
@@ -360,6 +360,22 @@ Container.prototype.setDomain = function (domain, port) {
 
         }).then(function () {
             return 'http://' + containerIp + ':' + httpPort;
+        });
+};
+
+/**
+ * Unset container domain on specific port
+ * // TODO: support multiple domain
+ * @param domain
+ * @param port
+ */
+Container.prototype.unsetDomain = function (domain, port) {
+    return models
+        .Container
+        .update({
+            domain: ''
+        }, {
+            where: {id: self.getConfigurationEntry('Id')}
         });
 };
 

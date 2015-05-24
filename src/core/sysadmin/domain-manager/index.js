@@ -19,7 +19,7 @@ DomainManager.prototype.generate = function (containerObj) {
             '.' + mainConfig.DOMAIN;
 };
 
-DomainManager.prototype.setDomain = function (containerObj, opts) {
+DomainManager.prototype.assign = function (containerObj, opts) {
     var port      = opts.port || '80',
         domain    = opts.domain || this.generate(containerObj),
         deferred  = Q.defer(),
@@ -38,16 +38,35 @@ DomainManager.prototype.setDomain = function (containerObj, opts) {
                 };
 
         fs.writeFileSync(
-            mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.conf',
+            mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port+ '.conf',
             Mustache.render(confFile, vars)
         );
 
-        container.getInstance(mainConfig.REVERSE_PROXY.containerID).then(function (containerObj) {
-            containerObj.restart();
+        container.getInstance(mainConfig.REVERSE_PROXY.containerID).then(function (ReverseProxyContainer) {
+            ReverseProxyContainer.restart();
             deferred.resolve(domain);
 
         }, deferred.reject);
 
+    }, deferred.reject);
+
+    return deferred.promise;
+};
+
+DomainManager.prototype.unassign = function (containerObj, opts) {
+    var port      = opts.port || '80',
+        domain    = opts.domain,
+        deferred  = Q.defer(),
+        container = new Containre();
+
+    containerObj.unsetDomain(domain, port).then(function () {
+        fs.unlinkSync(mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port+ '.conf');
+
+        container.getInstance(mainConfig.REVERSE_PROXY.containerID).then(function (ReverseProxyContainer) {
+            return ReverseProxyContainer.restart()
+                .then(deferred.resolve, deferred.reject);
+
+        }, deferred.reject);
     }, deferred.reject);
 
     return deferred.promise;
