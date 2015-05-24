@@ -306,10 +306,10 @@ Container.prototype.execShell = function (commands, publisher) {
                                     }
                                 })
                                 .on('data', function (data) {
-                                    publisher.sendString(data.toString());
+                                    publisher.sendRaw(data.toString());
                                 })
                                 .stderr.on('data', function (data) {
-                                    publisher.sendString(data.toString());
+                                    publisher.sendRaw(data.toString());
                                 });
                         });
 
