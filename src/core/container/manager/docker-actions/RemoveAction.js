@@ -8,8 +8,8 @@ var Q           = require('q'),
 /**
  * @constructor
  */
-function RemoveAction () {
-    this.identifier = null;
+function RemoveAction (identifier) {
+    this.identifier = identifier;
     this.queryParameters = {};
 }
 
@@ -19,11 +19,9 @@ function RemoveAction () {
  * @returns {RemoveAction}
  */
 RemoveAction.prototype.options = function (opt) {
-    if (!opt.Id || typeof opt.Id !== 'string') {
+    if (!this.identifier || typeof this.identifier !== 'string') {
         throw new Error('Unknown container Id ' + opt.Id);
     }
-
-    this.identifier = opt.Id;
 
     if (opt.RemoveVolume)  { this.queryParameters['v'] = true; }
     if (opt.ForceStop)     { this.queryParameters['force'] = true; }

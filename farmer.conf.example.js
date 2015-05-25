@@ -10,15 +10,20 @@ module.exports = {
     STORAGE: '/xxx',
     DOMAIN: 'xxxx.xx',
     SSH_CONFIG: {
-        privateKey: '/xxx/xxx/xxx/xxx',
+        privateKey: '/PRIVATE/KEY/FILE/ADDRESS',
         username: 'xxxx',
         port: 22,
         passphrase: 'xxxxx'
     },
+    REVERSE_PROXY: {
+        rootConfig: 'REVERSE PROXY conf.d FOLDER ADDRESS',
+        containerID: 'REVERSE_PROXY_CONTAINER_ID',
+        destination_server_ip: 'xxx.xxx.xxx.xxx'
+    },
     DB_USERNAME: 'xxxx',
     DB_PASSWORD: 'xxxxx',
     DB_NAME: 'farmer',
-    DB_HOST: 'xxxx.xxxx.xxxx.xxxx',
+    DB_HOST: 'xxx.xxx.xxx.xxx',
     DB_DIALECT: 'mysql',
     DB_PORT: '3306'
 };

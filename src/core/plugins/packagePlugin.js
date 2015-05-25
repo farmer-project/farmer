@@ -48,7 +48,8 @@ PackagePlugin.prototype.getContainers = function (bag) {
         var containerID = JSON.parse(packageRow.containers),
             promiseArray = [];
         for (var alias in containerID) {
-            (function(alias) { // Create a closure to save alias until code block finish
+            // Create a closure
+            (function(alias) {
                 var container = new Container();
                 promiseArray.push(
                     container.getInstance(containerID[alias])

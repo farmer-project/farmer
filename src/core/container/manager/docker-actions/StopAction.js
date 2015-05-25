@@ -10,7 +10,7 @@ var Q           = require('q'),
  * @constructor
  */
 function StopAction (identifier) {
-    this.id = id;
+    this.id = identifier;
     this.queryParameters = '';
 }
 

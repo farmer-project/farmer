@@ -12,8 +12,9 @@ module.exports = function(sequelize, DataTypes) {
         ports: DataTypes.STRING(256),
         public: DataTypes.INTEGER(8),
         image: DataTypes.STRING(128),
-        domain: DataTypes.STRING(128),
-        state: DataTypes.STRING(128),
+        status: DataTypes.STRING(128),
+        type: DataTypes.STRING(128),
+        server: DataTypes.STRING(128),
         metadata: DataTypes.TEXT,
         configuration: DataTypes.TEXT
     }, {

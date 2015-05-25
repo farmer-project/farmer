@@ -31,3 +31,11 @@ models.sequelize.sync().then(function () {
         console.log('Listening on port '.green, this.address().port);
     });
 });
+
+
+//var Container = require('./core/container');
+
+//var cont = new Container();
+//cont.getInstance('a0828ed56310').then(function (containerObj) {
+//    console.log('HERE');
+//});

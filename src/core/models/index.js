@@ -28,6 +28,8 @@ Object.keys(db).forEach(function(modelName) {
     }
 });
 
+db.Domain.belongsTo(db.Container, {foreignKey: 'container_id'});
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

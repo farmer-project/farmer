@@ -20,10 +20,14 @@ DomainManager.prototype.generate = function (containerObj) {
 };
 
 DomainManager.prototype.assign = function (containerObj, opts) {
+    console.log('domain', opts.domain);
+
     var port      = opts.port || '80',
         domain    = opts.domain || this.generate(containerObj),
         deferred  = Q.defer(),
         container = new Containre();
+
+    console.log('domain', domain);
 
     containerObj.setDomain(domain, port).then(function (proxyPass) {
         var confFile =

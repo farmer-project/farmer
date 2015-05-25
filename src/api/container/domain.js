@@ -70,7 +70,7 @@ module.exports = function Domain() {
         var args     = req.body.args,
             hostname = args.hostname || '',
             alias    = args.alias,
-            deferred = Q.defer;
+            deferred = Q.defer();
 
         models.
             Package.

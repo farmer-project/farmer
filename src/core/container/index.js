@@ -17,11 +17,13 @@ var _                = require('underscore'),
  * @constructor
  */
 function Container (type) {
-    this.configuration = {};
-    this.metadata = {};
-    this.domain = null;
-    this.type = type || 'docker';
+    this.type = type || config.CONTAINER.default;
     this.containermanager = new ContainerManager(this.type);
+    this.domain = [];
+    this.status = undefined;
+    this.server = null;
+    this.metadata = {};
+    this.configuration = {};
 }
 
 /**
@@ -31,21 +33,23 @@ function Container (type) {
  * @returns {*|promise}
  */
 Container.prototype.getInstance  = function (identifier) {
-    var self = this,
-        // TODO: create system to find created container server
-        repository = new Repository({api: config.CONTAINER_SERVER_API});
+    var self = this;
 
-    return repository.containerInfo(identifier).then(function (configuration) {
-        self.configuration = configuration;
-        return models.Container
-            .find({
-                where: {id: identifier}
-            }).then(function (container) {
-                self.metadata = JSON.parse(container.metadata);
-                self.domain   = container.domain;
+    return models
+        .Container
+        .find({
+            where: {id: identifier}
+        }).then(function (container) {
+            self.server     = container.server;
+            self.type       = container.type;
+            //self.domain   =
+            var repository = new Repository({api: config.SERVERS[container.server][self.type + '_api']});
+            return repository.containerInfo(identifier).then(function (configuration) {
+                self.configuration = configuration;
                 return self;
             });
-    });
+        })
+    ;
 };
 
 /**
@@ -130,21 +134,22 @@ Container.prototype.run = function (config) {
     var self = this,
         id   = this.getConfigurationEntry('Id');
     if (!id) {
-        return this.containermanager.createContainer(config).then(function (containerConfig) {
+        return this.containermanager.createContainer(config).spread(function (server, containerConfig) {
+            self.server = server;
             self._setConfiguration(containerConfig);
-            self.setState('created');
+            self.setStatus('created');
             config.Id = self.getConfigurationEntry('Id');
-            return self.containermanager.startContainer(config).then(function (conf) {
+            return self.containermanager.startContainer(server, config).then(function (conf) {
                 self._setConfiguration(conf);
-                self.setState('running');
+                self.setStatus('running');
                 return self;
             });
         });
     } else {
         config['Id'] = id;
-        return self.containermanager.startContainer(config).then(function (containerConfig) {
+        return self.containermanager.startContainer(self.server, config).then(function (containerConfig) {
             self._setConfiguration(containerConfig);
-            return self.setState('running');
+            return self.setStatus('running');
         });
     }
 };
@@ -157,9 +162,15 @@ Container.prototype.run = function (config) {
 Container.prototype.shutdown = function (second) {
     var self = this,
         sec = (second) ? second : 0;
+
     return this.containermanager.stopContainer(
-        this.getConfigurationEntry('Id'), {t: sec}).then(function () {
-        self.setState('shutdown');
+        self.server,
+        self.getConfigurationEntry('Id'),
+        {
+            t: sec
+        }
+    ).then(function () {
+        self.setStatus('shutdown');
     });
 };
 
@@ -170,13 +181,22 @@ Container.prototype.shutdown = function (second) {
  */
 Container.prototype.destroy = function (removeVolume) {
     var self = this;
-    return this.containermanager.removeContainer({
-        Id: self.getConfigurationEntry('Id'),
-        ForceStop: true,
-        RemoveVolume: removeVolume
-    }).tap(function () {
-        self._delete();
-    });
+
+    return this
+        .containermanager
+        .removeContainer(
+            self.server,
+            self.getConfigurationEntry('Id'),
+            {
+                ForceStop: true,
+                RemoveVolume: removeVolume
+            }
+        ).tap(function () {
+            // TODO: Unassign all domains
+            // TODO: Call domain manager to remove them all
+            self._delete();
+        })
+    ;
 };
 
 /**
@@ -185,18 +205,29 @@ Container.prototype.destroy = function (removeVolume) {
  */
 Container.prototype.restart = function (second) {
     var sec = (second) ? second : 0;
-    return this.containermanager.restartContainer(this.getConfigurationEntry('Id'), sec);
+
+    return this
+        .containermanager
+        .restartContainer(
+            this.server,
+            this.getConfigurationEntry('Id'),
+            {
+                t: sec
+            }
+        )
+    ;
 };
 
 /**
- * Save container state in database
- * @param {string} state
+ * Save container status in database
+ * @param {string} status
  * @returns {Bluebird.Promise|*}
  */
-Container.prototype.setState = function (state) {
+Container.prototype.setStatus = function (status) {
     var self = this;
-    switch (state) {
+    switch (status) {
         case 'created':
+            self.status = status;
             return models.Container
                 .create({
                     id: self.getConfigurationEntry('Id'),
@@ -204,15 +235,18 @@ Container.prototype.setState = function (state) {
                     ports: JSON.stringify(self.getConfigurationEntry('ExposedPorts')),
                     public: self.getConfigurationEntry('PublishAllPorts'),
                     image: self.configuration.Config.Image,
-                    state: 'created',
+                    status: status,
+                    server: self.server,
+                    type: self.type,
                     metadata: JSON.stringify(self.metadata),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
                 }).then(log.info, log.error);
 
         case 'running':
+            self.status = status;
             return models.Container
                 .update({
-                    state: 'running',
+                    status: status,
                     ports: JSON.stringify(self.getConfigurationEntry('Ports')),
                     volumes: JSON.stringify(self.getConfigurationEntry('Binds')),
                     configuration: JSON.stringify(self.getConfigurationEntry('*'))
@@ -221,14 +255,16 @@ Container.prototype.setState = function (state) {
                 }).then(log.info, log.error);
 
         case 'shutdown':
+            self.status = status;
             return models.Container
                 .update({
-                    state: 'shutdown'
+                    status: status
                 }, {
                     where: {id: self.getConfigurationEntry('Id')}
                 }).then(log.info, log.error);
         default :
-            return Q.reject('unknown state ' + state);
+            self.status = status;
+            return Q.reject('unknown status ' + status);
     }
 
 };
@@ -273,7 +309,7 @@ Container.prototype.execShell = function (commands, publisher) {
 
     fs.readFile(sshConfig.privateKey, function (error, privateKey) {
         if (error) {
-            console.log('read privateKey error', error);
+            log.error('read privateKey error ' + error.toString());
             deferred.reject(error);
             return;
         }
@@ -346,37 +382,44 @@ Container.prototype.execShell = function (commands, publisher) {
 Container.prototype.setDomain = function (domain, port) {
     var self        = this,
         ports       = this.getConfigurationEntry('Ports'),
-        httpPort    = ports[port + '/tcp'][0]['HostPort'],
-        containerIp = this.getConfigurationEntry('IPAddress');
+        httpPort    = ports[port + '/tcp'][0]['HostPort'];
 
-    this.domain = domain;
+    this.domain.push(domain);
 
     return models
-        .Container
-        .update({
-            domain: domain
-        }, {
-            where: {id: self.getConfigurationEntry('Id')}
-
-        }).then(function () {
-            return 'http://' + containerIp + ':' + httpPort;
-        });
+        .Domain
+        .create(
+            {
+                container: self.getConfigurationEntry('Id'),
+                domain: domain,
+                port: port
+            }
+        ).then(function () {
+            return 'http://' + config.SERVERS[self.server]['ip'] + ':' + httpPort;
+        })
+    ;
 };
 
 /**
  * Unset container domain on specific port
- * // TODO: support multiple domain
  * @param domain
  * @param port
  */
 Container.prototype.unsetDomain = function (domain, port) {
     return models
-        .Container
-        .update({
-            domain: ''
-        }, {
-            where: {id: self.getConfigurationEntry('Id')}
-        });
+        .Domain
+        .find(
+            {
+                domain: domain,
+                port: port,
+                container: self.getConfigurationEntry('Id')
+            }
+        ).then(function (domainObj) {
+            if (domainRow) {
+                domainRow.destroy();
+            }
+        })
+    ;
 };
 
 module.exports = Container;

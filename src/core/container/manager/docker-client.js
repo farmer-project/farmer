@@ -1,11 +1,11 @@
 var
-    CreateAction = require('./actions/CreateAction'),
-    StartAction = require('./actions/StartAction'),
-    InfoAction = require('./actions/InfoAction'),
-    StopAction = require('./actions/StopAction'),
-    RestartAction = require('./actions/RestartAction'),
-    RemoveAction = require('./actions/RemoveAction'),
-    ListImagesAction = require('./actions/ListImagesAction')
+    CreateAction = require('./docker-actions/CreateAction'),
+    StartAction = require('./docker-actions/StartAction'),
+    InfoAction = require('./docker-actions/InfoAction'),
+    StopAction = require('./docker-actions/StopAction'),
+    RestartAction = require('./docker-actions/RestartAction'),
+    RemoveAction = require('./docker-actions/RemoveAction'),
+    ListImagesAction = require('./docker-actions/ListImagesAction')
     ;
 
 function DockerClient() {
