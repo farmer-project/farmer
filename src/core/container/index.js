@@ -19,7 +19,7 @@ var _                = require('underscore'),
 function Container (type) {
     this.type = type || config.CONTAINER.default;
     this.containermanager = new ContainerManager(this.type);
-    this.domain = [];
+    this.domains = [];
     this.status = undefined;
     this.server = null;
     this.metadata = {};
@@ -38,12 +38,24 @@ Container.prototype.getInstance  = function (identifier) {
     return models
         .Container
         .find({
-            where: {id: identifier}
+            where: {id: identifier},
+            include: [
+                {
+                    model: models.Domain,
+                    as: 'domains'
+                }
+            ]
         }).then(function (container) {
-            self.server     = container.server;
-            self.type       = container.type;
-            //self.domain   =
-            var repository = new Repository({api: config.SERVERS[container.server][self.type + '_api']});
+            self.server = container.server;
+            self.type   = container.type;
+            self.domains = container.domains.map(function (record) {
+                return record.domain;
+            });
+
+            var repository = new Repository({
+                api: config.SERVERS[container.server][self.type + '_api']
+            });
+
             return repository.containerInfo(identifier).then(function (configuration) {
                 self.configuration = configuration;
                 return self;
@@ -133,24 +145,39 @@ Container.prototype.run = function (config) {
 
     var self = this,
         id   = this.getConfigurationEntry('Id');
+
     if (!id) {
-        return this.containermanager.createContainer(config).spread(function (server, containerConfig) {
-            self.server = server;
-            self._setConfiguration(containerConfig);
-            self.setStatus('created');
-            config.Id = self.getConfigurationEntry('Id');
-            return self.containermanager.startContainer(server, config).then(function (conf) {
-                self._setConfiguration(conf);
-                self.setStatus('running');
-                return self;
-            });
-        });
+        return this.containermanager
+            .createContainer(config)
+            .spread(function (server, containerConfig) {
+
+                self.server = server;
+                self._setConfiguration(containerConfig);
+                config.Id = self.getConfigurationEntry('Id');
+                self.setStatus('created');
+
+                return self.containermanager
+                    .startContainer(server, config)
+                    .then(function (conf) {
+                        self._setConfiguration(conf);
+                        self.setStatus('running');
+                        return self;
+                    })
+                ;
+            })
+        ;
+
     } else {
+
         config['Id'] = id;
-        return self.containermanager.startContainer(self.server, config).then(function (containerConfig) {
-            self._setConfiguration(containerConfig);
-            return self.setStatus('running');
-        });
+
+        return self.containermanager
+            .startContainer(self.server, config)
+            .then(function (containerConfig) {
+                self._setConfiguration(containerConfig);
+                return self.setStatus('running');
+            })
+        ;
     }
 };
 
@@ -383,27 +410,27 @@ Container.prototype.setDomain = function (domain, port) {
     var self        = this,
         ports       = this.getConfigurationEntry('Ports'),
         httpPort    = ports[port + '/tcp'][0]['HostPort'];
-
-    this.domain.push(domain);
-
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
     return models
         .Domain
         .create(
             {
-                container: self.getConfigurationEntry('Id'),
+                container_id: self.getConfigurationEntry('Id'),
                 domain: domain,
                 port: port
             }
         ).then(function () {
+            self.domains.push(domain);
             return 'http://' + config.SERVERS[self.server]['ip'] + ':' + httpPort;
         })
     ;
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 };
 
 /**
  * Unset container domain on specific port
- * @param domain
- * @param port
+ * @param {string} domain - domain url
+ * @param {Number} port - port number
  */
 Container.prototype.unsetDomain = function (domain, port) {
     return models

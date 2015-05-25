@@ -41,7 +41,7 @@ CreateAction.prototype.executeOn = function (serverConfig) {
             method: 'POST',
             json: this.configuration
         };
-console.log('options',options);
+
     request(options, function (error, response, body) {
         if (!error && response.statusCode == 201) {
             // 201 – no error

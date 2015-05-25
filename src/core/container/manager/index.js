@@ -75,6 +75,7 @@ Manager.prototype.createContainer = function (opt) {
 
 /**
  * Start the created container
+ * @param {string} server - Server tag name
  * @param {Object} opt - Start container options
  * @returns {Bluebird.Promise|*}
  */

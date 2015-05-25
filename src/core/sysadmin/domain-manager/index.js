@@ -11,6 +11,11 @@ var Q           = require('q'),
 function DomainManager () {
 }
 
+/**
+ * Generate a domain
+ * @param {Object} containerObj - container object
+ * @returns {string} - domain
+ */
 DomainManager.prototype.generate = function (containerObj) {
     return containerObj
             .getConfigurationEntry('Name')[1]
@@ -19,44 +24,79 @@ DomainManager.prototype.generate = function (containerObj) {
             '.' + mainConfig.DOMAIN;
 };
 
-DomainManager.prototype.assign = function (containerObj, opts) {
-    console.log('domain', opts.domain);
+/**
+ * check domain is already exists or not
+ * @param {string} domain - domain url
+ * @param {Number} port - port number
+ */
+DomainManager.prototype.exists = function (domain, port) {
+    try {
+        fs.accessSync(
+            mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf'
+        );
 
+        return true;
+
+    } catch (e) {
+        return false;
+    }
+};
+
+/**
+ * Assign a domain to a container
+ * @param {Object} containerObj - container object
+ * @param {Object} opts - options
+ * @returns {*|promise}
+ */
+DomainManager.prototype.assign = function (containerObj, opts) {
     var port      = opts.port || '80',
         domain    = opts.domain || this.generate(containerObj),
         deferred  = Q.defer(),
         container = new Containre();
 
-    console.log('domain', domain);
+    if (this.exists(domain, port)) {
 
-    containerObj.setDomain(domain, port).then(function (proxyPass) {
-        var confFile =
-                fs.readFileSync(
-                    path.resolve(__dirname, './nginx/reverse_proxy.conf'), {
-                        encoding: 'utf8'
-                    }
-                ),
-            vars = {
-                    domain: domain,
-                    proxyPass: proxyPass
-                };
+        containerObj.setDomain(domain, port).then(function (proxyPass) {
+            var confFile =
+                    fs.readFileSync(
+                        path.resolve(__dirname, './nginx/reverse_proxy.conf'), {
+                            encoding: 'utf8'
+                        }
+                    ),
+                vars = {
+                        domain: domain,
+                        proxyPass: proxyPass
+                    };
 
-        fs.writeFileSync(
-            mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port+ '.conf',
-            Mustache.render(confFile, vars)
-        );
+            fs.writeFileSync(
+                mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf',
+                Mustache.render(confFile, vars)
+            );
 
-        container.getInstance(mainConfig.REVERSE_PROXY.containerID).then(function (ReverseProxyContainer) {
-            ReverseProxyContainer.restart();
-            deferred.resolve(domain);
+            container
+                .getInstance(mainConfig.REVERSE_PROXY.containerID)
+                .then(function (ReverseProxyContainer) {
+
+                    ReverseProxyContainer.restart();
+                    deferred.resolve(domain);
+
+                }, deferred.reject);
 
         }, deferred.reject);
 
-    }, deferred.reject);
+    } else {
+        deferred.reject('Domain assigned.');
+    }
 
     return deferred.promise;
 };
 
+/**
+ * Unassign domain container
+ * @param {Object} containerObj - container object
+ * @param {Object} opts - options
+ * @returns {*|promise}
+ */
 DomainManager.prototype.unassign = function (containerObj, opts) {
     var port      = opts.port || '80',
         domain    = opts.domain,
@@ -64,13 +104,16 @@ DomainManager.prototype.unassign = function (containerObj, opts) {
         container = new Containre();
 
     containerObj.unsetDomain(domain, port).then(function () {
-        fs.unlinkSync(mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port+ '.conf');
+        fs.unlinkSync(mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf');
 
-        container.getInstance(mainConfig.REVERSE_PROXY.containerID).then(function (ReverseProxyContainer) {
-            return ReverseProxyContainer.restart()
-                .then(deferred.resolve, deferred.reject);
+        container
+            .getInstance(mainConfig.REVERSE_PROXY.containerID)
+            .then(function (ReverseProxyContainer) {
 
-        }, deferred.reject);
+                return ReverseProxyContainer.restart()
+                    .then(deferred.resolve, deferred.reject);
+
+            }, deferred.reject);
     }, deferred.reject);
 
     return deferred.promise;

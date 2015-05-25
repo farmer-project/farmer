@@ -5,6 +5,7 @@ module.exports = function(sequelize, DataTypes) {
     var Domain = sequelize.define('Domain', {
         id: {
             type: DataTypes.INTEGER(11),
+            autoIncrement: true,
             primaryKey: true
         },
         port: DataTypes.INTEGER(11),

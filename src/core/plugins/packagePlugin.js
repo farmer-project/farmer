@@ -108,7 +108,7 @@ PackagePlugin.prototype.toClient = function (bag) {
 
             result[alias] = {
                 Id: tempContainer.getConfigurationEntry('Id'),
-                Domain: tempContainer.domain,
+                Domains: tempContainer.domains,
                 Name: tempContainer.getConfigurationEntry('Name')[1],
                 Ports: tempContainer.getConfigurationEntry('Ports'),
                 Image: tempContainer.getConfigurationEntry('Image')[0],

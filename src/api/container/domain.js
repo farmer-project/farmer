@@ -115,6 +115,5 @@ module.exports = function Domain() {
 
     });
 
-
     return app;
 };
