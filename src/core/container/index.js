@@ -46,6 +46,10 @@ Container.prototype.getInstance  = function (identifier) {
                 }
             ]
         }).then(function (container) {
+            if (!container) {
+                return Q.reject('container does not exist!');
+            }
+
             self.server = container.server;
             self.type   = container.type;
             self.domains = container.domains.map(function (record) {
@@ -151,9 +155,10 @@ Container.prototype.run = function (config) {
             .createContainer(config)
             .spread(function (server, containerConfig) {
 
-                self.server = server;
                 self._setConfiguration(containerConfig);
-                config.Id = self.getConfigurationEntry('Id');
+                config.Id   = self.getConfigurationEntry('Id');
+                self.server = server;
+
                 self.setStatus('created');
 
                 return self.containermanager
@@ -164,6 +169,7 @@ Container.prototype.run = function (config) {
                         return self;
                     })
                 ;
+
             })
         ;
 
@@ -174,8 +180,10 @@ Container.prototype.run = function (config) {
         return self.containermanager
             .startContainer(self.server, config)
             .then(function (containerConfig) {
+
                 self._setConfiguration(containerConfig);
                 return self.setStatus('running');
+
             })
         ;
     }
@@ -231,10 +239,9 @@ Container.prototype.destroy = function (removeVolume) {
  * @param {Number} second - Number of seconds to wait before restart the container
  */
 Container.prototype.restart = function (second) {
-    var sec = (second) ? second : 0;
+    var sec = (second) ? second : 1;
 
-    return this
-        .containermanager
+    return this.containermanager
         .restartContainer(
             this.server,
             this.getConfigurationEntry('Id'),
@@ -254,7 +261,9 @@ Container.prototype.setStatus = function (status) {
     var self = this;
     switch (status) {
         case 'created':
+
             self.status = status;
+
             return models.Container
                 .create({
                     id: self.getConfigurationEntry('Id'),
@@ -270,7 +279,9 @@ Container.prototype.setStatus = function (status) {
                 }).then(log.info, log.error);
 
         case 'running':
+
             self.status = status;
+
             return models.Container
                 .update({
                     status: status,
@@ -282,15 +293,20 @@ Container.prototype.setStatus = function (status) {
                 }).then(log.info, log.error);
 
         case 'shutdown':
+
             self.status = status;
+
             return models.Container
                 .update({
                     status: status
                 }, {
                     where: {id: self.getConfigurationEntry('Id')}
                 }).then(log.info, log.error);
+
         default :
+
             self.status = status;
+
             return Q.reject('unknown status ' + status);
     }
 
@@ -318,6 +334,7 @@ Container.prototype._delete = function () {
         });
 };
 
+// TODO: remote server container shell executer
 /**
  * Execute a command on container
  * Connect to container with ssh and run command
@@ -329,10 +346,10 @@ Container.prototype.execShell = function (commands, publisher) {
         return Q.when(0);
     }
 
-    var self = this,
-        deferred = Q.defer(),
-        conn = new SshClient(),
-        sshConfig = _.clone(config.SSH_CONFIG);
+    var self        = this,
+        deferred    = Q.defer(),
+        conn        = new SshClient(),
+        sshConfig   = _.clone(config.SSH_CONFIG);
 
     fs.readFile(sshConfig.privateKey, function (error, privateKey) {
         if (error) {
@@ -410,6 +427,7 @@ Container.prototype.setDomain = function (domain, port) {
     var self        = this,
         ports       = this.getConfigurationEntry('Ports'),
         httpPort    = ports[port + '/tcp'][0]['HostPort'];
+
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
     return models
         .Domain
@@ -433,20 +451,24 @@ Container.prototype.setDomain = function (domain, port) {
  * @param {Number} port - port number
  */
 Container.prototype.unsetDomain = function (domain, port) {
+    var self = this;
+
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
     return models
         .Domain
-        .find(
-            {
+        .find({
+            where: {
                 domain: domain,
                 port: port,
-                container: self.getConfigurationEntry('Id')
+                container_id: self.getConfigurationEntry('Id')
             }
-        ).then(function (domainObj) {
+        }).then(function (domainRow) {
             if (domainRow) {
                 domainRow.destroy();
             }
         })
     ;
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 };
 
 module.exports = Container;

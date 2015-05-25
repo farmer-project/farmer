@@ -53,6 +53,7 @@ RestartAction.prototype.executeOn = function (serverConfig) {
             var errorMsg = '';
             if (response.statusCode == 404) { errorMsg = 'no such container'; }
             if (response.statusCode == 500) { errorMsg = 'docker server error'; }
+
             deferred.reject({
                 code: response.statusCode,
                 result: null,

@@ -111,8 +111,16 @@ Manager.prototype.stopContainer = function (server, identifier, opt) {
         .buildStopAction(identifier)
         .options(opt)
         .executeOn(targetServer.config)
-        .tap(log.trace)
-        .catch(log.error);
+        .then(function (res) {
+            log.trace(res);
+            return Q.when(res);
+
+        }, function (err) {
+            log.error(err);
+            return Q.reject(err);
+
+        })
+    ;
 };
 
 /**
@@ -129,8 +137,16 @@ Manager.prototype.removeContainer = function (server, identifier, opt) {
         .buildRemoveAction(identifier)
         .options(opt)
         .executeOn(targetServer.config)
-        .tap(log.trace)
-        .catch(log.error);
+        .then(function (res) {
+            log.trace(res);
+            return Q.when(res);
+
+        }, function (err) {
+            log.error(err);
+            return Q.reject(err);
+
+        })
+    ;
 };
 
 /**
@@ -147,8 +163,16 @@ Manager.prototype.restartContainer = function (server, identifier, opt) {
         .buildRestartAction(identifier)
         .options(opt)
         .executeOn(targetServer.config)
-        .tap(log.trace)
-        .catch(log.error);
+        .then(function (res) {
+            log.trace(res);
+            return Q.when(res);
+
+        }, function (err) {
+            log.error(err);
+            return Q.reject(err);
+
+        })
+    ;
 };
 
 module.exports = Manager;

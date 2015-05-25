@@ -1,12 +1,12 @@
 'use strict';
 
-var Q           = require('q'),
-    path        = require('path'),
-    fs          = require('fs'),
-    Mustache    = require('mustache'),
-    Containre   = require('../../container'),
-    models      = require('../../models'),
-    mainConfig  = require(path.resolve(__dirname, '../../../config'));
+var Q               = require('q'),
+    path            = require('path'),
+    fs              = require('fs'),
+    Mustache        = require('mustache'),
+    ReverseProxy    = require('../../farmer/ReverseProxy'),
+    models          = require('../../models'),
+    mainConfig      = require(path.resolve(__dirname, '../../../config'));
 
 function DomainManager () {
 }
@@ -30,16 +30,10 @@ DomainManager.prototype.generate = function (containerObj) {
  * @param {Number} port - port number
  */
 DomainManager.prototype.exists = function (domain, port) {
-    try {
-        fs.accessSync(
+    return fs.existsSync(
             mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf'
-        );
-
-        return true;
-
-    } catch (e) {
-        return false;
-    }
+        )
+    ;
 };
 
 /**
@@ -52,9 +46,9 @@ DomainManager.prototype.assign = function (containerObj, opts) {
     var port      = opts.port || '80',
         domain    = opts.domain || this.generate(containerObj),
         deferred  = Q.defer(),
-        container = new Containre();
+        reverseProxy = new ReverseProxy();
 
-    if (this.exists(domain, port)) {
+    if (!this.exists(domain, port)) {
 
         containerObj.setDomain(domain, port).then(function (proxyPass) {
             var confFile =
@@ -73,19 +67,14 @@ DomainManager.prototype.assign = function (containerObj, opts) {
                 Mustache.render(confFile, vars)
             );
 
-            container
-                .getInstance(mainConfig.REVERSE_PROXY.containerID)
-                .then(function (ReverseProxyContainer) {
-
-                    ReverseProxyContainer.restart();
-                    deferred.resolve(domain);
-
-                }, deferred.reject);
+            reverseProxy.restart().then(function () {
+                deferred.resolve(domain);
+            }, deferred.reject);
 
         }, deferred.reject);
 
     } else {
-        deferred.reject('Domain assigned.');
+        deferred.reject('Domain has been assigned.');
     }
 
     return deferred.promise;
@@ -101,20 +90,24 @@ DomainManager.prototype.unassign = function (containerObj, opts) {
     var port      = opts.port || '80',
         domain    = opts.domain,
         deferred  = Q.defer(),
-        container = new Containre();
+        reverseProxy = new ReverseProxy();
 
-    containerObj.unsetDomain(domain, port).then(function () {
-        fs.unlinkSync(mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf');
+    if (this.exists(domain, port)) {
+        containerObj.unsetDomain(domain, port).then(function () {
+            fs.unlinkSync(
+                mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf'
+            );
 
-        container
-            .getInstance(mainConfig.REVERSE_PROXY.containerID)
-            .then(function (ReverseProxyContainer) {
+            reverseProxy.restart()
+                .then(function () {
+                    deferred.resolve('Done.');
+                }, deferred.reject);
 
-                return ReverseProxyContainer.restart()
-                    .then(deferred.resolve, deferred.reject);
+        }, deferred.reject);
 
-            }, deferred.reject);
-    }, deferred.reject);
+    } else {
+        deferred.reject('Domain does not exist!');
+    }
 
     return deferred.promise;
 };
