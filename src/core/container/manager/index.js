@@ -125,8 +125,8 @@ Manager.prototype.stopContainer = function (server, identifier, opt) {
 
 /**
  * Remove container
- * @param {string} server - server tag name
- * @param {string} identifier - container identifier
+ * @param {string} server - Server tag name
+ * @param {string} identifier - Container identifier
  * @param {Object} opt - Remove container options
  * @returns {Bluebird.Promise|*}
  */
@@ -151,8 +151,8 @@ Manager.prototype.removeContainer = function (server, identifier, opt) {
 
 /**
  * Restart container
- * @param {string} server - server tag name
- * @param {string} identifier - container identifier
+ * @param {string} server - Server tag name
+ * @param {string} identifier - Container identifier
  * @param {Object} opt - Remove container options
  * @returns {Bluebird.Promise}
  */

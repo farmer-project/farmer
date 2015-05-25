@@ -1,8 +1,8 @@
 'use strict';
 
-var Q       = require('q'),
-    urljoin = require('url-join'),
-    request = require('request'),
+var Q           = require('q'),
+    urljoin     = require('url-join'),
+    request     = require('request'),
     querystring = require('querystring');
 
 /**

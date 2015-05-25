@@ -5,6 +5,10 @@ var Q = require('q'),
     Container = require('../container'),
     config = require(path.resolve(__dirname, '../../config'));
 
+/**
+ * Create a container mock for reverse proxy
+ * @constructor
+ */
 function ReverseProxy() {
     var mainConfig = config.REVERSE_PROXY;
     var reverseProxy = new Container();
@@ -19,6 +23,9 @@ function ReverseProxy() {
     this.proxy = reverseProxy;
 }
 
+/**
+ * Restart ReverseProxy
+ */
 ReverseProxy.prototype.restart = function () {
     return this.proxy.restart();
 };
