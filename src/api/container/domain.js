@@ -17,14 +17,15 @@ module.exports = function Domain() {
     app.post('/', function (req, res) {
         var args     = req.body.args,
             hostname = args.hostname || '',
-            alias    = args.alias,
-            deferred = Q.defer();
+            alias    = args.alias;
 
         models.
             Package.
             find({
                 where: {hostname: hostname}
             }).then(function (packageRow) {
+                var deferred = Q.defer();
+
                 if (!packageRow) {
                     deferred.reject('Package does not exists');
 

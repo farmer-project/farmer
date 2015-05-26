@@ -74,7 +74,7 @@ DomainManager.prototype.assign = function (containerObj, opts) {
         }, deferred.reject);
 
     } else {
-        deferred.reject('Domain has been assigned.');
+        deferred.reject('Domain has already been used.');
     }
 
     return deferred.promise;

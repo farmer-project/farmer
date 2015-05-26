@@ -120,6 +120,32 @@ module.exports = function Greenhouse() {
             });
     });
 
+    app.post('/script/run', function (req, res) {
+        var publisher = new Publisher(config.RABBITMQ_CONFIG);
+        publisher
+            .connect()
+            .then(function () {
+                res.status(200)
+                    .json({
+                        room: publisher.roomID
+                    });
+
+                var bag = new Bag();
+                bag.set('farmerfile', new FarmerFile(req.body.farmerfile))
+                    .set('args', req.body.args)
+                    .set('publisher', publisher);
+
+                farmer.fireEvent('script', bag);
+
+            }, function () {
+                res.status(500)
+                    .json({
+                        result: '',
+                        error: 'station server not respond'
+                    });
+            });
+    });
+
     app.use('/domain', domain());
 
     return app;

@@ -12,7 +12,10 @@ function Shell () {
  */
 Shell.prototype.registerPlugin = function () {
     emitter.register('create', 100, this.farmfile);
+
     emitter.register('deploy', 100, this.farmfile);
+
+    emitter.register('script', 100, this.farmfile);
 };
 
 /**

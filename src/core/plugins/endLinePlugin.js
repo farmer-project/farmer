@@ -17,6 +17,7 @@ EndLinePlugin.prototype.registerPlugin = function () {
     emitter.register('inspect', 999, this.eventEnd);
     emitter.register('delete', 999, this.eventEnd);
     emitter.register('setDomain', 999, this.eventEnd);
+    emitter.register('script', 999, this.eventEnd);
 };
 
 /**

@@ -26,6 +26,8 @@ PackagePlugin.prototype.registerPlugin = function () {
     emitter.register('delete', 1, getContainers);
     emitter.register('delete', 2, this.delete);
 
+    emitter.register('script', 1, getContainers);
+
     function getContainers(bag) {
         return self.getContainers(bag);
     }
