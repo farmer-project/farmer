@@ -10,6 +10,17 @@
     "type": "git",
     "url": "https://github.com/majidgolshadi/farmer"
   },
+  "keywords": [
+    "docker",
+    "farmer server",
+    "farmer",
+    "paas",
+    "container",
+    "manager",
+    "orchestrate",
+    "deploy",
+    "create"
+  ],
   "author": "Majid Golshadi <golshadi.majid@gmail.com>",
   "license": "MIT",
   "dependencies": {

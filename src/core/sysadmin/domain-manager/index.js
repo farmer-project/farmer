@@ -1,6 +1,7 @@
 'use strict';
 
-var Q               = require('q'),
+var _               = require('underscore'),
+    Q               = require('q'),
     path            = require('path'),
     fs              = require('fs'),
     Mustache        = require('mustache'),
@@ -83,33 +84,53 @@ DomainManager.prototype.assign = function (containerObj, opts) {
 /**
  * Unassign domain container
  * @param {Object} containerObj - container object
- * @param {Object} opts - options
+ * @param {Object|Array} domains - domains
  * @returns {*|promise}
  */
-DomainManager.prototype.unassign = function (containerObj, opts) {
-    var port      = opts.port || '80',
-        domain    = opts.domain,
-        deferred  = Q.defer(),
-        reverseProxy = new ReverseProxy();
+DomainManager.prototype.unassign = function (containerObj, domains) {
+    var self            = this,
+        result          = [],
+        reverseProxy    = new ReverseProxy();
 
-    if (this.exists(domain, port)) {
-        containerObj.unsetDomain(domain, port).then(function () {
-            fs.unlinkSync(
-                mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf'
-            );
+    domains = _.isArray(domains) ? domains : [domains];
 
-            reverseProxy.restart()
-                .then(function () {
-                    deferred.resolve('Done.');
+    return (function () {
+        var promiseArray = [];
+
+        domains.forEach(function (proxy) {
+            var deferred    = Q.defer(),
+                domain      = proxy.domain,
+                port        = proxy.port || '80';
+
+            promiseArray.push(deferred);
+
+            if (self.exists(domain, port)) {
+                containerObj.unsetDomain(domain, port).then(function () {
+                    fs.unlinkSync(
+                        mainConfig.REVERSE_PROXY.rootConfig + '/' + domain + '.' + port + '.conf'
+                    );
+
+                    result.push(domain + ' removed.');
+                    deferred.resolve(true);
+
                 }, deferred.reject);
 
-        }, deferred.reject);
+            } else {
+                result.push('Domain ' + domain + ' does not exist!');
+                deferred.reject();
+            }
 
-    } else {
-        deferred.reject('Domain does not exist!');
+        });
+
+        return Q.all(promiseArray);
+    })()
+    .then(restartProxy, restartProxy);
+
+    function restartProxy() {
+        return reverseProxy.restart().then(function () {
+            return result;
+        });
     }
-
-    return deferred.promise;
 };
 
 module.exports = new DomainManager();

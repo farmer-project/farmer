@@ -68,10 +68,14 @@ module.exports = function Domain() {
      * Unassign a domain form a package container
      */
     app.delete('/', function (req, res) {
-        var args     = req.body.args,
-            hostname = args.hostname || '',
-            alias    = args.alias,
-            deferred = Q.defer();
+        var args      = req.body.args,
+            hostname  = args.hostname || '',
+            alias     = args.alias,
+            deferred  = Q.defer(),
+            domains  = {
+                domain: args.domain,
+                port: args.port
+            };
 
         models.
             Package.
@@ -90,7 +94,7 @@ module.exports = function Domain() {
 
                     } else {
                         container.getInstance(containersID[alias]).then(function (containerObj) {
-                            domainManager.unassign(containerObj, args)
+                            domainManager.unassign(containerObj, domains)
                                 .then(deferred.resolve, deferred.reject);
                         });
                     }
@@ -101,7 +105,7 @@ module.exports = function Domain() {
             }).then(function (result) {
                 return res.status(200)
                     .json({
-                        result: result,
+                        result: result[0],
                         error: ''
                     });
 

@@ -215,21 +215,33 @@ Container.prototype.shutdown = function (second) {
  * @returns {Bluebird.Promise|*}
  */
 Container.prototype.destroy = function (removeVolume) {
-    var self = this;
+    var self = this,
+        id   = self.getConfigurationEntry('Id'),
+        domainManager    = require('../sysadmin/domain-manager');
 
     return this
         .containermanager
         .removeContainer(
             self.server,
-            self.getConfigurationEntry('Id'),
+            id,
             {
                 ForceStop: true,
                 RemoveVolume: removeVolume
             }
-        ).tap(function () {
-            // TODO: Unassign all domains
-            // TODO: Call domain manager to remove them all
-            self._delete();
+        ).then(function () {
+            (function () {
+                // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+                return models
+                    .Domain
+                    .findAll({
+                        where:{container_id: id}
+                    }).then(function (domains) {
+                        return domainManager.unassign(self, domains);
+                    });
+                // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
+            })().finally(function () {
+                self._delete();
+            });
         })
     ;
 };
