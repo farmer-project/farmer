@@ -1,6 +1,7 @@
 'use strict';
 
-var RunPackage      = require('./actions/RunPackage'),
+var Q               = require('q'),
+    RunPackage      = require('./actions/RunPackage'),
     StopPackage     = require('./actions/StopPackage'),
     RestartPackage  = require('./actions/RestartPackage'),
     BackupPackage   = require('./actions/BackupPackage'),
@@ -26,11 +27,19 @@ PackageCompose.prototype.restart = function (hostname, sec) {
 };
 
 PackageCompose.prototype.backup = function (hostname, tag) {
+    if (!hostname || !tag) {
+        return Q.reject('Invalid arguments');
+    }
+
     var backup = new BackupPackage();
     return backup.execute(hostname, tag);
 };
 
 PackageCompose.prototype.restore = function (tag) {
+    if (!tag) {
+        return Q.reject('Invalid argument');
+    }
+
     var restore = new RestorePackage();
     return restore.execute(tag);
 };

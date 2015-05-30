@@ -5,6 +5,7 @@ var express     = require('express'),
     Q           = require('q'),
     path        = require('path'),
     domain      = require('./domain'),
+    backup      = require('./backup'),
     LogCenter   = require('../../core/debug/log'),
     Publisher   = require('../../core/station'),
     auth        = require('../../core/security/auth'),
@@ -147,6 +148,7 @@ module.exports = function Greenhouse() {
     });
 
     app.use('/domain', domain());
+    app.use('/backup', backup());
 
     return app;
 };

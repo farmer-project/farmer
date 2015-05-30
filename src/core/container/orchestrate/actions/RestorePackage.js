@@ -58,9 +58,8 @@ RestorePackage.prototype.getScreenshots = function (tag) {
 RestorePackage.prototype.restoreFiles = function (containerDirBinds) {
     _.reduce(containerDirBinds, function (prevPromise, volume) {
         return prevPromise.then(function () {
-            console.log('volume', volume);
             del.sync([volume.hostPath + '/*']);
-            backupFileServer.restore();
+            return backupFileServer.restore();
         });
     }, Q.when(true));
     // remove directory content
