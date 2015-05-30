@@ -25,11 +25,11 @@ BackupPackage.prototype.execute = function (hostname, tag) {
         .then(function (packageRow) {
 
             var containersID = JSON.parse(packageRow.containers),
-                screenshot = tag || self.genScreenshot();
+                screenshotTag = tag || self.genScreenshotTag();
 
             return self._getPackageContainersBackup(containersID)
                 .then(function (volumes) {
-                    return self._save(screenshot, volumes, hostname);
+                    return self._save(screenshotTag, volumes, hostname);
                 })
             ;
 
@@ -51,19 +51,19 @@ BackupPackage.prototype.getPackage = function (hostname) {
         }).then(function (packageRow) {
 
             if (!packageRow) {
-                return Q.reject('package not found');
+                return Q.reject('package ' + hostname + ' does not exists!');
             }
 
             return Q.resolve(packageRow);
         })
-        ;
+    ;
 };
 
 /**
  * Generate a unique screenshot tag based on timestamp and 5 random char
  * @returns {*}
  */
-BackupPackage.prototype.genScreenshot = function () {
+BackupPackage.prototype.genScreenshotTag = function () {
     var text = '',
         possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -90,14 +90,16 @@ BackupPackage.prototype._getPackageContainersBackup = function (containersID) {
     return _.reduce(containersID, function (prevPromise, id, alias) {
         var container = new Container();
 
-        return container
-            .getInstance(id)
-            .then(self._backupContainer)
-            .then(function (res) {
-                result[alias] = res;
-                return result;
-            })
-        ;
+            return prevPromise.then(function () {
+                return container
+                    .getInstance(id)
+                    .then(self._backupContainer)
+                    .then(function (res) {
+                        result[alias] = res;
+                        return result;
+                    })
+                ;
+            });
 
     }, Q.when(true));
 };
@@ -134,21 +136,21 @@ BackupPackage.prototype._backupContainer = function (container) {
 
 /**
  * Save screenshot information in database
- * @param {string} screenshot - Screenshot tag
+ * @param {string} tag - Screenshot tag
  * @param {Object} volumes - Volumes
  * @param {string} hostname - Hostname
  * @returns {*}
  * @private
  */
-BackupPackage.prototype._save = function (screenshot, volumes, hostname) {
+BackupPackage.prototype._save = function (tag, volumes, hostname) {
     return models
         .PackageScreenshot
         .create({
-            screenshot: screenshot,
+            tag: tag,
             hostname: hostname,
             volumes: JSON.stringify(volumes)
         }).then(function (res) {
-            return screenshot;
+            return tag;
         })
     ;
 };

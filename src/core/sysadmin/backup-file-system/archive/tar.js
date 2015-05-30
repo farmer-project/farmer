@@ -55,7 +55,7 @@ Tar.prototype.extract = function (source, destination) {
     var deferred = Q.defer();
 
     try {
-        fs.createReadStream(source).pipe(tar.extract(destination));
+        fs.createReadStream(source).pipe(tar.extract(destination + '/../'));
 
         deferred.resolve({
             source: source,

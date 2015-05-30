@@ -69,4 +69,37 @@ BackupSystem.prototype.backup = function (address, metadata) {
     });
 };
 
+/**
+ * Restore data files in destination address
+ * @param {string} id - Identifier
+ * @param {String} restorePoint - Restore point
+ */
+BackupSystem.prototype.restore = function (id, restorePoint) {
+    return models
+        .BackupFile
+        .find({
+            where: {id: id}
+        }).then(function (fileRow) {
+            var deferred = Q.defer();
+
+            if (!fileRow) {
+                return Q.reject('Unknown Identifier');
+            }
+
+            try {
+                // TODO:Add snapshot feature  and multi compress type to backup server system
+                archiveFactory('tar')
+                    .extract(fileRow.uri, restorePoint)
+                    .then(deferred.resolve, deferred.reject);
+
+            } catch (e) {
+                require('./transfer').clone(fileRow.uri, restorePoint)
+                    .then(deferred.resolve, deferred.reject);
+            }
+
+            return deferred.promise;
+        })
+    ;
+};
+
 module.exports = new BackupSystem();
