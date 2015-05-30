@@ -1,11 +1,12 @@
 'use strict';
 
-var Q               = require('q'),
-    RunPackage      = require('./actions/RunPackage'),
-    StopPackage     = require('./actions/StopPackage'),
-    RestartPackage  = require('./actions/RestartPackage'),
-    BackupPackage   = require('./actions/BackupPackage'),
-    RestorePackage  = require('./actions/RestorePackage');
+var Q                   = require('q'),
+    RunPackage          = require('./actions/RunPackage'),
+    StopPackage         = require('./actions/StopPackage'),
+    RestartPackage      = require('./actions/RestartPackage'),
+    BackupPackage       = require('./actions/BackupPackage'),
+    RestorePackage      = require('./actions/RestorePackage'),
+    DeleteBackupPackage = require('./actions/DeleteBackupPackage');
 
 function PackageCompose() {
 
@@ -42,6 +43,15 @@ PackageCompose.prototype.restore = function (tag) {
 
     var restore = new RestorePackage();
     return restore.execute(tag);
+};
+
+PackageCompose.prototype.deleteBackup = function (tag) {
+    if (!tag) {
+        return Q.reject('Invalid argument');
+    }
+
+    var deleteBackup = new DeleteBackupPackage();
+    return deleteBackup.execute(tag);
 };
 
 module.exports = new PackageCompose();

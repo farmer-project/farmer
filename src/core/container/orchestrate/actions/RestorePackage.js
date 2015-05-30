@@ -56,14 +56,16 @@ RestorePackage.prototype.getScreenshots = function (tag) {
 };
 
 RestorePackage.prototype.restoreFiles = function (containerDirBinds) {
-    _.reduce(containerDirBinds, function (prevPromise, volume) {
+    return _.reduce(containerDirBinds, function (prevPromise, volume) {
+
         return prevPromise.then(function () {
+
             del.sync([volume.hostPath + '/*']);
-            return backupFileServer.restore();
+            return backupFileServer.restore(volume.backupId);
+
         });
+
     }, Q.when(true));
-    // remove directory content
-    // extract data to that folder
 };
 
 module.exports = RestorePackage;

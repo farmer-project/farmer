@@ -1,12 +1,9 @@
 'use strict';
 
 var express         = require('express'),
-    path            = require('path'),
-    Q               = require('q'),
-    packageCompose  = require('../../core/container/orchestrate'),
-    config          = require(path.resolve(__dirname, '../../config'));
+    packageCompose  = require('../../core/container/orchestrate');
 
-module.exports = function Domain() {
+module.exports = function Backup() {
     var app = express();
 
     /**
@@ -43,6 +40,32 @@ module.exports = function Domain() {
         var args = req.body.args;
 
         packageCompose.restore(args.tag)
+            .then(function (result) {
+
+                return res.status(200)
+                    .json({
+                        result: 'Done',
+                        error: ''
+                    });
+
+            }, function (error) {
+
+                return res.status(500)
+                    .json({
+                        result: '',
+                        error: error
+                    });
+            })
+        ;
+    });
+
+    /**
+     * Delete package backup
+     */
+    app.delete('/delete', function (req, res) {
+        var args = req.body.args;
+
+        packageCompose.deleteBackup(args.tag)
             .then(function (result) {
 
                 return res.status(200)

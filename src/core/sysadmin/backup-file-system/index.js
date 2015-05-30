@@ -3,6 +3,7 @@
 var _               = require('underscore'),
     Q               = require('q'),
     path            = require('path'),
+    fs              = require('fs'),
     archiveFactory  = require('./archive'),
     config          = require(path.resolve(__dirname, '../../../config')),
     models          = require(path.resolve(__dirname, '../../models')),
@@ -98,6 +99,25 @@ BackupSystem.prototype.restore = function (id, restorePoint) {
             }
 
             return deferred.promise;
+        })
+    ;
+};
+
+/**
+ * Delete backup file
+ * @param {string} id - Identifier
+ * @returns {Bluebird.Promise|*}
+ */
+BackupSystem.prototype.delete = function (id) {
+    return models
+        .BackupFile
+        .find({
+            where: {id: id}
+        }).then(function (fileRow) {
+
+            fs.unlinkSync(fileRow.uri);
+            return fileRow.destroy();
+
         })
     ;
 };
