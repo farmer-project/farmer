@@ -196,7 +196,7 @@ Container.prototype.run = function (config) {
  */
 Container.prototype.shutdown = function (second) {
     var self = this,
-        sec = (second) ? second : 0;
+        sec = (second) ? second : 1;
 
     return this.containermanager.stopContainer(
         self.server,
