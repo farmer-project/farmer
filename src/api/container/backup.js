@@ -85,5 +85,45 @@ module.exports = function Backup() {
         ;
     });
 
+    /**
+     * All generated backup of package list
+     */
+    app.get('/list', function (req, res) {
+        var models = require('../../core/models'),
+            args = req.body.args;
+
+        models
+            .PackageScreenshot
+            .findAll({
+                attributes: ['tag'],
+                where: {
+                    hostname: args.hostname
+                }
+            }).then(function (screenshots) {
+
+                var result = [];
+                screenshots.forEach(function (screenshot) {
+                    result.push(screenshot.tag);
+                });
+
+                return res.status(200)
+                    .json({
+                        result: result,
+                        error: ''
+                    })
+                ;
+
+            }, function (error) {
+                return res.status(500)
+                    .json({
+                        result: [],
+                        error: error
+                    })
+                ;
+            })
+        ;
+
+    });
+
     return app;
 };
