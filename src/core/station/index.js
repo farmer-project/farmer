@@ -127,8 +127,10 @@ Publisher.prototype.subWorksFinish = function () {
  */
 Publisher.prototype._emitEvent = function (data) {
     if (this.connection) {
+
         this.connection.publish(this.roomID, data,
             {contentType: 'application/json'});
+
         log.trace('room >>' + this.roomID + ' data >>' + JSON.stringify(data));
     }
 };

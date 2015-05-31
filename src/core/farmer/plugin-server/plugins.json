@@ -12,15 +12,15 @@
   },
 
   {
-    "plugin": "/plugins/shell",
-    "name": "Shell Plugin",
-    "description": "Connect to any container and run shell command or execute shell file"
+    "plugin": "/core/plugins/backupPlugin",
+    "name": "Backup Plugin",
+    "description": "Delete package backup on delete event"
   },
 
   {
-    "plugin": "/core/plugins/endLinePlugin",
-    "name": "endline Plugin",
-    "description": "Call client that event flow finished"
+    "plugin": "/plugins/shell",
+    "name": "Shell Plugin",
+    "description": "Connect to any container and run shell command or execute shell file"
   },
 
   {

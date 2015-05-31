@@ -18,10 +18,10 @@ function BackupSystem() {
  * @private
  */
 BackupSystem.prototype.newID = function () {
-    var text = "",
-        possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var text = '',
+        possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-    for( var i=0; i < 5; i++ ) {
+    for (var i = 0 ; i < 5 ; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
 

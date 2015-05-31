@@ -64,7 +64,7 @@ DeleteBackupPackage.prototype._getScreenshots = function (tag) {
 
 /**
  * Delete
- * @param containerDirBinds
+ * @param {Array} containerDirBinds
  * @returns {*}
  * @private
  */

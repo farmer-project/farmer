@@ -22,9 +22,8 @@ RestorePackage.prototype.execute = function (tag) {
 
     return this.getScreenshots(tag)
         .then(function (packageScreenshot) {
-
             var volumes = JSON.parse(packageScreenshot.volumes);
-            _.reduce(volumes, function (prevPromise, containerDirBinds) {
+            return _.reduce(volumes, function (prevPromise, containerDirBinds) {
                 return prevPromise.then(function () {
                     return self.restoreFiles(containerDirBinds);
                 });
@@ -55,13 +54,18 @@ RestorePackage.prototype.getScreenshots = function (tag) {
     ;
 };
 
+/**
+ * Restore files
+ * @param {Array} containerDirBinds
+ * @returns {*}
+ */
 RestorePackage.prototype.restoreFiles = function (containerDirBinds) {
     return _.reduce(containerDirBinds, function (prevPromise, volume) {
 
         return prevPromise.then(function () {
 
             del.sync([volume.hostPath + '/*']);
-            return backupFileServer.restore(volume.backupId);
+            return backupFileServer.restore(volume.backupId, volume.hostPath);
 
         });
 

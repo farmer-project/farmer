@@ -53,5 +53,4 @@ StopPackage.prototype.getPackage = function (hostname) {
     ;
 };
 
-
 module.exports = StopPackage;

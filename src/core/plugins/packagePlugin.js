@@ -45,27 +45,33 @@ PackagePlugin.prototype.getContainers = function (bag) {
         publisher   = bag.get('publisher'),
         containers  = {};
 
-    bag.set('containers', containers);
     return this.isExist(args.hostname).then(function (packageRow) {
         var containerID = JSON.parse(packageRow.containers),
             promiseArray = [];
+
         for (var alias in containerID) {
-            // Create a closure
+            // Closure
             (function(alias) {
                 var container = new Container();
+
                 promiseArray.push(
-                    container.getInstance(containerID[alias])
-                        .then(function (containerObj) {
-                            containers[alias] = containerObj;
-                        })
+                    container
+                    .getInstance(containerID[alias])
+                    .then(function (containerObj) {
+                        containers[alias] = containerObj;
+                    })
                 );
+
             })(alias);
         }
 
-        return Q.all(promiseArray);
+        return Q.all(promiseArray).then(function () {
+            bag.set('containers', containers);
+        });
+
     }, function (error) {
-        publisher.sendString(args.hostname + ' package does not exist');
-        return Q.when(true);
+        publisher.sendString(error);
+        return Q.reject(true);
     });
 };
 
@@ -78,19 +84,27 @@ PackagePlugin.prototype.getContainers = function (bag) {
  * @returns {*}
  */
 PackagePlugin.prototype.delete = function (bag) {
-    var containers  = bag.get('containers'),
+    var publisher   = bag.get('publisher'),
+        containers  = bag.get('containers'),
         args        = bag.get('args'),
         promiseArray = [];
 
     for (var alias in containers) {
+        publisher.sendString('Delete ' + alias);
         promiseArray.push(containers[alias].destroy(args.deleteVolume));
     }
 
-    return models.Package.find({
-        where: {hostname: args.hostname}
-    }).then(function (packageRow) {
-        packageRow.destroy();
-        return Q.all(promiseArray);
+    return Q.all(promiseArray).then(function () {
+        return models
+            .Package.find({
+                where: {
+                    hostname: args.hostname
+                }
+            }).then(function (packageRow) {
+                publisher.sendString('Package ' + args.hostname + ' deleted');
+                return packageRow.destroy();
+            })
+        ;
     });
 };
 
@@ -122,17 +136,26 @@ PackagePlugin.prototype.toClient = function (bag) {
     return Q.when(true);
 };
 
+/**
+ * Check package existence
+ * @param {string} packageName - package name
+ * @returns {Bluebird.Promise|*}
+ */
 PackagePlugin.prototype.isExist = function (packageName) {
     return models
         .Package.find({
-            where: {hostname: packageName}
+            where: {
+                hostname: packageName
+            }
         }).then(function (packageRow) {
+
             if (null == packageRow) {
                 return Q.reject(packageName + ' does not exist');
-            } else {
-                return Q.when(packageRow);
             }
-        });
+
+            return Q.resolve(packageRow);
+        })
+    ;
 };
 
 module.exports = new PackagePlugin();

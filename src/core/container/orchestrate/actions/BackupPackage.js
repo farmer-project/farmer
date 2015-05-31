@@ -15,28 +15,51 @@ function BackupPackage () {
 /**
  * Backup a package
  * @param {string} hostname - Package hostname
- * @param {string} tag - Tag
+ * @param {string} [tag] - Tag
  * @returns {Bluebird.Promise|*}
  */
 BackupPackage.prototype.execute = function (hostname, tag) {
-    var self = this;
+    var self = this,
+        screenshotTag = tag || this.genScreenshotTag();
 
-    return this.getPackage(hostname)
-        .then(function (packageRow) {
+    return this.uniqueTag(tag).then(function () {
+        return self.getPackage(hostname)
+            .then(function (packageRow) {
 
-            var containersID = JSON.parse(packageRow.containers),
-                screenshotTag = tag || self.genScreenshotTag();
+                var containersID = JSON.parse(packageRow.containers);
 
-            return self._getPackageContainersBackup(containersID)
-                .then(function (volumes) {
-                    return self._save(screenshotTag, volumes, hostname);
-                })
-            ;
+                return self._getPackageContainersBackup(containersID)
+                    .then(function (volumes) {
+                        return self._save(screenshotTag, volumes, hostname);
+                    })
+                ;
+            })
+        ;
+    });
 
+};
+
+/**
+ * Reject on duplicate tag name
+ * @param {string} tag - Tag name
+ * @returns {Bluebird.Promise|*}
+ */
+BackupPackage.prototype.uniqueTag = function (tag) {
+    return models
+        .PackageScreenshot
+        .find({
+            where: {
+                tag: tag
+            }
+        }).then(function (screenshot) {
+            if (!screenshot) {
+                return Q.resolve(true);
+            }
+
+            return Q.reject('Duplicate tag name!');
         })
     ;
 };
-
 
 /**
  * Return package column row
@@ -67,7 +90,7 @@ BackupPackage.prototype.genScreenshotTag = function () {
     var text = '',
         possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-    for( var i=0; i < 5; i++ ) {
+    for (var i = 0 ; i < 5 ; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
 
@@ -90,16 +113,16 @@ BackupPackage.prototype._getPackageContainersBackup = function (containersID) {
     return _.reduce(containersID, function (prevPromise, id, alias) {
         var container = new Container();
 
-            return prevPromise.then(function () {
-                return container
-                    .getInstance(id)
-                    .then(self._backupContainer)
-                    .then(function (res) {
-                        result[alias] = res;
-                        return result;
-                    })
-                ;
-            });
+        return prevPromise.then(function () {
+            return container
+                .getInstance(id)
+                .then(self._backupContainer)
+                .then(function (res) {
+                    result[alias] = res;
+                    return result;
+                })
+            ;
+        });
 
     }, Q.when(true));
 };

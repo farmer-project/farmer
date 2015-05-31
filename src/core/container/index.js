@@ -114,6 +114,7 @@ Container.prototype.getConfigurationEntry = function (entry) {
  */
 Container.prototype.updateConfigurationEntry = function (entry, data) {
     if (this.configuration !== {}) {
+
         var recurse = function (obj, key) {
             for (var p in obj) {
                 if (p === key) {
@@ -125,6 +126,7 @@ Container.prototype.updateConfigurationEntry = function (entry, data) {
                 }
             }
         };
+
         recurse(this.configuration, entry);
     }
 };
@@ -229,19 +231,23 @@ Container.prototype.destroy = function (removeVolume) {
                 RemoveVolume: removeVolume
             }
         ).then(function () {
-            (function () {
-                // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-                return models
-                    .Domain
-                    .findAll({
-                        where:{container_id: id}
-                    }).then(function (domains) {
-                        return domainManager.unassign(self, domains);
-                    });
-                // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-            })().finally(function () {
-                self._delete();
-            });
+
+            // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+            return models
+                .Domain
+                .findAll({
+                    where:{container_id: id}
+                }).then(function (domains) {
+
+                    return domainManager
+                        .unassign(self, domains)
+                        .then(function () {
+                            return self._delete();
+                        });
+
+                });
+            // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
+
         })
     ;
 };
@@ -335,15 +341,18 @@ Container.prototype._delete = function () {
             where: {id: this.getConfigurationEntry('Id')}
         }).then(function (container) {
             // TODO: Remove this code part when docker api remove volume issue solved
-            var volArr = JSON.parse(container.volumes);
-            if (null !== volArr) {
-                volArr.forEach(function (mountPoints) {
-                    del.sync(mountPoints.split(':')[0] + '/*', {force: true});
-                    del.sync(mountPoints.split(':')[0] + '/', {force: true});
+            var volumeArray = _.clone(JSON.parse(container.volumes));
+
+            if (volumeArray !== null) {
+                volumeArray.forEach(function (mountPoints) {
+                    del.sync([mountPoints.split(':')[0] + '/*']);
+                    del.sync([mountPoints.split(':')[0]], {force: true});
                 });
             }
+
             return container.destroy();
-        });
+        })
+    ;
 };
 
 // TODO: remote server container shell executer
@@ -476,10 +485,9 @@ Container.prototype.unsetDomain = function (domain, port) {
             }
         }).then(function (domainRow) {
             if (domainRow) {
-                domainRow.destroy();
+                return domainRow.destroy();
             }
-        })
-    ;
+        });
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 };
 

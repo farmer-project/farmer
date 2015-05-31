@@ -17,7 +17,7 @@ module.exports = function Backup() {
 
                 return res.status(200)
                     .json({
-                        result: {tag: tag},
+                        result: {tag: args.tag},
                         error: ''
                     });
 

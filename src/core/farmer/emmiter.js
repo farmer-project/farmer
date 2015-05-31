@@ -37,19 +37,44 @@ Emitter.prototype.register = function (event, priority, action) {
  * @param {Bag} context - Bag object
  */
 Emitter.prototype.dispatch = function (event, context) {
-    var priorityGraph = this.channel[event];
+    var priorityGraph = this.channel[event],
+        self = this;
+
     _(this._getSortPriority(priorityGraph)).reduce(function (prevPromise, priority) {
         return prevPromise.then(function() {
+
             var promiseArr = [];
+
             priorityGraph[priority].forEach(function (action) {
                 var deferred = Q.defer();
                 action(context).then(deferred.resolve, deferred.reject);
                 promiseArr.push(deferred.promise);
             });
-            return Q.all(promiseArr);
-        });
-    }, Q.when(true));
 
+            return Q.all(promiseArr);
+
+        });
+
+    }, Q.when(true)).finally(function () {
+        self.endBroadCasting(context);
+    });
+
+};
+
+/**
+ * Broadcast end of process
+ * @param {Object} context - Bag object
+ */
+Emitter.prototype.endBroadCasting = function (context) {
+    var publisher = context.get('publisher');
+
+    if (publisher) {
+        while (publisher.subLevel > 0) {
+            if (publisher.subLevel === 1) { publisher.sendString('Done.'); }
+            publisher.subWorksFinish();
+        }
+        publisher.disconnect();
+    }
 };
 
 /**
