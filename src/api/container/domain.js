@@ -5,6 +5,7 @@ var express         = require('express'),
     Q               = require('q'),
     Container       = require('../../core/container'),
     models          = require('../../core/models'),
+    _               = require('underscore'),
     domainManager   = require('../../core/sysadmin/domain-manager'),
     config          = require(path.resolve(__dirname, '../../config'));
 
@@ -118,6 +119,73 @@ module.exports = function Domain() {
             })
         ;
 
+    });
+
+    app.get('/', function (req, res) {
+        var args = req.body.args;
+
+        models.Package.find({
+            where: {
+                hostname: args.hostname
+            }
+        }).then(function (packageRow) {
+            if (!packageRow) {
+                return Q.reject('Packge does not exists!');
+            }
+
+            var containers = JSON.parse(packageRow.containers),
+                results = {};
+
+            return (function() {
+                return _.reduce(containers, function (prevPromise, containerID, alias) {
+                    return prevPromise.then(function () {
+
+                        return models
+                            .Domain
+                            .findAll({
+                                attributes: ['domain', 'port'],
+                                where: {
+                                    container_id: containerID
+                                }
+                            }).then(function (domainsInfo) {
+
+                                var dataValues = [];
+
+                                domainsInfo.forEach(function (value) {
+                                    dataValues.push({
+                                        domain: value.domain,
+                                        port: value.port
+                                    });
+                                });
+
+                                results[alias] = dataValues;
+                                return results;
+                            });
+
+                    });
+
+            }, Q.when(true));
+            })()
+                .then(function () {
+                    return Q.resolve(results);
+                });
+
+        }).then(function (result) {
+            return res
+                .status(200)
+                .json({
+                    result: result,
+                    error: ''
+                });
+
+        }, function (error) {
+            return res
+                .status(500)
+                .json({
+                    result: '',
+                    error: error
+                });
+        });
     });
 
     return app;

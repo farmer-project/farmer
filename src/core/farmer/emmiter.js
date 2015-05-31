@@ -70,7 +70,6 @@ Emitter.prototype.endBroadCasting = function (context) {
 
     if (publisher) {
         while (publisher.subLevel > 0) {
-            if (publisher.subLevel === 1) { publisher.sendString('Done.'); }
             publisher.subWorksFinish();
         }
         publisher.disconnect();

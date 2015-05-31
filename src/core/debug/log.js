@@ -19,7 +19,7 @@ var ACCESS_LOG_FILE_TAG = 'access';
 function LogCenter() {
     log4js.configure({
         appenders: [
-            //{type: 'console'},
+            {type: 'console'},
             {
                 type: 'file',
                 absolute: true,

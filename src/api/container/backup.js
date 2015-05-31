@@ -1,7 +1,9 @@
 'use strict';
 
 var express         = require('express'),
-    packageCompose  = require('../../core/container/orchestrate');
+    path            = require('path'),
+    packageCompose  = require('../../core/container/orchestrate'),
+    models          = require(path.resolve(__dirname, '../../core/models'));
 
 module.exports = function Backup() {
     var app = express();
@@ -89,8 +91,7 @@ module.exports = function Backup() {
      * All generated backup of package list
      */
     app.get('/list', function (req, res) {
-        var models = require('../../core/models'),
-            args = req.body.args;
+        var args = req.body.args;
 
         models
             .PackageScreenshot
