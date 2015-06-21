@@ -241,7 +241,7 @@ Container.prototype.destroy = function (removeVolume) {
 
                     return domainManager
                         .unassign(self, domains)
-                        .then(function () {
+                        .finally(function () {
                             return self._delete();
                         });
 
@@ -341,13 +341,18 @@ Container.prototype._delete = function () {
             where: {id: this.getConfigurationEntry('Id')}
         }).then(function (container) {
             // TODO: Remove this code part when docker api remove volume issue solved
-            var volumeArray = _.clone(JSON.parse(container.volumes));
+            try {
+                var volumeArray = _.clone(JSON.parse(container.volumes));
 
-            if (volumeArray !== null) {
-                volumeArray.forEach(function (mountPoints) {
-                    del.sync([mountPoints.split(':')[0] + '/*']);
-                    del.sync([mountPoints.split(':')[0]], {force: true});
-                });
+                if (volumeArray !== null) {
+                    volumeArray.forEach(function (mountPoints) {
+                        del.sync([mountPoints.split(':')[0] + '/*']);
+                        del.sync([mountPoints.split(':')[0]], {force: true});
+                    });
+                }
+
+            } catch (e) {
+
             }
 
             return container.destroy();

@@ -7,6 +7,7 @@ var _               = require('underscore'),
     Mustache        = require('mustache'),
     ReverseProxy    = require('../../farmer/ReverseProxy'),
     models          = require('../../models'),
+    log             = require(path.resolve(__dirname, '../../debug/log')),
     mainConfig      = require(path.resolve(__dirname, '../../../config'));
 
 function DomainManager () {
@@ -128,6 +129,7 @@ DomainManager.prototype.unassign = function (containerObj, domains) {
 
     function restartProxy() {
         return reverseProxy.restart().then(function () {
+            log.trace('Restart reverse proxy');
             return result;
         });
     }
