@@ -346,7 +346,7 @@ Container.prototype._delete = function () {
 
                 if (volumeArray !== null) {
                     volumeArray.forEach(function (mountPoints) {
-                        del.sync([mountPoints.split(':')[0] + '/*']);
+                        del.sync([mountPoints.split(':')[0] + '/*'], {force: true});
                         del.sync([mountPoints.split(':')[0]], {force: true});
                     });
                 }
