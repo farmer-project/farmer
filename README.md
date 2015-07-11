@@ -13,7 +13,7 @@ This project is still in progress for our internal use. We will publish working 
 # RoadMap
 
 - [ ] api
- - [ ] Config system
+ - [x] Config system
  - [ ] Listener on specific port
  - [ ] Define create route
  - [ ] Create api
