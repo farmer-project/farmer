@@ -2,21 +2,31 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	"code.google.com/p/goconf"
+	"github.com/spf13/viper"
 )
 
-type config struct {
-	Port			uint16
-	Greenhouse_Vol	string
-	Farmland_Vol	string
-	Docker_Api		string
+const CONFIG_FOLDER = "/etc/farmer"
+
+type Config struct {
+	Port			int
+	Docker_Api, Greenhouse_Vol, Farmland_Vol string
 }
 
-func main() {
-	fmt.Println(os.Getenv("farmer_port"));
-	c, err = goconf.ReadConfigFile("farmer.conf")
-	fmt.Println(c.GetInt("port"));
+func (c *Config) init() {
+	viper.SetConfigName("farmer")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(CONFIG_FOLDER)
+	err := viper.ReadInConfig()
 
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	fmt.Println("samavar1")
+
+	c.Port = viper.GetInt("port")
+	c.Docker_Api = viper.GetString("docker_api")
+	c.Greenhouse_Vol = viper.GetString("greenhouse_vol")
+	c.Farmland_Vol = viper.GetString("farmland_vol")
 }

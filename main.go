@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	fmt.Println("Start farmer deamon")
+	fmt.Println(config.Port)
 }
