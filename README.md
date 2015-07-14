@@ -14,8 +14,8 @@ This project is still in progress for our internal use. We will publish working 
 
 - [ ] api
  - [x] Config system
- - [ ] Listener on specific port
- - [ ] Define create route
+ - [x] Define routes
+ - [x] Listener on specific port
  - [ ] Create api
 - [ ] farmer-docker-compose
  - [ ] Container Object

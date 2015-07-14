@@ -15,4 +15,4 @@ done
 
 echo "Application Env set"
 
-echo "Farmer started"
+go run $(pwd)"/main.go"
