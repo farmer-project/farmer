@@ -7,9 +7,9 @@ import (
 )
 
 func main() {
-	api := &api.FarmerApi{
-		port: os.Getenv("LISTEN"),
+	Api := &api.FarmerApi{
+		Port: os.Getenv("LISTEN"),
 	}
 
-	api.start()
+	Api.Listen()
 }

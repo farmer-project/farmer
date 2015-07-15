@@ -5,24 +5,24 @@ import (
 )
 
 type FarmerApi struct {
-	port string
+	Port string
 }
 
-func (farmer *FarmerApi) start() {
+func (farmer *FarmerApi) Listen() {
 	server := martini.Classic()
-	server.Get("/seedbox/list",						farmer.ListSeedBox)
-	server.Get("/seedbox/:seedbox/inspect",			farmer.InspectSeedBox)
-	server.Get("/seedbox/:seedbox/backup/list",		farmer.SeedBoxBackupList)
-	server.Get("/seedbox/:seedbox/domain/list",		farmer.ListDomain)
+	server.Get("/seedbox/list",						farmer.listSeedBox)
+	server.Get("/seedbox/:seedbox/inspect",			farmer.inspectSeedBox)
+	server.Get("/seedbox/:seedbox/backup/list",		farmer.seedBoxBackupList)
+	server.Get("/seedbox/:seedbox/domain/list",		farmer.listDomain)
 
-	server.Post("/seedbox/create",					farmer.CreateSeedBox)
-	server.Post("/seedbox/deploy",					farmer.DeployOnSeedBox)
-	server.Post("/seedbox/backup/create",			farmer.BackUpSeedBoxVolumes)
-	server.Post("/seedbox/domain/add",				farmer.AddDomain)
+	server.Post("/seedbox/create",					farmer.createSeedBox)
+	server.Post("/seedbox/deploy",					farmer.deployOnSeedBox)
+	server.Post("/seedbox/backup/create",			farmer.backUpSeedBoxVolumes)
+	server.Post("/seedbox/domain/add",				farmer.addDomain)
 
-	server.Delete("/seedbox/delete",				farmer.DeleteSeedBox)
-	server.Delete("/seedbox/backup/delete/:tag",	farmer.RestoreSeedBoxVolumes)
-	server.Delete("/seedbox/domain/delete",			farmer.DeleteDomain)
+	server.Delete("/seedbox/delete",				farmer.deleteSeedBox)
+	server.Delete("/seedbox/backup/delete/:tag",	farmer.restoreSeedBoxVolumes)
+	server.Delete("/seedbox/domain/delete",			farmer.deleteDomain)
 
-	server.RunOnAddr(":"+farmer.port)
+	server.RunOnAddr(":"+farmer.Port)
 }
