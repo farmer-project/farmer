@@ -26,3 +26,5 @@ _testmain.go
 *.prof
 
 farmer.conf
+
+Godeps/_workspace
