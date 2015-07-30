@@ -1,0 +1,17 @@
+---
+- name: Install PHP5-FPM
+  sudo: yes
+  when: stage == "development"
+  apt:  package=php5-fpm state=latest
+
+- name: Install PHP5-CLI
+  sudo: yes
+  when: stage == "development"
+  apt:  package=php5-cli state=latest
+
+- name: Install PHP packages
+  sudo: yes
+  when: stage == "development"
+  apt:  package={{ item.package }} state=latest
+  with_items: php_packages
+
