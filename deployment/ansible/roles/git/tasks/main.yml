@@ -1,0 +1,5 @@
+---
+- name: Install Git
+  sudo: yes
+  when: stage == "development" or stage == "staging"
+  apt:  pkg=git state=latest

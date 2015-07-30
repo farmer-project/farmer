@@ -1,0 +1,46 @@
+---
+- hosts: all
+  vars:
+    stage: "{{ lookup('env','RAVAJ_STAGE') | default('development', true)  }}"
+    # change app_port and app_development_port to only port and it's automaticaty init based on stage
+
+    app_port: 80
+    app_development_port: 8080
+
+    docker_server: "http://localhost:4242"
+    log_dir: "/var/www/logs"
+
+    node_version: "0.12.0"
+    node_prefix: "node-v{{node_version}}"
+    node_tarball: "{{node_prefix}}-linux-x64.tar.gz"
+    node_path: "/usr/local"
+
+    sys_packages:
+      - curl
+      - wget
+      - build-essential
+      - python-software-properties
+    extra_packages:
+          - mcrypt
+    php_packages:
+      - { name: curl, package: php5-curl }
+      - { name: mcrypt, package: php5-mcrypt }
+      - { name: mysql, package: php5-mysql }
+      - { name: intl, package: php5-intl }
+      - { name: gd, package: php5-gd }
+    php_extensions: []
+    php_ppa: php5
+  vars_files:
+    - [ "../vars.yml", "../vars.default.yml" ]
+  roles:
+    - init
+    - nginx
+    - php5
+    - mysql
+    - curl
+    - wget
+    - unzip
+    - git
+    - phpmyadmin
+    - nodejs
+    - app

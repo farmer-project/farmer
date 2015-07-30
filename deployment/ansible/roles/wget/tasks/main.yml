@@ -1,0 +1,5 @@
+---
+- name: Install wget
+  sudo: yes
+  when: stage == "development" or stage == "staging"
+  apt:  pkg=wget state=latest
