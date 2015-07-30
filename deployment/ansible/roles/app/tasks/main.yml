@@ -1,0 +1,27 @@
+---
+- name: Install npm dependencies
+  sudo: yes
+  npm: path=/var/www
+
+- name: create application config file
+  sudo: yes
+  template: src=farmer.conf.j2 dest=/var/www/farmer.conf.js
+
+- name: install docker.io
+  sudo: yes
+  shell: apt-get install -y docker.io
+
+- name: ready nginx to enable docker rest api
+  sudo: yes
+  shell: sudo sed -i 's/user .*;/user root;/' /etc/nginx/nginx.conf
+
+- name: install MySQLdb
+  sudo: yes
+  shell: apt-get install -y python-mysqldb
+
+- mysql_db: name=farmer_development collation=utf8_general_ci
+
+- name: Change default nginx site
+  sudo: yes
+  template: src=docker.j2 dest=/etc/nginx/sites-enabled/docker
+  notify: restart nginx
