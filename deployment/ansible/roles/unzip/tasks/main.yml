@@ -1,5 +1,0 @@
----
-- name: Install unzip
-  sudo: yes
-  when: stage == "development" or stage == "staging"
-  apt:  pkg=unzip state=latest
