@@ -3,6 +3,7 @@ package brain
 import (
 	"os"
 
+	"errors"
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/box"
 	"github.com/farmer-project/farmer/utils/farmerFile"
@@ -18,8 +19,7 @@ func Create(req request.CreateSeedRequest) error {
 	git.Clone(req.Repo, req.PathSpec, codeDest)
 	// 2. Read .farmer.yml and fetch it's data
 	projectConfig, err := farmerFile.Parse(codeDest)
-
-	if  err != nil {
+	if err != nil {
 		os.RemoveAll(codeDest)
 		return err
 	}
@@ -27,15 +27,19 @@ func Create(req request.CreateSeedRequest) error {
 	// 3. Init box configuration
 	box := box.Box{
 		Name: req.Name,
-		Git: &box.GitConfig {
-			Repo: req.Repo,
+		Git: &box.GitConfig{
+			Repo:     req.Repo,
 			PathSpec: req.PathSpec,
 		},
 	}
 	// 4. Create an container
 	err = box.Run(boxConfigure(projectConfig, codeDest))
+	if err != nil {
+		os.RemoveAll(codeDest)
+		return err
+	}
 
-	return err
+	return errors.New("")
 }
 
 func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxConfig {
@@ -44,10 +48,10 @@ func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxC
 		Ports: conf.Ports,
 	}
 	return box.BoxConfig{
-		Image: conf.Image,
+		Image:        conf.Image,
 		CgroupParent: user,
-		Hostname: user,
-		Binds: []string{"/app:"+codeFolderAddress}, // Any container has one source code
-		Network: network,
+		Hostname:     user,
+		Binds:        []string{"/app:" + codeFolderAddress}, // Any container has one source code
+		Network:      network,
 	}
 }

@@ -10,7 +10,6 @@ import (
 
 // POST
 func (f* FarmerApi) createSeed(res http.ResponseWriter, req request.CreateSeedRequest) string {
-
 	return brain.Create(req).Error()
 }
 
