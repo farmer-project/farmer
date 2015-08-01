@@ -6,25 +6,25 @@ import (
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/box"
 	"github.com/farmer-project/farmer/utils/farmerFile"
-	"fmt"
+	"github.com/farmer-project/farmer/utils/git"
 )
 
 var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
 
 // TODO: Add a method to brain that init remotely
-func Create(req request.CreateSeedRequest) {
-	// 1. Clone code(ahmad work)
-	// 2. Read .farmer.yml (done)
-	// 3. Parse file and fetch it's data (done)
-	// 4. Init box configuration
-	// 5. Create an container
-	projectConfig, err := farmerFile.Parse(GREEN_HOUSE)
+func Create(req request.CreateSeedRequest) error {
+	codeDest := GREEN_HOUSE + "/" + req.Name
+	// 1. Clone code
+	git.Clone(req.Repo, req.PathSpec, codeDest)
+	// 2. Read .farmer.yml and fetch it's data
+	projectConfig, err := farmerFile.Parse(codeDest)
 
 	if  err != nil {
-		panic(err)
-//		file does not exists and remove cloned code
+		os.RemoveAll(codeDest)
+		return err
 	}
 
+	// 3. Init box configuration
 	box := box.Box{
 		Name: req.Name,
 		Git: &box.GitConfig {
@@ -32,8 +32,10 @@ func Create(req request.CreateSeedRequest) {
 			PathSpec: req.PathSpec,
 		},
 	}
-fmt.Println(boxConfigure(projectConfig, GREEN_HOUSE))
-	box.Run(boxConfigure(projectConfig, GREEN_HOUSE))
+	// 4. Create an container
+	err = box.Run(boxConfigure(projectConfig, codeDest))
+
+	return err
 }
 
 func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxConfig {
