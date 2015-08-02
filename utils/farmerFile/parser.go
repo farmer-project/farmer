@@ -1,9 +1,9 @@
 package farmerFile
 
 import (
-	"path/filepath"
-	"io/ioutil"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"path/filepath"
 )
 
 type ConfigFile struct {
@@ -11,7 +11,6 @@ type ConfigFile struct {
 	Ports []string
 	Env   []string
 }
-
 
 func Parse(address string) (ConfigFile, error) {
 	filename, _ := filepath.Abs(address + "/.farmer.yml")
