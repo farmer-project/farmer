@@ -18,8 +18,7 @@ func services() {
 	station.UpServer()
 	fmt.Println("up")
 
-	// FIXME: Sometimes!!! in installation part db container connection failed til 1 min!!!!!!??? :O
-	db.Connect()
+	// FIXME: Sometimes!!! in installation part db container connection failed til 1 min!!??? :O
 	db.Sync()
 	fmt.Println("Main init done")
 }

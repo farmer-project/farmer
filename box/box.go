@@ -15,7 +15,7 @@ type BoxConfig struct {
 	Image        string   `json:"image"`
 	Hostname     string   `json:"hostname"`
 	CgroupParent string   `json:"cgroupParent"`
-	Binds      []string `json:"volumes"`
+	Binds        []string `json:"volumes"`
 	Network      *ContainerNetworkSetting
 }
 

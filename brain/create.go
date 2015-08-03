@@ -15,10 +15,14 @@ var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
 // TODO: Add a method to brain that init remotely
 func Create(req request.CreateSeedRequest) error {
 	codeDest := GREEN_HOUSE + "/" + req.Name
+
 	// 1. Clone code
-	git.Clone(req.Repo, req.PathSpec, codeDest)
+	if err := git.Clone(req.Repo, req.PathSpec, codeDest); err != nil {
+		return err
+	}
+
 	// 2. Read .farmer.yml and fetch it's data
-	projectConfig, err := farmerFile.Parse(codeDest)
+	ff, err := farmerFile.Parse(codeDest)
 	if err != nil {
 		os.RemoveAll(codeDest)
 		return err
@@ -32,8 +36,9 @@ func Create(req request.CreateSeedRequest) error {
 			PathSpec: req.PathSpec,
 		},
 	}
+
 	// 4. Create an container
-	err = box.Run(boxConfigure(projectConfig, codeDest))
+	err = box.Run(boxConfigure(ff, codeDest))
 	if err != nil {
 		os.RemoveAll(codeDest)
 		return err
