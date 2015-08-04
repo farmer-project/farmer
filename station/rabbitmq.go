@@ -10,24 +10,24 @@ import (
 const (
 	RABBITMQ_STATION_NAME = "farmer-rabbitmq-station"
 	username              = "admin"
-	password              = "5h1Eq2Majid][GolshadiFarmer<3#"
+	password              = "admin"
 )
-
-var Station docker.Container
 
 func UpServer() *docker.Container {
 	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
 
-	Station, error := d.InspectContainer(RABBITMQ_STATION_NAME)
+	station, error := d.InspectContainer(RABBITMQ_STATION_NAME)
 	if error != nil {
-		Station, _ = d.CreateContainer(stationConfig())
+		station, _ = d.CreateContainer(stationConfig())
 		// docker need 1 second to create a container
 		time.Sleep(time.Second)
-		d.StartContainer(Station.ID, Station.HostConfig)
+		d.StartContainer(station.ID, station.HostConfig)
 	}
 	// TODO: Assign domain to station dashboard and station server
 
-	return Station
+	os.Setenv("AMPQ_SERVER", "amqp://"+username+":"+password+"@"+station.NetworkSettings.IPAddress+":5672/")
+
+	return station
 }
 
 func stationConfig() docker.CreateContainerOptions {

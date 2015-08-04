@@ -6,11 +6,20 @@ import (
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/brain"
 	"github.com/go-martini/martini"
+	"github.com/farmer-project/farmer/station"
 )
 
 // POST
 func (f *FarmerApi) createSeed(res http.ResponseWriter, req request.CreateSeedRequest) string {
-	return brain.Create(req).Error()
+	hub := &station.Hub{}
+	connectedHub, err := hub.CreateConnection()
+
+	if err == nil {
+		go brain.Create(req, connectedHub)
+		return connectedHub.Queue.Name
+	}
+
+	return err.Error()
 }
 
 // POST

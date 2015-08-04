@@ -39,6 +39,10 @@
 			"Rev": "45321e63b98c756df17369c027c1df89298e1288"
 		},
 		{
+			"ImportPath": "github.com/streadway/amqp",
+			"Rev": "1aedb1f9e106db5d7403222313a0504a06def5b3"
+		},
+		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40"
 		}

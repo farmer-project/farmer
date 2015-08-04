@@ -1,33 +1,30 @@
 package git
 
-import (
-	"os"
-	"os/exec"
-)
+import "os/exec"
 
-func Clone(repo string, pathSpec string, codeDestination string) error {
+func (g *Git) Clone(pathSpec string, codeDestination string) error {
 	if err := Support(); err != nil {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", repo, codeDestination)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd := exec.Command("git", "clone", g.Repo, codeDestination)
+	cmd.Stdout = g.Stdout
+	cmd.Stderr = g.Stderr
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 
 	cmd = exec.Command("git", "checkout", "-B", pathSpec)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = g.Stdout
+	cmd.Stderr = g.Stderr
 	cmd.Dir = codeDestination
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 
 	cmd = exec.Command("git", "pull", "origin", pathSpec)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = g.Stdout
+	cmd.Stderr = g.Stderr
 	cmd.Dir = codeDestination
 	if err := cmd.Run(); err != nil {
 		return err

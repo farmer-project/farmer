@@ -3,21 +3,26 @@ package brain
 import (
 	"os"
 
-	"errors"
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/box"
 	"github.com/farmer-project/farmer/utils/farmerFile"
 	"github.com/farmer-project/farmer/utils/git"
+	"github.com/farmer-project/farmer/station"
 )
 
 var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
 
 // TODO: Add a method to brain that init remotely
-func Create(req request.CreateSeedRequest) error {
+func Create(req request.CreateSeedRequest, hub *station.Hub) error {
+	defer hub.Close()
+
 	codeDest := GREEN_HOUSE + "/" + req.Name
 
 	// 1. Clone code
-	if err := git.Clone(req.Repo, req.PathSpec, codeDest); err != nil {
+	repo := git.New(req.Repo)
+	repo.Stdout = hub
+	repo.Stderr = hub
+	if err := repo.Clone(req.PathSpec, codeDest); err != nil {
 		return err
 	}
 
@@ -29,22 +34,25 @@ func Create(req request.CreateSeedRequest) error {
 	}
 
 	// 3. Init box configuration
-	box := box.Box{
-		Name: req.Name,
-		Git: &box.GitConfig{
-			Repo:     req.Repo,
-			PathSpec: req.PathSpec,
-		},
+	b := box.New(req.Name)
+	b.Stdout = hub
+	b.Stderr = hub
+	b.Git = &box.GitConfig{
+		Repo:     req.Repo,
+		PathSpec: req.PathSpec,
 	}
 
-	// 4. Create an container
-	err = box.Run(boxConfigure(ff, codeDest))
+	// 4. Create and Start a container
+	id, err := b.Run(boxConfigure(ff, codeDest))
 	if err != nil {
 		os.RemoveAll(codeDest)
 		return err
 	}
 
-	return errors.New("")
+	hub.Write([]byte("Container id: " + id))
+
+	cmds := []string{"sh", "/app/" + ff.Scripts["create"]}
+	return b.Exec(id, cmds)
 }
 
 func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxConfig {
@@ -56,7 +64,7 @@ func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxC
 		Image:        conf.Image,
 		CgroupParent: user,
 		Hostname:     user,
-		Binds:        []string{"/app:" + codeFolderAddress}, // Any container has one source code
+		Binds:        []string{codeFolderAddress + ":/app"}, // Any container has one source code
 		Network:      network,
 	}
 }

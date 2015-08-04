@@ -7,9 +7,10 @@ import (
 )
 
 type ConfigFile struct {
-	Image string
-	Ports []string
-	Env   []string
+	Image   string
+	Ports   []string
+	Env     []string
+	Scripts map[string]string
 }
 
 func Parse(address string) (ConfigFile, error) {
