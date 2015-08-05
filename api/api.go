@@ -41,7 +41,7 @@ func (farmer *FarmerApi) registerRoutes(server *martini.ClassicMartini) {
 	server.Post("/box/backup/create", farmer.backUpSeedBoxVolumes)
 	server.Post("/box/domain/add", farmer.addDomain)
 
-	server.Delete("/box/delete", farmer.deleteSeed)
+	server.Delete("/box/:box", farmer.deleteSeed)
 	server.Delete("/box/backup/delete/:tag", farmer.restoreSeedBoxVolumes)
 	server.Delete("/box/domain/delete", farmer.deleteDomain)
 }
