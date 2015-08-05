@@ -22,23 +22,23 @@ func (farmer *FarmerApi) Listen() {
 }
 
 func (farmer *FarmerApi) registerRoutes(server *martini.ClassicMartini) {
-	server.Get("/seed/list", farmer.listSeed)
-	server.Get("/seed/:seed/inspect", farmer.inspectSeed)
-	server.Get("/seed/:seed/backup/list", farmer.seedBoxBackupList)
-	server.Get("/seed/:seed/domain/list", farmer.listDomain)
+	server.Get("/box/list", farmer.listSeed)
+	server.Get("/box/:box/inspect", farmer.inspectSeed)
+	server.Get("/box/:box/backup/list", farmer.seedBoxBackupList)
+	server.Get("/box/:box/domain/list", farmer.listDomain)
 
 	server.Post(
-		"/seed/create",
+		"/box/create",
 		binding.Bind(request.CreateSeedRequest{}),
 		farmer.createSeed,
 	)
-	server.Post("/seed/deploy", farmer.deployOnSeed)
-	server.Post("/seed/backup/create", farmer.backUpSeedBoxVolumes)
-	server.Post("/seed/domain/add", farmer.addDomain)
+	server.Post("/box/deploy", farmer.deployOnSeed)
+	server.Post("/box/backup/create", farmer.backUpSeedBoxVolumes)
+	server.Post("/box/domain/add", farmer.addDomain)
 
-	server.Delete("/seed/delete", farmer.deleteSeed)
-	server.Delete("/seed/backup/delete/:tag", farmer.restoreSeedBoxVolumes)
-	server.Delete("/seed/domain/delete", farmer.deleteDomain)
+	server.Delete("/box/delete", farmer.deleteSeed)
+	server.Delete("/box/backup/delete/:tag", farmer.restoreSeedBoxVolumes)
+	server.Delete("/box/domain/delete", farmer.deleteDomain)
 }
 
 func (farmer *FarmerApi) jsonRequest(res http.ResponseWriter, req *http.Request) {

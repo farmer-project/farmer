@@ -6,34 +6,53 @@ import (
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/box"
 	"github.com/farmer-project/farmer/utils/farmerFile"
-	"fmt"
+	"github.com/farmer-project/farmer/utils/git"
+	"github.com/farmer-project/farmer/station"
 )
 
 var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
 
 // TODO: Add a method to brain that init remotely
-func Create(req request.CreateSeedRequest) {
-	// 1. Clone code(ahmad work)
-	// 2. Read .farmer.yml (done)
-	// 3. Parse file and fetch it's data (done)
-	// 4. Init box configuration
-	// 5. Create an container
-	projectConfig, err := farmerFile.Parse(GREEN_HOUSE)
+func Create(req request.CreateSeedRequest, hub *station.Hub) error {
+	defer hub.Close()
 
-	if  err != nil {
-		panic(err)
-//		file does not exists and remove cloned code
+	codeDest := GREEN_HOUSE + "/" + req.Name
+
+	// 1. Clone code
+	repo := git.New(req.Repo)
+	repo.Stdout = hub
+	repo.Stderr = hub
+	if err := repo.Clone(req.PathSpec, codeDest); err != nil {
+		return err
 	}
 
-	box := box.Box{
-		Name: req.Name,
-		Git: &box.GitConfig {
-			Repo: req.Repo,
-			PathSpec: req.PathSpec,
-		},
+	// 2. Read .farmer.yml and fetch it's data
+	ff, err := farmerFile.Parse(codeDest)
+	if err != nil {
+		os.RemoveAll(codeDest)
+		return err
 	}
-fmt.Println(boxConfigure(projectConfig, GREEN_HOUSE))
-	box.Run(boxConfigure(projectConfig, GREEN_HOUSE))
+
+	// 3. Init box configuration
+	b := box.New(req.Name)
+	b.Stdout = hub
+	b.Stderr = hub
+	b.Git = &box.GitConfig{
+		Repo:     req.Repo,
+		PathSpec: req.PathSpec,
+	}
+
+	// 4. Create and Start a container
+	id, err := b.Run(boxConfigure(ff, codeDest))
+	if err != nil {
+		os.RemoveAll(codeDest)
+		return err
+	}
+
+	hub.Write([]byte("Container id: " + id))
+
+	cmds := []string{"sh", "/app/" + ff.Scripts["create"]}
+	return b.Exec(id, cmds)
 }
 
 func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxConfig {
@@ -42,10 +61,10 @@ func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxC
 		Ports: conf.Ports,
 	}
 	return box.BoxConfig{
-		Image: conf.Image,
+		Image:        conf.Image,
 		CgroupParent: user,
-		Hostname: user,
-		Binds: []string{"/app:"+codeFolderAddress}, // Any container has one source code
-		Network: network,
+		Hostname:     user,
+		Binds:        []string{codeFolderAddress + ":/app"}, // Any container has one source code
+		Network:      network,
 	}
 }
