@@ -5,9 +5,9 @@ import (
 
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/box"
+	"github.com/farmer-project/farmer/station"
 	"github.com/farmer-project/farmer/utils/farmerFile"
 	"github.com/farmer-project/farmer/utils/git"
-	"github.com/farmer-project/farmer/station"
 )
 
 var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
@@ -19,10 +19,10 @@ func Create(req request.CreateSeedRequest, hub *station.Hub) error {
 	codeDest := GREEN_HOUSE + "/" + req.Name
 
 	// 1. Clone code
-	repo := git.New(req.Repo)
+	repo := git.New()
 	repo.Stdout = hub
 	repo.Stderr = hub
-	if err := repo.Clone(req.PathSpec, codeDest); err != nil {
+	if err := repo.Clone(req.Repo, req.PathSpec, codeDest); err != nil {
 		return err
 	}
 
@@ -51,8 +51,8 @@ func Create(req request.CreateSeedRequest, hub *station.Hub) error {
 
 	hub.Write([]byte("Container id: " + id))
 
-	cmds := []string{"sh", "/app/" + ff.Scripts["create"]}
-	return b.Exec(id, cmds)
+	cmds := []string{"sh", "/app/" + ff.Scripts[farmerFile.CREATE]}
+	return b.Exec(cmds)
 }
 
 func boxConfigure(conf farmerFile.ConfigFile, codeFolderAddress string) box.BoxConfig {

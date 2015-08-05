@@ -2,12 +2,12 @@ package git
 
 import "os/exec"
 
-func (g *Git) Clone(pathSpec string, codeDestination string) error {
+func (g *Git) Clone(repo string, pathSpec string, codeDestination string) error {
 	if err := Support(); err != nil {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", g.Repo, codeDestination)
+	cmd := exec.Command("git", "clone", repo, codeDestination)
 	cmd.Stdout = g.Stdout
 	cmd.Stderr = g.Stderr
 	if err := cmd.Run(); err != nil {
@@ -26,9 +26,5 @@ func (g *Git) Clone(pathSpec string, codeDestination string) error {
 	cmd.Stdout = g.Stdout
 	cmd.Stderr = g.Stderr
 	cmd.Dir = codeDestination
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.Run()
 }
