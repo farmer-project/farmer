@@ -129,3 +129,9 @@ func (box *Box) dynamicPortBindings(ports []string) map[docker.Port]struct{} {
 
 	return portBindings
 }
+
+func PublicPort(c *docker.Container, portType string) string {
+	var pb []docker.PortBinding
+	pb = c.NetworkSettings.Ports[docker.Port(portType)]
+	return pb[0].HostPort
+}

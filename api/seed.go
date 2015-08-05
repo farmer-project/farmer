@@ -7,6 +7,8 @@ import (
 	"github.com/farmer-project/farmer/brain"
 	"github.com/farmer-project/farmer/station"
 	"github.com/go-martini/martini"
+	"encoding/json"
+	"github.com/farmer-project/farmer/api/response"
 )
 
 // POST
@@ -16,7 +18,11 @@ func (f *FarmerApi) createSeed(res http.ResponseWriter, req request.CreateSeedRe
 
 	if err == nil {
 		go brain.Create(req, connectedHub)
-		return connectedHub.Queue.Name
+		json, _ := json.Marshal(&response.StreamResponse{
+			Amqp: hub.ClientAmpqUrl(),
+			RoomID: connectedHub.Queue.Name,
+		})
+		return string(json)
 	}
 
 	return err.Error()
@@ -29,7 +35,11 @@ func (f *FarmerApi) deployOnSeed(res http.ResponseWriter, req request.DeploySeed
 
 	if err == nil {
 		go brain.Deploy(req, connectedHub)
-		return connectedHub.Queue.Name
+		json, _ := json.Marshal(&response.StreamResponse{
+			Amqp: hub.ClientAmpqUrl(),
+			RoomID: connectedHub.Queue.Name,
+		})
+		return string(json)
 	}
 
 	return err.Error()
@@ -52,5 +62,5 @@ func (f *FarmerApi) listSeed() string {
 
 // GET
 func (f *FarmerApi) inspectSeed(params martini.Params) string {
-	return params["seedbox"]
+	return params["box"]
 }

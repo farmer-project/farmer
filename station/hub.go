@@ -4,8 +4,8 @@ import (
 	"github.com/streadway/amqp"
 	"math/rand"
 	"os"
-	"time"
 	"strconv"
+	"time"
 )
 
 type Hub struct {
@@ -16,7 +16,7 @@ type Hub struct {
 }
 
 func (hub *Hub) CreateConnection() (*Hub, error) {
-	conn, err := amqp.Dial(os.Getenv("AMPQ_SERVER"))
+	conn, err := amqp.Dial(os.Getenv(AMDIN_AMQP_SERVER))
 	if err != nil {
 		return hub, err
 	}
@@ -57,4 +57,8 @@ func (hub *Hub) Write(b []byte) (n int, err error) {
 
 func (hub *Hub) Close() error {
 	return hub.connection.Close()
+}
+
+func (hub *Hub) ClientAmpqUrl() string {
+	return "amqp://guest:guest@" + os.Getenv(AMQP_SERVER_IP)
 }
