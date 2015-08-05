@@ -66,16 +66,23 @@ func (box *Box) Start(id string, hostConfig *docker.HostConfig) error {
 	return nil
 }
 
-func (b *Box) Exec(id string, cmds []string) error {
+func (b *Box) inspect(identifier string) (*docker.Container, error) {
 	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
 
+	return d.InspectContainer(identifier)
+}
+
+func (b *Box) Exec(cmds []string) error {
+	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
+	con, err := d.InspectContainer(b.Name)
+
 	exec, err := d.CreateExec(docker.CreateExecOptions{
-		Container: id,
-		AttachStdin: false,
+		Container:    con.ID,
+		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
-		Tty: false,
-		Cmd: cmds,
+		Tty:          false,
+		Cmd:          cmds,
 	})
 
 	if err != nil {
@@ -83,10 +90,10 @@ func (b *Box) Exec(id string, cmds []string) error {
 	}
 
 	return d.StartExec(exec.ID, docker.StartExecOptions{
-		Detach: false,
-		Tty: false,
+		Detach:       false,
+		Tty:          false,
 		OutputStream: b.Stdout,
-		ErrorStream: b.Stderr,
+		ErrorStream:  b.Stderr,
 	})
 }
 

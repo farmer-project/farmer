@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	CREATE = "create"
+	DEPLOY = "deploy"
+)
+
 type ConfigFile struct {
 	Image   string
 	Ports   []string

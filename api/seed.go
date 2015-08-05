@@ -3,10 +3,11 @@ package api
 import (
 	"net/http"
 
+	"fmt"
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/brain"
-	"github.com/go-martini/martini"
 	"github.com/farmer-project/farmer/station"
+	"github.com/go-martini/martini"
 )
 
 // POST
@@ -23,8 +24,16 @@ func (f *FarmerApi) createSeed(res http.ResponseWriter, req request.CreateSeedRe
 }
 
 // POST
-func (f *FarmerApi) deployOnSeed(params martini.Params) string {
-	return "Hi"
+func (f *FarmerApi) deployOnSeed(res http.ResponseWriter, req request.DeploySeedRequest) string {
+	hub := &station.Hub{}
+	connectedHub, err := hub.CreateConnection()
+	fmt.Println("here in deploy")
+	if err == nil {
+		brain.Deploy(req, connectedHub)
+		return connectedHub.Queue.Name
+	}
+	fmt.Println(err.Error())
+	return err.Error()
 }
 
 // DELETE
