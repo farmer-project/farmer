@@ -1,6 +1,6 @@
 package response
 
 type StreamResponse struct {
-	Amqp string
-	RoomID string
+	AmqpURI   string `json:"amqp_uri"`
+	QueueName string `json:"queue_name"`
 }

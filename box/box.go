@@ -3,15 +3,16 @@ package box
 import (
 	"io"
 	"os"
+	"strings"
 )
 
-// TODO: Support multitype container(docker, droplet(digitalocean), ...)
 type Box struct {
-	Name   string `json:"name"`
-	Stdout io.Writer
-	Stderr io.Writer
-	Git    *GitConfig
-	Config *BoxConfig
+	Name         string     `json:"name"`
+	InputStream  io.Reader  `json:"-"`
+	OutputStream io.Writer  `json:"-"`
+	ErrorStream  io.Writer  `json:"-"`
+	Git          *GitConfig
+	Config       *BoxConfig
 }
 
 type GitConfig struct {
@@ -35,28 +36,34 @@ type ContainerNetworkSetting struct {
 func New(name string) *Box {
 	return &Box{
 		Name:   name,
-		Stderr: os.Stderr,
-		Stdout: os.Stdout,
+		OutputStream: os.Stdout,
+		ErrorStream: os.Stderr,
+		InputStream: os.Stdin,
 	}
 }
 
 func Fetch(identifier string) (*Box, error) {
 	box := &Box{}
 
-	con, err := box.inspect(identifier)
+	c, err := box.inspect(identifier)
 	if err != nil {
 		return nil, err
 	}
 
-	box.Name = con.Name
-	box.Stdout = os.Stdout
-	box.Stderr = os.Stderr
+	box.Name = c.Name
+	box.OutputStream = os.Stdout
+	box.ErrorStream = os.Stderr
+	box.InputStream = os.Stdin
 	box.Config = &BoxConfig{
-		Image:        con.Image,
-		Hostname:     con.Config.Hostname,
-		CgroupParent: con.HostConfig.CgroupParent,
-		Binds:        con.HostConfig.Binds,
+		Image:        c.Image,
+		Hostname:     c.Config.Hostname,
+		CgroupParent: c.HostConfig.CgroupParent,
+		Binds:        c.HostConfig.Binds,
 	}
 
 	return box, nil
+}
+
+func (b *Box) CodeDirectory() string {
+	return strings.Split(b.Config.Binds[0], ":")[0]
 }
