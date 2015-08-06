@@ -6,13 +6,13 @@ import (
 )
 
 type Git struct {
-	Stdout io.Writer
-	Stderr io.Writer
+	OutputStream io.Writer
+	ErrorStream io.Writer
 }
 
 func New() *Git {
 	return &Git{
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
+		OutputStream: os.Stdout,
+		ErrorStream: os.Stderr,
 	}
 }

@@ -14,7 +14,7 @@ const (
 	db_name           = "farmer"
 )
 
-func UpServer() *docker.Container {
+func SetupServer() *docker.Container {
 	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
 
 	var err error

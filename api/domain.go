@@ -2,14 +2,14 @@ package api
 
 import "github.com/go-martini/martini"
 
-func (f *FarmerApi) addDomain(params martini.Params) string {
+func (api *Api) domainAdd(params martini.Params) string {
 	return "Hi"
 }
 
-func (f *FarmerApi) deleteDomain(params martini.Params) string {
+func (api *Api) domainDelete(params martini.Params) string {
 	return "Hi"
 }
 
-func (f *FarmerApi) listDomain(params martini.Params) string {
+func (api *Api) domainList(params martini.Params) string {
 	return params["seedbox"]
 }

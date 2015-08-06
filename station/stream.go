@@ -8,29 +8,35 @@ import (
 	"time"
 )
 
-type Hub struct {
+type Stream struct {
 	server     string
 	connection *amqp.Connection
 	channel    *amqp.Channel
 	Queue      amqp.Queue
 }
 
-func (hub *Hub) CreateConnection() (*Hub, error) {
+func CreateStream() (*Stream, error) {
+	stream := &Stream{}
+
 	conn, err := amqp.Dial(os.Getenv(AMDIN_AMQP_SERVER))
 	if err != nil {
-		return hub, err
+		return stream, err
 	}
 
-	hub.connection = conn
+	stream.connection = conn
 
 	ch, err := conn.Channel()
-	hub.channel = ch
+	if err != nil {
+		return stream, err
+	}
+
+	stream.channel = ch
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	roomID := "room" + strconv.Itoa(int(time.Now().Unix())) + strconv.Itoa(r.Int())
+	queueName := "farmer" + strconv.Itoa(int(time.Now().Unix())) + strconv.Itoa(r.Int())
 
 	q, err := ch.QueueDeclare(
-		roomID, // name
+		queueName, // name
 		false,  // durable
 		true,   // delete when unused
 		false,  // exclusive
@@ -38,15 +44,15 @@ func (hub *Hub) CreateConnection() (*Hub, error) {
 		nil,    // arguments
 	)
 
-	hub.Queue = q
+	stream.Queue = q
 
-	return hub, err
+	return stream, err
 }
 
-func (hub *Hub) Write(b []byte) (n int, err error) {
-	return len(b), hub.channel.Publish(
+func (s *Stream) Write(b []byte) (n int, err error) {
+	return len(b), s.channel.Publish(
 		"",             // exchange
-		hub.Queue.Name, // routing key
+		s.Queue.Name, // routing key
 		false,          // mandatory
 		false,          // immediate
 		amqp.Publishing{
@@ -55,10 +61,10 @@ func (hub *Hub) Write(b []byte) (n int, err error) {
 		})
 }
 
-func (hub *Hub) Close() error {
-	return hub.connection.Close()
+func (s *Stream) Close() error {
+	return s.connection.Close()
 }
 
-func (hub *Hub) ClientAmpqUrl() string {
+func (s *Stream) AmpqURI() string {
 	return "amqp://guest:guest@" + os.Getenv(AMQP_SERVER_IP)
 }

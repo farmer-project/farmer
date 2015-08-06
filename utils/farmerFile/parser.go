@@ -7,31 +7,31 @@ import (
 )
 
 const (
-	CREATE = "create"
-	DEPLOY = "deploy"
+	SCRIPT_CREATE = "create"
+	SCRIPT_DEPLOY = "deploy"
 )
 
-type ConfigFile struct {
+type FarmerConfig struct {
 	Image   string
 	Ports   []string
 	Env     []string
 	Scripts map[string]string
 }
 
-func Parse(address string) (ConfigFile, error) {
+func Parse(address string) (FarmerConfig, error) {
 	filename, _ := filepath.Abs(address + "/.farmer.yml")
 	yamlFile, err := ioutil.ReadFile(filename)
 
 	if err != nil {
-		return ConfigFile{}, err
+		return FarmerConfig{}, err
 	}
 
-	var farmerFile ConfigFile
-	err = yaml.Unmarshal(yamlFile, &farmerFile)
+	var farmerConfig FarmerConfig
+	err = yaml.Unmarshal(yamlFile, &farmerConfig)
 
 	if err != nil {
-		return ConfigFile{}, err
+		return FarmerConfig{}, err
 	}
 
-	return farmerFile, nil
+	return farmerConfig, nil
 }

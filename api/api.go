@@ -8,45 +8,34 @@ import (
 	"github.com/martini-contrib/binding"
 )
 
-type FarmerApi struct {
+type Api struct {
 	Port string
 }
 
-func (farmer *FarmerApi) Listen() {
+func (api *Api) Listen() {
 	server := martini.Classic()
 
-	server.Use(farmer.jsonRequest)
-	farmer.registerRoutes(server)
+	server.Use(api.jsonRequest)
+	api.registerRoutes(server)
 
-	server.RunOnAddr(":" + farmer.Port)
+	server.RunOnAddr(":" + api.Port)
 }
 
-func (farmer *FarmerApi) registerRoutes(server *martini.ClassicMartini) {
-	server.Get("/box/list", farmer.listSeed)
-	server.Get("/box/:box/inspect", farmer.inspectSeed)
-	server.Get("/box/:box/backup/list", farmer.seedBoxBackupList)
-	server.Get("/box/:box/domain/list", farmer.listDomain)
+func (api *Api) registerRoutes(server *martini.ClassicMartini) {
 
-	server.Post(
-		"/box/create",
-		binding.Bind(request.CreateSeedRequest{}),
-		farmer.createSeed,
-	)
-	server.Post(
-		"/box/deploy",
-		binding.Bind(request.DeploySeedRequest{}),
-		farmer.deployOnSeed,
-	)
+	// Box routes
+	server.Post("/box", binding.Bind(request.CreateRequest{}), api.boxCreate)
+	server.Put("/box/:hostname", binding.Bind(request.DeployRequest{}), api.boxDeploy)
+	server.Get("/box", api.boxList)
+	server.Get("/box/:hostname", api.boxInspect)
+	server.Delete("/box/:hostname", api.boxDelete)
 
-	server.Post("/box/backup/create", farmer.backUpSeedBoxVolumes)
-	server.Post("/box/domain/add", farmer.addDomain)
-
-	server.Delete("/box/:box", farmer.deleteSeed)
-	server.Delete("/box/backup/delete/:tag", farmer.restoreSeedBoxVolumes)
-	server.Delete("/box/domain/delete", farmer.deleteDomain)
+	// Domain routes
+	server.Post("/box/:hostname/domain", api.domainAdd)
+	server.Delete("/box/:hostname/domain/:domain", api.domainDelete)
 }
 
-func (farmer *FarmerApi) jsonRequest(res http.ResponseWriter, req *http.Request) {
+func (api *Api) jsonRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Header.Get("Content-Type") != "application/json" {
 		res.WriteHeader(http.StatusBadRequest)
 		res.Header().Set("Content-Type", "application/json")

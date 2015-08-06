@@ -92,8 +92,8 @@ func (b *Box) Exec(cmds []string) error {
 	return d.StartExec(exec.ID, docker.StartExecOptions{
 		Detach:       false,
 		Tty:          false,
-		OutputStream: b.Stdout,
-		ErrorStream:  b.Stderr,
+		OutputStream: b.OutputStream,
+		ErrorStream:  b.ErrorStream,
 	})
 }
 

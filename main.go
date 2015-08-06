@@ -10,23 +10,22 @@ import (
 )
 
 func services() {
-	fmt.Print("Database server....")
-	db.UpServer()
-	fmt.Println("up")
+	fmt.Print("Setting up database server...")
+	db.SetupServer()
+	fmt.Println("Database server is up.")
 
-	fmt.Print("Station server....")
-	station.UpServer()
-	fmt.Println("up")
+	fmt.Print("Setting up station server...")
+	station.SetupServer()
+	fmt.Println("Station server is up.")
 
 	// FIXME: Sometimes!!! in installation part db container connection failed til 1 min!!??? :O
 	db.Sync()
-	fmt.Println("Main init done")
 }
 
 func main() {
 	services()
 
-	Api := &api.FarmerApi{
+	Api := &api.Api{
 		Port: os.Getenv("LISTEN"),
 	}
 

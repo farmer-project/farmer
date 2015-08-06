@@ -18,7 +18,7 @@ const (
 	password              = "admin"
 )
 
-func UpServer() *docker.Container {
+func SetupServer() *docker.Container {
 	ds := os.Getenv("DOCKER_API")
 	d, _ := docker.NewClient(ds)
 
