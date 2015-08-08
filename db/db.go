@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/farmer-project/farmer/db/tables"
+	"github.com/farmer-project/farmer/db/models"
 	"github.com/fsouza/go-dockerclient"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -26,6 +26,7 @@ func Connect() gorm.DB {
 			db_name,
 		)
 		DbConnection, _ = gorm.Open(DB_TYPE, cs)
+		DbConnection.LogMode(true)
 	}
 
 	return DbConnection
@@ -33,9 +34,9 @@ func Connect() gorm.DB {
 
 func Sync() {
 	Connect()
-	DbConnection.CreateTable(&tables.Box{})
-	DbConnection.CreateTable(&tables.Container{})
-	DbConnection.AutoMigrate(&tables.Box{}, &tables.Container{})
+	DbConnection.AutoMigrate(
+		&models.Box{},
+	)
 }
 
 func Close() error {
