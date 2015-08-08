@@ -1,10 +1,17 @@
 package git
 
-import "os/exec"
+import (
+	"os/exec"
+	"errors"
+)
 
 func (g *Git) Update(branch string, codeDestination string) error {
 	if err := Support(); err != nil {
 		return err
+	}
+
+	if branch == "" {
+		return errors.New("Branch must be set")
 	}
 
 	cmd := exec.Command("git", "reset", "--hard")

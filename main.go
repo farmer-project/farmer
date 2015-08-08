@@ -6,7 +6,7 @@ import (
 
 	"github.com/farmer-project/farmer/api"
 	"github.com/farmer-project/farmer/db"
-	"github.com/farmer-project/farmer/station"
+	"github.com/farmer-project/farmer/hub"
 )
 
 func services() {
@@ -15,7 +15,7 @@ func services() {
 	fmt.Println("Database server is up.")
 
 	fmt.Print("Setting up station server...")
-	station.SetupServer()
+	hub.SetupServer()
 	fmt.Println("Station server is up.")
 
 	// FIXME: Sometimes!!! in installation part db container connection failed til 1 min!!??? :O

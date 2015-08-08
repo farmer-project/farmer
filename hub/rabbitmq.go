@@ -1,4 +1,4 @@
-package station
+package hub
 
 import (
 	"os"
