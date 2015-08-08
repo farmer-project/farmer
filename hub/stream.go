@@ -66,5 +66,5 @@ func (s *Stream) Close() error {
 }
 
 func (s *Stream) AmpqURI() string {
-	return "amqp://guest:guest@" + os.Getenv(AMQP_SERVER_IP)
+	return "amqp://ahmad:ahmad@" + os.Getenv(AMQP_SERVER_IP)
 }

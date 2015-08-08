@@ -66,6 +66,12 @@ func (f *Api) boxList(params martini.Params) (int, string) {
 }
 
 // DELETE
-func (f *Api) boxDelete(params martini.Params) string {
-	return "Hi"
+func (f *Api) boxDelete(params martini.Params) (int, string) {
+	err := brain.Delete(params["hostname"])
+
+	if err != nil {
+		return 500, err.Error()
+	}
+
+	return 200, "Done"
 }

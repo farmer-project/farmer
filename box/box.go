@@ -50,7 +50,7 @@ func Fetch(identifier string) (*Box, error) {
 		return nil, err
 	}
 
-	box.Name = c.Name
+	box.Name = strings.TrimLeft(c.Name, "/")
 	box.OutputStream = os.Stdout
 	box.ErrorStream = os.Stderr
 	box.InputStream = os.Stdin

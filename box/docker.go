@@ -124,6 +124,27 @@ func (box *Box) dynamicPortBindings(ports []string) map[docker.Port]struct{} {
 	return portBindings
 }
 
+func (box *Box) Delete(removeVolumes bool) error {
+	db.Connect()
+	b := models.Box{}
+	db.DbConnection.First(&b, "name = ?", box.Name)
+
+	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
+	err := d.RemoveContainer(docker.RemoveContainerOptions{
+		ID: b.ContainerID,
+		RemoveVolumes: removeVolumes,
+		Force: true,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	os.RemoveAll(box.CodeDirectory())
+
+	return db.DbConnection.Delete(&b).Error
+}
+
 func PublicPort(c *docker.Container, portType string) string {
 	var pb []docker.PortBinding
 	pb = c.NetworkSettings.Ports[docker.Port(portType)]
