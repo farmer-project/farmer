@@ -24,15 +24,15 @@ func (api *Api) Listen() {
 func (api *Api) registerRoutes(server *martini.ClassicMartini) {
 
 	// Box routes
-	server.Post("/box", binding.Bind(request.CreateRequest{}), api.boxCreate)
-	server.Put("/box/:hostname", binding.Bind(request.DeployRequest{}), api.boxDeploy)
-	server.Get("/box", api.boxList)
-	server.Get("/box/:hostname", api.boxInspect)
-	server.Delete("/box/:hostname", api.boxDelete)
+	server.Post("/boxes", binding.Bind(request.CreateRequest{}), api.boxCreate)
+	server.Put("/boxes/:hostname", binding.Bind(request.DeployRequest{}), api.boxDeploy)
+	server.Get("/boxes", api.boxList)
+	server.Get("/boxes/:hostname", api.boxInspect)
+	server.Delete("/boxes/:hostname", api.boxDelete)
 
 	// Domain routes
-	server.Post("/box/:hostname/domain", api.domainAdd)
-	server.Delete("/box/:hostname/domain/:domain", api.domainDelete)
+	server.Post("/boxes/:hostname/domain", api.domainAdd)
+	server.Delete("/boxes/:hostname/domain/:domain", api.domainDelete)
 }
 
 func (api *Api) jsonRequest(res http.ResponseWriter, req *http.Request) {
