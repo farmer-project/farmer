@@ -19,7 +19,7 @@ func (f *Api) boxCreate(res http.ResponseWriter, req request.CreateRequest) (int
 		return 500, err.Error()
 	}
 
-	go brain.Create(req.Hostname, req.RepoUrl, req.PathSpec, stream)
+	go brain.Create(req.Name, req.RepoUrl, req.PathSpec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
 		AmqpURI:   stream.AmpqURI(),
@@ -54,7 +54,15 @@ func (f *Api) boxInspect(params martini.Params) string {
 
 // GET
 func (f *Api) boxList(params martini.Params) (int, string) {
-	return "Hi"
+	boxes, err := brain.List()
+
+	if err != nil {
+		return 500, err.Error()
+	}
+
+	json, _ := json.Marshal(boxes)
+
+	return 200, string(json)
 }
 
 // DELETE

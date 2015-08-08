@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/farmer-project/farmer/db"
-	"github.com/farmer-project/farmer/db/tables"
+	"github.com/farmer-project/farmer/db/models"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -29,39 +29,33 @@ func (box *Box) Create(config BoxConfig) (*docker.Container, error) {
 		return nil, err
 	}
 
-	// improve code if they solve this issue https://github.com/jinzhu/gorm/issues/594
-	boxRow := &tables.Box{
+	b := models.Box{
 		Name:        box.Name,
 		Repo:        box.Git.Repo,
 		Pathspec:    box.Git.PathSpec,
-		ContainerID: container.ID,
-	}
-	contRow := &tables.Container{
-		ID:     container.ID,
+		ContainerID:     container.ID,
 		Image:  config.Image,
 		Status: "create",
 	}
 
 	db.Connect()
-	db.DbConnection.Create(boxRow)
-	db.DbConnection.Create(contRow)
+	db.DbConnection.Create(&b)
 
 	return container, err
 }
 
-func (box *Box) Start(id string, hostConfig *docker.HostConfig) error {
+func (box *Box) Start(containerId string, hostConfig *docker.HostConfig) error {
 	d, _ := docker.NewClient(os.Getenv("DOCKER_API"))
-	err := d.StartContainer(id, hostConfig)
+	err := d.StartContainer(containerId, hostConfig)
 
 	if err != nil {
 		return err
 	}
 
-	// improve code style based on this issue solved https://github.com/jinzhu/gorm/issues/595
 	db.Connect()
-	containerRow := &tables.Container{}
-	db.DbConnection.First(containerRow, "id = ?", id)
-	db.DbConnection.Model(containerRow).Update(tables.Container{Status: "running"})
+	b := models.Box{}
+	db.DbConnection.First(&b, "container_id = ?", containerId)
+	db.DbConnection.Model(&b).Update("Status", "running")
 
 	return nil
 }

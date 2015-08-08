@@ -6,7 +6,7 @@ import (
 	"github.com/farmer-project/farmer/utils/farmerFile"
 	"github.com/farmer-project/farmer/utils/git"
 	"github.com/farmer-project/farmer/db"
-	"github.com/farmer-project/farmer/db/tables"
+	"github.com/farmer-project/farmer/db/models"
 )
 
 func Deploy(hostname string, pathspec string, stream *hub.Stream) error {
@@ -21,9 +21,9 @@ func Deploy(hostname string, pathspec string, stream *hub.Stream) error {
 	}
 
 	db.Connect()
-	boxRow := &tables.Box{}
+	boxRow := &models.Box{}
 	db.DbConnection.First(boxRow, "name = ?", hostname)
-	db.DbConnection.Model(boxRow).Update(tables.Box{Pathspec: pathspec})
+	db.DbConnection.Model(boxRow).Update(models.Box{Pathspec: pathspec})
 
 	ff, err := farmerFile.Parse(codeDirectory)
 	if err != nil {
