@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/farmer-project/farmer/box"
-	"github.com/farmer-project/farmer/station"
+	"github.com/farmer-project/farmer/hub"
 	"github.com/farmer-project/farmer/utils/farmerFile"
 	"github.com/farmer-project/farmer/utils/git"
 )
@@ -12,7 +12,7 @@ import (
 var GREEN_HOUSE = os.Getenv("GREENHOUSE_VOLUME")
 
 // TODO: Add a method to controller that init remotely
-func Create(hostname string, repoUrl string, pathspec string, stream *station.Stream) error {
+func Create(hostname string, repoUrl string, pathspec string, stream *hub.Stream) error {
 	defer stream.Close()
 
 	codeDirectory := GREEN_HOUSE + "/" + hostname

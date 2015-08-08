@@ -2,12 +2,12 @@ package controller
 
 import (
 	"github.com/farmer-project/farmer/box"
-	"github.com/farmer-project/farmer/station"
+	"github.com/farmer-project/farmer/hub"
 	"github.com/farmer-project/farmer/utils/farmerFile"
 	"github.com/farmer-project/farmer/utils/git"
 )
 
-func Deploy(hostname string, pathspec string, stream *station.Stream) error {
+func Deploy(hostname string, pathspec string, stream *hub.Stream) error {
 	b, _ := box.Fetch(hostname)
 	codeDirectory := b.CodeDirectory()
 
