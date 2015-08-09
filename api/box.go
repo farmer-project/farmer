@@ -6,20 +6,21 @@ import (
 
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/api/response"
-	"github.com/farmer-project/farmer/brain"
+	"github.com/farmer-project/farmer/controller"
+	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
 	"github.com/go-martini/martini"
 )
 
 // POST
-func (f *Api) boxCreate(res http.ResponseWriter, req request.CreateRequest) (int, string) {
+func boxCreate(res http.ResponseWriter, req request.CreateRequest) (int, string) {
 	stream, err := hub.CreateStream()
 
 	if err != nil {
 		return 500, err.Error()
 	}
 
-	go brain.Create(req.Name, req.RepoUrl, req.PathSpec, stream)
+	go controller.BoxCreate(req.Name, req.RepoUrl, req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
 		AmqpURI:   stream.AmpqURI(),
@@ -30,14 +31,14 @@ func (f *Api) boxCreate(res http.ResponseWriter, req request.CreateRequest) (int
 }
 
 // PUT
-func (f *Api) boxDeploy(res http.ResponseWriter, req request.DeployRequest, params martini.Params) (int, string) {
+func boxDeploy(res http.ResponseWriter, req request.DeployRequest, params martini.Params) (int, string) {
 	stream, err := hub.CreateStream()
 
 	if err != nil {
 		return 500, string(err.Error())
 	}
 
-	go brain.Deploy(params["hostname"], req.PathSpec, stream)
+	go controller.BoxDeploy(params["name"], req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
 		AmqpURI:   stream.AmpqURI(),
@@ -48,13 +49,21 @@ func (f *Api) boxDeploy(res http.ResponseWriter, req request.DeployRequest, para
 }
 
 // GET
-func (f *Api) boxInspect(params martini.Params) string {
-	return "Hi"
+func boxInspect(params martini.Params) (int, string) {
+	box, err := farmer.FindBoxByName(params["name"])
+
+	if err != nil {
+		return 500, err.Error()
+	}
+
+	json, _ := json.Marshal(box)
+
+	return 200, string(json)
 }
 
 // GET
-func (f *Api) boxList(params martini.Params) (int, string) {
-	boxes, err := brain.List()
+func boxList(params martini.Params) (int, string) {
+	boxes, err := controller.BoxList()
 
 	if err != nil {
 		return 500, err.Error()
@@ -66,12 +75,12 @@ func (f *Api) boxList(params martini.Params) (int, string) {
 }
 
 // DELETE
-func (f *Api) boxDelete(params martini.Params) (int, string) {
-	err := brain.Delete(params["hostname"])
+func boxDelete(params martini.Params) (int, string) {
+	err := controller.BoxDelete(params["name"])
 
 	if err != nil {
 		return 500, err.Error()
 	}
 
-	return 200, "Done"
+	return 204, ""
 }

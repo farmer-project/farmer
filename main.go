@@ -1,33 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/farmer-project/farmer/api"
 	"github.com/farmer-project/farmer/db"
-	"github.com/farmer-project/farmer/hub"
+	"github.com/farmer-project/farmer/farmer"
 )
 
-func services() {
-	fmt.Print("Setting up database server...")
-	db.SetupServer()
-	fmt.Println("Database server is up.")
-
-	fmt.Print("Setting up station server...")
-	hub.SetupServer()
-	fmt.Println("Station server is up.")
-
-	// FIXME: Sometimes!!! in installation part db container connection failed til 1 min!!??? :O
-	db.Sync()
-}
-
 func main() {
-	services()
+	// Database
+	db.Connect()
+	defer db.Close()
 
-	Api := &api.Api{
-		Port: os.Getenv("LISTEN"),
-	}
+	db.DB.AutoMigrate(
+		&farmer.Box{},
+	)
 
-	Api.Listen()
+	// API Server
+	api.Listen()
 }

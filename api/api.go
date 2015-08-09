@@ -2,40 +2,36 @@ package api
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
 )
 
-type Api struct {
-	Port string
-}
-
-func (api *Api) Listen() {
+func Listen() {
 	server := martini.Classic()
 
-	server.Use(api.jsonRequest)
-	api.registerRoutes(server)
+	server.Use(jsonRequest)
+	registerRoutes(server)
 
-	server.RunOnAddr(":" + api.Port)
+	server.RunOnAddr(":" + os.Getenv("FARMER_API_PORT"))
 }
 
-func (api *Api) registerRoutes(server *martini.ClassicMartini) {
+func registerRoutes(server *martini.ClassicMartini) {
+	// Box
+	server.Post("/boxes", binding.Bind(request.CreateRequest{}), boxCreate)
+	server.Put("/boxes/:name", binding.Bind(request.DeployRequest{}), boxDeploy)
+	server.Get("/boxes", boxList)
+	server.Get("/boxes/:name", boxInspect)
+	server.Delete("/boxes/:name", boxDelete)
 
-	// Box routes
-	server.Post("/boxes", binding.Bind(request.CreateRequest{}), api.boxCreate)
-	server.Put("/boxes/:hostname", binding.Bind(request.DeployRequest{}), api.boxDeploy)
-	server.Get("/boxes", api.boxList)
-	server.Get("/boxes/:hostname", api.boxInspect)
-	server.Delete("/boxes/:hostname", api.boxDelete)
-
-	// Domain routes
-	server.Post("/boxes/:hostname/domain", api.domainAdd)
-	server.Delete("/boxes/:hostname/domain/:domain", api.domainDelete)
+	// Domain
+	server.Post("/boxes/:name/domain", domainAdd)
+	server.Delete("/boxes/:name/domain/:domain", domainDelete)
 }
 
-func (api *Api) jsonRequest(res http.ResponseWriter, req *http.Request) {
+func jsonRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Header.Get("Content-Type") != "application/json" {
 		res.WriteHeader(http.StatusBadRequest)
 		res.Header().Set("Content-Type", "application/json")

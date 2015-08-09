@@ -18,7 +18,7 @@ type Stream struct {
 func CreateStream() (*Stream, error) {
 	stream := &Stream{}
 
-	conn, err := amqp.Dial(os.Getenv(AMDIN_AMQP_SERVER))
+	conn, err := amqp.Dial(os.Getenv("FARMER_ADMIN_AMQP_URI"))
 	if err != nil {
 		return stream, err
 	}
@@ -37,11 +37,11 @@ func CreateStream() (*Stream, error) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // name
-		false,  // durable
-		true,   // delete when unused
-		false,  // exclusive
-		false,  // no-wait
-		nil,    // arguments
+		false,     // durable
+		true,      // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 
 	stream.Queue = q
@@ -51,20 +51,20 @@ func CreateStream() (*Stream, error) {
 
 func (s *Stream) Write(b []byte) (n int, err error) {
 	return len(b), s.channel.Publish(
-		"",             // exchange
+		"",           // exchange
 		s.Queue.Name, // routing key
-		false,          // mandatory
-		false,          // immediate
+		false,        // mandatory
+		false,        // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        b,
 		})
 }
 
-func (s *Stream) Close() error {
-	return s.connection.Close()
+func (s *Stream) AmpqURI() string {
+	return os.Getenv("FARMER_CONSUMER_AMQP_URI")
 }
 
-func (s *Stream) AmpqURI() string {
-	return "amqp://ahmad:ahmad@" + os.Getenv(AMQP_SERVER_IP)
+func (s *Stream) Close() error {
+	return s.connection.Close()
 }
