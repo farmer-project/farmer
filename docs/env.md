@@ -1,0 +1,12 @@
+* Farmer Enviroment Variables
+	* FARMER_DEBUG true
+	* FARMER_API_PORT 5594
+	* FARMER_DOCKER_API tcp://127.0.0.1:4243
+	* FARMER_FARMLAND_DIRECTORY /home/majid/farmer/farmland
+	* FARMER_CONSUMER_AMQP_URI amqp://farmer:farmer@127.0.0.1:5672/
+	* FARMER_ADMIN_AMQP_URI amqp://admin:admin@127.0.0.1:5672/
+	* FARMER_DB_USERNAME
+	* FARMER_DB_PASSWORD
+	* FARMER_DB_HOST
+	* FARMER_DB_PORT
+	* FARMER_DB_NAME

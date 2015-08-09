@@ -2,45 +2,28 @@ package db
 
 import (
 	"fmt"
-
-	"github.com/farmer-project/farmer/db/models"
-	"github.com/fsouza/go-dockerclient"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"os"
 )
 
-const DB_TYPE = "mysql"
+var DB gorm.DB
 
-var (
-	DbConnection gorm.DB
-	DbServer     *docker.Container
-)
-
-func Connect() gorm.DB {
-	if DbConnection.Error == nil {
-		cs := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-			username,
-			password,
-			DbServer.NetworkSettings.IPAddress,
-			"3306",
-			db_name,
-		)
-		DbConnection, _ = gorm.Open(DB_TYPE, cs)
-		DbConnection.LogMode(true)
-	}
-
-	return DbConnection
-}
-
-func Sync() {
-	Connect()
-	DbConnection.AutoMigrate(
-		&models.Box{},
+func Connect() {
+	cs := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True",
+		os.Getenv("FARMER_DB_USERNAME"),
+		os.Getenv("FARMER_DB_PASSWORD"),
+		os.Getenv("FARMER_DB_HOST"),
+		os.Getenv("FARMER_DB_PORT"),
+		os.Getenv("FARMER_DB_NAME"),
 	)
+
+	DB, _ = gorm.Open("mysql", cs)
+	DB.LogMode(os.Getenv("FARMER_DEBUG") == "true")
 }
 
 func Close() error {
-	if err := DbConnection.Close(); err != nil {
+	if err := DB.Close(); err != nil {
 		return err
 	}
 	return nil
