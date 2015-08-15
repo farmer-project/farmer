@@ -1,9 +1,17 @@
 package api
 
-import "github.com/go-martini/martini"
+import (
+	"github.com/farmer-project/farmer/api/request"
+	"github.com/farmer-project/farmer/controller"
+	"github.com/go-martini/martini"
+)
 
-func domainAdd(params martini.Params) string {
-	return "Hi"
+func domainAdd(req request.Domain, params martini.Params) (int, string) {
+	if err := controller.DomainAdd(params["name"], req.Url, req.Port); err != nil {
+		return 500, err.Error()
+	}
+
+	return 204, ""
 }
 
 func domainDelete(params martini.Params) string {

@@ -13,6 +13,7 @@ func main() {
 
 	db.DB.AutoMigrate(
 		&farmer.Box{},
+		&farmer.Domain{},
 	)
 
 	// API Server

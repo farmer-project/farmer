@@ -18,8 +18,10 @@ type Box struct {
 	Hostname      string `sql:"-" json:"hostname"`
 	CgroupParent  string `sql:"-" json:"cgroupParent"`
 	CodeDirectory string `sql:"type:varchar(255);not null" json:"code_directory"`
+	IP            string `sql:"-" json:"-"`
 
 	FarmerConfig
+	Domains []Domain `json:"domains"`
 }
 
 func (b *Box) Create() error {
@@ -60,4 +62,8 @@ func (b *Box) Destroy() error {
 	}
 
 	return b.removeCode()
+}
+
+func (b *Box) Restart() error {
+	return dockerRestartContainer(b)
 }

@@ -36,6 +36,7 @@ func dockerInspectContainer(box *Box) error {
 	box.Hostname = container.Config.Hostname
 	box.CgroupParent = container.HostConfig.CgroupParent
 	box.Image = container.Config.Image
+	box.IP = container.NetworkSettings.IPAddress
 
 	box.Ports = dockerExtractPortBindings(container.NetworkSettings.Ports)
 	box.Status = dockerTranslateContainerState(container.State)
@@ -89,6 +90,10 @@ func dockerDeleteContainer(box *Box) error {
 		RemoveVolumes: false,
 		Force:         true,
 	})
+}
+
+func dockerRestartContainer(box *Box) error {
+	return dockerClient.RestartContainer(box.ContainerID, 1)
 }
 
 func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
