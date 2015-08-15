@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/api/response"
@@ -13,7 +12,7 @@ import (
 )
 
 // POST
-func boxCreate(res http.ResponseWriter, req request.CreateRequest) (int, string) {
+func boxCreate(req request.CreateRequest) (int, string) {
 	stream, err := hub.CreateStream()
 
 	if err != nil {
@@ -31,7 +30,7 @@ func boxCreate(res http.ResponseWriter, req request.CreateRequest) (int, string)
 }
 
 // PUT
-func boxDeploy(res http.ResponseWriter, req request.DeployRequest, params martini.Params) (int, string) {
+func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 	stream, err := hub.CreateStream()
 
 	if err != nil {
