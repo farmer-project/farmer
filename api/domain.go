@@ -14,10 +14,10 @@ func domainAdd(req request.Domain, params martini.Params) (int, string) {
 	return 204, ""
 }
 
-func domainDelete(params martini.Params) string {
-	return "Hi"
-}
+func domainDelete(params martini.Params) (int, string) {
+	if err := controller.DomainDelete(params["name"], params["domain"]); err != nil {
+		return 500, err.Error()
+	}
 
-func domainList(params martini.Params) string {
-	return "Hi"
+	return 204, ""
 }

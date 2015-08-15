@@ -3,7 +3,6 @@ package controller
 import (
 	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/reverse_proxy"
-	"github.com/farmer-project/farmer/db"
 )
 
 func DomainAdd(boxName string, url string, port string) error {
@@ -12,15 +11,20 @@ func DomainAdd(boxName string, url string, port string) error {
 		return err
 	}
 
-	if err := box.AddDomain(url, port); err != nil {
+	if err := reverse_proxy.AddDomain(box, url, port); err != nil {
 		return err
 	}
 
-	if err := reverse_proxy.ConfigureDomains(box); err != nil {
+	return reverse_proxy.Restart()
+}
+
+func DomainDelete(boxName string, url string) error {
+	box, err := farmer.FindBoxByName(boxName)
+	if err != nil {
 		return err
 	}
 
-	if err := db.DB.Save(&box).Error; err != nil {
+	if err := reverse_proxy.DeleteDomain(box, url); err != nil {
 		return err
 	}
 

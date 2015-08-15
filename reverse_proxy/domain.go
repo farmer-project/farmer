@@ -1,18 +1,44 @@
 package reverse_proxy
 
 import (
-	"github.com/farmer-project/farmer/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/farmer-project/farmer/farmer"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/farmer-project/farmer/db"
+	"github.com/farmer-project/farmer/farmer"
 )
 
-var dockerClient *docker.Client
+func AddDomain(box *farmer.Box, url string, port string) error {
+	if err := box.AddDomain(url, port); err != nil {
+		return err
+	}
 
-func init() {
-	dockerClient, _ = docker.NewClient(os.Getenv("FARMER_DOCKER_API"))
+	if err := ConfigureDomains(box); err != nil {
+		return err
+	}
+
+	return db.DB.Save(&box).Error
+}
+
+func DeleteDomain(box *farmer.Box, url string) error {
+	domain := &farmer.Domain{
+		BoxId: box.ID,
+		Url:   url,
+	}
+
+	if err := db.DB.Find(domain).Error; err != nil {
+		return err
+	}
+
+	if err := box.DeleteDomain(url); err != nil {
+		return err
+	}
+
+	os.Remove(configFile(domain.Url, domain.Port))
+
+	return db.DB.Delete(domain).Error
 }
 
 func ConfigureDomains(box *farmer.Box) error {
@@ -23,10 +49,6 @@ func ConfigureDomains(box *farmer.Box) error {
 	}
 
 	return nil
-}
-
-func Restart() error {
-	return dockerClient.RestartContainer("farmer-reverse-proxy", 1)
 }
 
 func setReverseProxyConfig(ip string, url string, port string) error {
@@ -52,8 +74,7 @@ func setReverseProxyConfig(ip string, url string, port string) error {
 		Port        string
 	}
 
-	reverseProxyConfigFileLocation := os.Getenv("FARMER_REVERSE_PROXY_LOCATION")
-	filePath := reverseProxyConfigFileLocation + "/" + url + "." + port + ".conf"
+	filePath := configFile(url, port)
 
 	os.Remove(filePath)
 	file, err := os.Create(filePath)
@@ -66,4 +87,9 @@ func setReverseProxyConfig(ip string, url string, port string) error {
 		ContainerIP: ip,
 		Port:        port,
 	})
+}
+
+func configFile(url string, port string) string {
+	reverseProxyConfigFileLocation := os.Getenv("FARMER_REVERSE_PROXY_LOCATION")
+	return reverseProxyConfigFileLocation + "/" + url + "." + port + ".conf"
 }

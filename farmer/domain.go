@@ -14,17 +14,32 @@ func (box *Box) AddDomain(url string, port string) error {
 		return errors.New("Invalid port number")
 	}
 
-	if !box.duplicateDomain(url) {
-		return errors.New("Duplicate domain name")
+	if box.domainExist(url) {
+		return errors.New("Domain was assigned")
 	}
 
-	domain := Domain{
+	box.Domains = append(box.Domains, Domain{
 		BoxId: box.ID,
 		Url:   url,
 		Port:  port,
+	})
+
+	return nil
+}
+
+func (box *Box) DeleteDomain(url string) error {
+	if !box.domainExist(url) {
+		return errors.New("Domain does not exist")
 	}
 
-	box.Domains = append(box.Domains, domain)
+	var domains []Domain
+	for _, d := range box.Domains {
+		if d.Url != url {
+			domains = append(domains, d)
+		}
+	}
+
+	box.Domains = domains
 	return nil
 }
 
@@ -38,12 +53,12 @@ func (box *Box) openPort(port string) bool {
 	return false
 }
 
-func (box *Box) duplicateDomain(domain string) bool {
+func (box *Box) domainExist(domain string) bool {
 	for _, d := range box.Domains {
 		if d.Url == domain {
-			return false
+			return true
 		}
 	}
 
-	return true
+	return false
 }
