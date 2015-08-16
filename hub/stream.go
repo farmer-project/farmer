@@ -61,7 +61,7 @@ func (s *Stream) Write(b []byte) (n int, err error) {
 		})
 }
 
-func (s *Stream) AmpqURI() string {
+func (s *Stream) AmqpURI() string {
 	return os.Getenv("FARMER_CONSUMER_AMQP_URI")
 }
 

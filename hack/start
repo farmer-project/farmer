@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#
+# Execute this script by main terminal context, ". bin/start.sh" notice the dot(.)
+#
+
+# Set Farmer config as enviroment variables
+IFS=' ' read -a CONFIG <<< $(cat /etc/farmer/farmer.cfg)
+len=${#CONFIG[@]}
+
+for (( i=0; i<${len}; i+=2 ));
+do
+    export ${CONFIG[$i]}"="${CONFIG[$i+1]}
+done
+
+echo "Farmer Environments Set."
+
+go run $(pwd)"/main.go"

@@ -22,7 +22,7 @@ func boxCreate(req request.CreateRequest) (int, string) {
 	go controller.BoxCreate(req.Name, req.RepoUrl, req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
-		AmqpURI:   stream.AmpqURI(),
+		AmqpURI:   stream.AmqpURI(),
 		QueueName: stream.Queue.Name,
 	})
 
@@ -40,7 +40,7 @@ func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 	go controller.BoxDeploy(params["name"], req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
-		AmqpURI:   stream.AmpqURI(),
+		AmqpURI:   stream.AmqpURI(),
 		QueueName: stream.Queue.Name,
 	})
 

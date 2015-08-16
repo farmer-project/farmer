@@ -35,6 +35,6 @@ func jsonRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Header.Get("Content-Type") != "application/json" {
 		res.WriteHeader(http.StatusBadRequest)
 		res.Header().Set("Content-Type", "application/json")
-		res.Write([]byte("{'error':'Content-Type specified must be application/json')}"))
+		res.Write([]byte("{\"error\":\"Content-Type specified must be application/json\"}"))
 	}
 }

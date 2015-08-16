@@ -17,7 +17,7 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 		ErrorStream:   stream,
 		RepoUrl:       repoUrl,
 		Pathspec:      pathspec,
-		CodeDirectory: os.Getenv("FARMER_FARMLAND_DIRECTORY") + "/" + name,
+		CodeDirectory: os.Getenv("FARMER_DATA_LOCATION") + "/" + name,
 		CgroupParent:  "level1",
 	}
 
