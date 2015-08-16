@@ -8,8 +8,14 @@ import (
 	"github.com/farmer-project/farmer/hub"
 )
 
-func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream) error {
-	defer stream.Close()
+func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream) (err error) {
+	defer func() {
+		if err != nil {
+			stream.Write([]byte(err.Error()))
+		}
+
+		stream.Close()
+	}()
 
 	box := farmer.Box{
 		Name:          name,
@@ -21,14 +27,11 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 		CgroupParent:  "level1",
 	}
 
-	err := db.DB.Save(&box).Error
-	if err != nil {
+	if err := db.DB.Save(&box).Error; err != nil {
 		return err
 	}
 
-	err = box.Create()
-
-	if err != nil {
+	if err := box.Create(); err != nil {
 		db.DB.Delete(&box)
 		return err
 	}

@@ -6,7 +6,15 @@ import (
 	"github.com/farmer-project/farmer/hub"
 )
 
-func BoxDeploy(name string, pathspec string, stream *hub.Stream) error {
+func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
+	defer func() {
+		if err != nil {
+			stream.Write([]byte(err.Error()))
+		}
+
+		stream.Close()
+	}()
+
 	box, err := farmer.FindBoxByName(name)
 
 	if err != nil {

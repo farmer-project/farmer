@@ -75,9 +75,7 @@ func boxList(params martini.Params) (int, string) {
 
 // DELETE
 func boxDelete(params martini.Params) (int, string) {
-	err := controller.BoxDelete(params["name"])
-
-	if err != nil {
+	if err := controller.BoxDelete(params["name"]); err != nil {
 		return 500, err.Error()
 	}
 
