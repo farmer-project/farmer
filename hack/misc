@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Ensures a container (by its name) does not exist and is ready to be sued by farmer!
+ensure_container_free()
+{
+    container_name=${1}
+    docker inspect ${container_name} &>/dev/null
+    if [ $? -eq 0 ]; then
+        read -r -p "A container with name '${container_name}' exists, Should I remove it? ${CYAN}[y/N]:${RESET} " response
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            docker rm -f ${container_name}
+        else
+            exit
+        fi
+    fi
+}
+
+# Prints a friendly error if last container could not be created
+handle_container_error()
+{
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "${RED}Could not download or run ${1} container.${RESET}"
+        echo "You can restart docker daemon and re-run the installer again."
+        exit
+    fi
+}
+
+# Returns this system external if available or internal IP.
+my_ip()
+{
+    ip=$(my_external_ip)
+    if [ $? -ne 0 ]; then
+        ip=$(my_local_ip)
+    fi
+
+    echo ${ip}
+}
+
+# Returns this system external IP.
+my_external_ip()
+{
+	dig +short myip.opendns.com @resolver1.opendns.com
+}
+
+# Returns this system local IP.
+my_local_ip()
+{
+    local _ip _myip _line _nl=$'\n'
+    while IFS=$': \t' read -a _line ;do
+        [ -z "${_line%inet}" ] &&
+           _ip=${_line[${#_line[1]}>4?1:2]} &&
+           [ "${_ip#127.0.0.1}" ] && _myip=$_ip
+      done< <(LANG=C /sbin/ifconfig)
+    printf ${1+-v} $1 "%s${_nl:0:$[${#1}>0?0:1]}" $_myip
+}
+
+# Checks if a command is installed.
+command_exists()
+{
+	command -v "$@" > /dev/null 2>&1
+}
+
+# Install docker
+farmer_install_docker()
+{
+    wget -qO- https://get.docker.com/ | sh
+}
+
+# Random string generator
+generate_random()
+{
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1
+}
+
+# Creates a file and sets a permission on it. (Recursively makes directories if they does not exist)
+mktouch()
+{
+    mkdir -p "$(dirname "$1")"
+    touch "$1"
+
+    if [ "$#" -eq 2 ]; then
+        chmod ${2} ${1}
+    fi
+}
+
+# Checks if a string is a valid host address or domain
+farmer_check_host()
+{
+    valid_ip $1 || valid_domain $1
+    STATUS=$?
+
+    if [ ${STATUS} -ne 0 ];
+    then
+        echo "Host \"${1}\" is not valid. ('localhost', '123.123.123.123', 'example.com' are some valid hosts.)"
+    fi
+
+    return ${STATUS}
+}
+
+# Test an FQDN for validity.
+function valid_domain()
+{
+    echo ${1} |grep -P '(?=^.{1,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
+    return $?
+}
+
+# Test an IP address for validity:
+# Usage:
+#      valid_ip IP_ADDRESS
+#      if [[ $? -eq 0 ]]; then echo good; else echo bad; fi
+#   OR
+#      if valid_ip IP_ADDRESS; then echo good; else echo bad; fi
+#
+function valid_ip()
+{
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+
+    return $stat
+}
