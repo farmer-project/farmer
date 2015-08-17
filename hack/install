@@ -21,6 +21,30 @@ echo "===================================="
 echo "${RESET}"
 
 ###
+# Preparation
+###
+
+    # Make sure Docker is installed.
+    if ! command_exists docker; then
+        echo "It seems Docker daemon is not installed here."
+        read -r -p "Should I install Docker latest version? ${CYAN}[Y/n]:${RESET} " response
+        response=${response:-y}
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            farmer_install_docker
+        fi
+    fi
+
+    # Make sure jq is installed.
+    if ! command_exists jq; then
+        echo "It seems JQ json tool is not installed here."
+        read -r -p "Should I install jq? ${CYAN}[Y/n]:${RESET} " response
+        response=${response:-y}
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            apt-get install jq -y --force-yes
+        fi
+    fi
+
+###
 # Gather Required Info
 ###
 

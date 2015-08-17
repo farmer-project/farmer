@@ -18,15 +18,6 @@ echo "====="
 echo "= Building Farmer..."
 echo "====="
 
-    # Make sure Docker is installed.
-    if ! command_exists docker; then
-        echo "It seems Docker daemon is not installed here."
-        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
-            farmer_install_docker
-        fi
-    fi
-
     echo "${YELLOW}1) Gather required information from services' containers...${RESET}"
 
         # Reverse-proxy
