@@ -19,6 +19,7 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 
 # Known Issues
 * Currently farmer API (default on port `5549`) is accessible by **everyone**. Please protect this port (e.g. Using an `iptables` rule) if you want to use Farmer in production environment.
+* You need to manually `docker pull` any image you want to use in your `.farmer.yml` file.
 
 # Roadmap
 
