@@ -1,10 +1,9 @@
 #!/bin/bash
 
 #
-# This scripts needs following variables to exist:
+# This script needs following variables to exist:
 #
 # FARMER_HOST_IP
-# FARMER_DATA_LOCATION
 # FARMER_DATA_LOCATION
 # FARMER_DOCKER_API
 # FARMER_API_PORT
