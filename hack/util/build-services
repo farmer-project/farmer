@@ -38,6 +38,7 @@ echo ""
                 -e CONSUMER_PASSWORD=${consumer_password} \
                 -p 5672:5672 \
                 -p 15672:15672 \
+                --hostname farmer \
                 -d tutum/rabbitmq
 
             handle_container_error tutum/rabbitmq
@@ -67,6 +68,7 @@ echo ""
                 -e MYSQL_USER=farmer \
                 -e MYSQL_PASSWORD=$(generate_random) \
                 -e MYSQL_DATABASE=farmer \
+                --hostname farmer \
                 -d mysql:latest
             sleep 10
 

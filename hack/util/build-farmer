@@ -83,6 +83,7 @@ echo ""
             -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
             -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
             --link farmer-database:db \
+            --hostname farmer \
             farmer/server
 
         handle_container_error farmer/server
