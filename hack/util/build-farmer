@@ -1,0 +1,113 @@
+#!/bin/bash
+
+#
+# This scripts needs following variables to exist:
+#
+# FARMER_HOST_IP
+# FARMER_DATA_LOCATION
+# FARMER_DATA_LOCATION
+# FARMER_DOCKER_API
+# FARMER_API_PORT
+#
+
+# Include utils
+my_dir=`dirname $BASH_SOURCE`
+source ${my_dir}/misc
+
+echo "====="
+echo "= Building Farmer..."
+echo "====="
+
+    # Make sure Docker is installed.
+    if ! command_exists docker; then
+        echo "It seems Docker daemon is not installed here."
+        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            farmer_install_docker
+        fi
+    fi
+
+    echo "${YELLOW}1) Gather required information from services' containers...${RESET}"
+
+        # Reverse-proxy
+        export FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy
+        export FARMER_REVERSE_PROXY_CONF_PATH=$(docker_get_env farmer-reverse-proxy FARMER_REVERSE_PROXY_CONF_PATH)
+
+        # Database
+        export FARMER_DB_USERNAME=root
+        export FARMER_DB_PASSWORD=$(docker_get_env farmer-database MYSQL_ROOT_PASSWORD)
+        export FARMER_DB_HOST=$(docker_get_ip farmer-database)
+        export FARMER_DB_PORT=3306
+        export FARMER_DB_NAME=farmer
+
+        # Hub
+        hub_ip=$(docker_get_ip farmer-hub)
+        hub_admin_pass=$(docker_get_env farmer-hub RABBITMQ_PASS)
+        hub_consumer_user=$(docker_get_env farmer-hub CONSUMER_USER)
+        hub_consumer_pass=$(docker_get_env farmer-hub CONSUMER_PASS)
+        export FARMER_ADMIN_AMQP_URI="amqp://admin:${hub_admin_pass}@${hub_ip}:5672/"
+        export FARMER_CONSUMER_AMQP_URI="amqp://${hub_consumer_user}:${hub_consumer_pass}@${FARMER_HOST_IP}:5672/"
+
+    echo "${GREEN}Information gathered.${RESET}"
+    echo ""
+
+    echo "${YELLOW}2) Generating an SSH Key for Farmer git client...${RESET}"
+
+        farmer_git_ssh_wrapper=${FARMER_DATA_LOCATION}/keys/git_wrapper.sh
+        mkdir -p ${FARMER_DATA_LOCATION}/keys
+        ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+        touch ${farmer_git_ssh_wrapper}
+        echo "#!/bin/bash" > ${farmer_git_ssh_wrapper}
+        echo "ssh -o StrictHostKeyChecking=no -i ${FARMER_DATA_LOCATION}/keys/gitkey_rsa \$@" > ${farmer_git_ssh_wrapper}
+        chmod +x ${farmer_git_ssh_wrapper}
+
+        export FARMER_GIT_SSH=${farmer_git_ssh_wrapper}
+
+    echo "${GREEN}SSH keys for git client successfully created.${RESET}"
+    echo ""
+
+    echo "${YELLOW}3) Building the image...${RESET}"
+
+        ensure_container_free farmer-server
+
+        if ! command_exists git; then
+            echo "Installing git..."
+            apt-get install -q -y --force-yes git
+        fi
+
+        my_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+        docker build -t farmer/server ${my_dir}/../..
+        handle_container_error farmer/server
+
+        docker run --name farmer-server -d \
+            -v ${FARMER_DATA_LOCATION}:${FARMER_DATA_LOCATION} \
+            -v ${my_dir}/..:/go/src/github.com/farmer-project/farmer:ro \
+            -p ${FARMER_API_PORT}:80 \
+            -e GIT_SSH=${FARMER_GIT_SSH} \
+            -e FARMER_DEBUG=true \
+            -e FARMER_API_PORT=80 \
+            -e FARMER_HOST_IP=${FARMER_HOST_IP} \
+            -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
+            -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
+            -e FARMER_ADMIN_AMQP_URI=${FARMER_ADMIN_AMQP_URI} \
+            -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
+            -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \
+            -e FARMER_DB_PASSWORD=${FARMER_DB_PASSWORD} \
+            -e FARMER_DB_HOST=${FARMER_DB_HOST} \
+            -e FARMER_DB_PORT=${FARMER_DB_PORT} \
+            -e FARMER_DB_NAME=${FARMER_DB_NAME} \
+            -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
+            -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+            farmer/server
+
+        handle_container_error farmer/server
+
+    echo "${GREEN}Image farmer/server is created successfully.${RESET}"
+    echo ""
+
+
+echo "${GREEN}"
+echo "==========================================="
+echo "|| Farmer succesfully built.             ||"
+echo "==========================================="
+echo "${RESET}"

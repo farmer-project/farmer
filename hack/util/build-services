@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# This scripts needs these variables to exist:
+#
+# FARMER_DATA_LOCATION
+# FARMER_REVERSE_PROXY_PORT
+# FARMER_REVERSE_PROXY_PORT_SSL
+#
+
+# Include utils
+my_dir=`dirname $BASH_SOURCE`
+source ${my_dir}/misc
+
+echo "====="
+echo "= Creating and setting up Farmer dependent services..."
+echo "====="
+
+    # Make sure Docker is installed.
+    if ! command_exists docker; then
+        echo "It seems Docker daemon is not installed here."
+        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            farmer_install_docker
+        fi
+    fi
+
+    echo "${YELLOW}1) Installing hub container...${RESET}"
+        ensure_container_free farmer-hub
+
+        if [ $? -eq ${OK} ]; then
+            export consumer_username=farmer
+            export consumer_password=$(generate_random)
+
+            docker run --name farmer-hub \
+                -e RABBITMQ_PASS=$(generate_random) \
+                -e CONSUMER_USERNAME=${consumer_username} \
+                -e CONSUMER_PASSWORD=${consumer_password} \
+                -p 5672:5672 \
+                -p 15672:15672 \
+                -d tutum/rabbitmq
+
+            handle_container_error tutum/rabbitmq
+            sleep 4
+
+            echo " > Creating consumer user..."
+            docker exec farmer-hub rabbitmqctl start_app
+            docker exec farmer-hub rabbitmqctl add_user ${consumer_username} ${consumer_password}
+
+            echo " > Allowing monitor access to consumer user..."
+            docker exec farmer-hub rabbitmqctl set_user_tags ${consumer_username} monitoring
+
+            echo "${GREEN}Hub container is created.${RESET}"
+        else
+            echo "${GREEN}Hub container already exists.${RESET}"
+        fi
+    echo ""
+
+    echo "${YELLOW}2) Installing database container...${RESET}"
+        ensure_container_free farmer-database
+
+        if [ $? -eq ${OK} ]; then
+            mkdir -p /var/farmer/mysql
+            docker run --name farmer-database \
+                -v ${FARMER_DATA_LOCATION}/mysql:/var/lib/mysql \
+                -p 3306:3306 \
+                -e MYSQL_ROOT_PASSWORD=$(generate_random) \
+                -e MYSQL_DATABASE=farmer \
+                -d mysql:latest
+
+            handle_container_error tutum/mysql
+            echo "${GREEN}Database container is up.${RESET}"
+        else
+            echo "${GREEN}Database container already exists.${RESET}"
+        fi
+    echo ""
+
+    echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
+        ensure_container_free farmer-reverse-proxy
+
+        if [ $? -eq ${OK} ]; then
+            export FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_DATA_LOCATION}/proxy
+            docker run --name farmer-reverse-proxy \
+                -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+                -p ${FARMER_REVERSE_PROXY_PORT}:80 \
+                -p ${FARMER_REVERSE_PROXY_PORT_SSL}:443 \
+                -v ${FARMER_REVERSE_PROXY_CONF_PATH}:/etc/nginx/conf.d:rw \
+                -d nginx
+
+            handle_container_error nginx
+            echo "${GREEN}Reverse-proxy container is up.${RESET}"
+        else
+            echo "${GREEN}Reverse-proxy container already exists.${RESET}"
+        fi
+    echo ""
+
+echo "${GREEN}"
+echo "==============================================="
+echo "|| Farmer services are created successfully. ||"
+echo "==============================================="
+echo "${RESET}"

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Include utils
+my_dir=`dirname $BASH_SOURCE`
+source ${my_dir}/misc
+
+###
+# Start Services
+###
+
+echo "====="
+echo "= Starting Farmer dependent services..."
+echo "====="
+
+echo "${YELLOW}1) Starting hub container...${RESET}"
+    docker start farmer-hub
+    handle_container_error farmer-hub
+echo "${GREEN}Hub container is up.${RESET}"
+echo ""
+
+echo "${YELLOW}2) Installing database container...${RESET}"
+    docker start farmer-database
+    handle_container_error farmer-database
+echo "${GREEN}Database container is up.${RESET}"
+echo ""
+
+echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
+    docker start farmer-reverse-proxy
+    handle_container_error farmer-reverse-proxy
+echo "${GREEN}Reverse-proxy container is up.${RESET}"
+echo ""
+
+echo "${GREEN}"
+echo "=========================================="
+echo "|| Farmer services are up successfully. ||"
+echo "=========================================="
+echo "${RESET}"

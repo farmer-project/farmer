@@ -4,19 +4,9 @@
 # This script is meant for quick & easy install via command line
 #
 
-# Variables
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-FARMER_REPO=https://github.com/farmer-project/farmer.git
-
 # Include utils
-source ${DIR}/misc
-
-# Colors
-export RESET="$(echo -e "\033[0m")"
-export GREEN="$(echo -e "\033[32m")"
-export YELLOW="$(echo -e "\033[33m")"
-export CYAN="$(echo -e "\033[36m")"
-export RED="$(echo -e "\033[31m")"
+DIR=`dirname $BASH_SOURCE`
+source ${DIR}/util/misc
 
 # We need root access
 if [[ $(id -u) -ne 0 ]]; then
@@ -31,19 +21,6 @@ echo "===================================="
 echo "${RESET}"
 
 ###
-# Preparation
-###
-
-    # Make sure Docker is installed.
-    if ! command_exists docker; then
-        echo "It seems Docker daemon is not installed here."
-        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
-            farmer_install_docker
-        fi
-    fi
-
-###
 # Gather Required Info
 ###
 
@@ -51,164 +28,78 @@ echo "${RESET}"
         echo -n "1) Which port should Farmer API listen to? ${CYAN}(Default: 5549):${RESET} "
         read FARMER_API_PORT
         echo ""
-        FARMER_API_PORT=${FARMER_API_PORT:-5549}
+        export FARMER_API_PORT=${FARMER_API_PORT:-5549}
 
     # Ask Reverse Proxy Port
         echo    "2) Which port should Farmer reverse-proxy listen to?"
         echo -n "   This is where all PUBLIC http traffic should go to. ${CYAN}(Default: 80):${RESET} "
         read FARMER_REVERSE_PROXY_PORT
-        FARMER_REVERSE_PROXY_PORT=${FARMER_REVERSE_PROXY_PORT:-80}
+        export FARMER_REVERSE_PROXY_PORT=${FARMER_REVERSE_PROXY_PORT:-80}
 
-        echo -n "   Now what port to listen for SSL http traffic. ${CYAN}(Default: 443):${RESET} "
+        echo -n "   http(s) SSL traffic port? ${CYAN}(Default: 443):${RESET} "
         read FARMER_REVERSE_PROXY_PORT_SSL
         echo ""
-        FARMER_REVERSE_PROXY_PORT_SSL=${FARMER_REVERSE_PROXY_PORT_SSL:-443}
+        export FARMER_REVERSE_PROXY_PORT_SSL=${FARMER_REVERSE_PROXY_PORT_SSL:-443}
+
+    # Ask Server IP
+        MY_IP=$(my_ip)
+        echo    "3) What is this server's public acessible IP address?"
+        echo -n "   Used for adminstration UIs. ${CYAN}(Default: ${MY_IP}):${RESET} "
+        read FARMER_HOST_IP
+        echo ""
+        export FARMER_HOST_IP=${FARMER_HOST_IP:-$MY_IP}
+        farmer_check_host ${FARMER_HOST_IP}
 
     # Ask Docker API
-        MY_IP=$(my_ip)
-        echo    "3) What is this server's Docker daemon API Address?"
-        echo -n "   It should be accssible from within Farmer's container. ${CYAN}(Default: ${MY_IP}):${RESET} "
+        echo    "4) What is this server's Docker daemon API Address?"
+        echo -n "   It should be accssible from within Farmer's container. ${CYAN}(Default: ${FARMER_HOST_IP}):${RESET} "
         read FARMER_DOCKER_API_HOST
         echo ""
-        FARMER_DOCKER_API_HOST=${FARMER_DOCKER_API_HOST:-$MY_IP}
+        export FARMER_DOCKER_API_HOST=${FARMER_DOCKER_API_HOST:-$FARMER_HOST_IP}
         farmer_check_host ${FARMER_DOCKER_API_HOST}
 
-        echo -n "4) What is Docker daemon API Port? ${CYAN}(Default: 4243):${RESET} "
+        echo -n "5) What is Docker daemon API Port? ${CYAN}(Default: 4243):${RESET} "
         read FARMER_DOCKER_API_PORT
         echo ""
-        FARMER_DOCKER_API_PORT=${FARMER_DOCKER_API_PORT:-4243}
+        export FARMER_DOCKER_API_PORT=${FARMER_DOCKER_API_PORT:-4243}
 
-        FARMER_DOCKER_API="tcp://${FARMER_DOCKER_API_HOST}:${FARMER_DOCKER_API_PORT}"
+        export FARMER_DOCKER_API="tcp://${FARMER_DOCKER_API_HOST}:${FARMER_DOCKER_API_PORT}"
 
     # Ask Farmer Data Location
         echo -n "5) Where should I put box's data (e.g. cloned codes, database, proxy configs)? ${CYAN}(Default: /var/farmer):${RESET} "
         read FARMER_DATA_LOCATION
         echo ""
-        FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION:-/var/farmer}
+        export FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION:-/var/farmer}
         mkdir -p ${FARMER_DATA_LOCATION}/box
 
 ###
 # Installation
 ###
 
-    echo ""
-    echo "Creating and setting up Farmer application containers..."
-    echo ""
+    source ${DIR}/util/build-services
+    handle_error "building services"
 
-    echo "${YELLOW}1) Installing hub container...${RESET}"
-        ensure_container_free farmer-hub
+    source ${DIR}/util/start-services
+    handle_error "starting services"
 
-        hub_admin_pass=$(generate_random)
-        docker run --name farmer-hub \
-            -e RABBITMQ_PASS=${hub_admin_pass} \
-            -p 5672:5672 \
-            -p 15672:15672 \
-            -d tutum/rabbitmq
+    source ${DIR}/util/build-farmer
+    handle_error "building farmer"
 
-        handle_container_error tutum/rabbitmq
-        hub_ip=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' farmer-hub)
-
-        export FARMER_ADMIN_AMQP_URI="amqp://admin:${hub_admin_pass}@${hub_ip}:5672/"
-        export FARMER_CONSUMER_AMQP_URI="amqp://admin:${hub_admin_pass}@${hub_ip}:5672/" # TODO Should create a guest user.
-    echo "${GREEN}Hub container is up.${RESET}"
-    echo ""
-
-    echo "${YELLOW}2) Installing database container...${RESET}"
-        ensure_container_free farmer-database
-
-        mkdir -p /var/farmer/mysql
-        export FARMER_DB_NAME="farmer"
-        export FARMER_DB_USERNAME="root"
-        export FARMER_DB_PASSWORD=$(generate_random)
-        export FARMER_DB_PORT=3306
-        docker run --name farmer-database \
-            -v ${FARMER_DATA_LOCATION}/mysql:/var/lib/mysql \
-            -p ${FARMER_DB_PORT}:3306 \
-            -e MYSQL_ROOT_PASSWORD="${FARMER_DB_PASSWORD}" \
-            -e MYSQL_DATABASE="${FARMER_DB_NAME}" \
-            -d mysql:latest
-
-        handle_container_error tutum/mysql
-        export FARMER_DB_HOST=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' farmer-database)
-    echo "${GREEN}Database container is up.${RESET}"
-    echo ""
-
-    echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
-        FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy
-        ensure_container_free ${FARMER_REVERSE_PROXY_CONTAINER_ID}
-
-        FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_DATA_LOCATION}/proxy
-        docker run --name ${FARMER_REVERSE_PROXY_CONTAINER_ID} \
-             -p ${FARMER_REVERSE_PROXY_PORT}:80 \
-             -p ${FARMER_REVERSE_PROXY_PORT_SSL}:443 \
-            -v ${FARMER_REVERSE_PROXY_CONF_PATH}:/etc/nginx/conf.d:rw \
-            -d nginx
-
-        handle_container_error nginx
-    echo "${GREEN}Reverse-proxy container is up.${RESET}"
-    echo ""
-
-    echo "${YELLOW}5) Generating an SSH Key for Farmer git client...${RESET}"
-
-        farmer_git_ssh_wrapper=${FARMER_DATA_LOCATION}/keys/git_wrapper.sh
-        mkdir -p ${FARMER_DATA_LOCATION}/keys
-        ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
-        touch ${farmer_git_ssh_wrapper}
-        echo "#!/bin/bash" > ${farmer_git_ssh_wrapper}
-        echo "ssh -o StrictHostKeyChecking=no -i ${FARMER_DATA_LOCATION}/keys/gitkey_rsa \$@" > ${farmer_git_ssh_wrapper}
-        chmod +x ${farmer_git_ssh_wrapper}
-
-        export FARMER_GIT_SSH=${farmer_git_ssh_wrapper}
-
-    echo "${GREEN}SSH keys for git client successfully created.${RESET}"
-    echo ""
-
-    echo "${YELLOW}6) Installing Farmer container...${RESET}"
-        ensure_container_free farmer-server
-
-        if ! command_exists git; then
-            echo "Installing git..."
-            apt-get install -q -y --force-yes git
-        fi
-
-        DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-        docker build -t farmer/server ${DIR}/..
-        docker run --name farmer-server -d \
-            -v ${FARMER_DATA_LOCATION}:${FARMER_DATA_LOCATION} \
-            -v ${DIR}/..:/go/src/github.com/farmer-project/farmer:ro \
-            -p ${FARMER_API_PORT}:80 \
-            -e GIT_SSH=${FARMER_GIT_SSH} \
-            -e FARMER_DEBUG=true \
-            -e FARMER_API_PORT=80 \
-            -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
-            -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
-            -e FARMER_ADMIN_AMQP_URI=${FARMER_ADMIN_AMQP_URI} \
-            -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
-            -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \
-            -e FARMER_DB_PASSWORD=${FARMER_DB_PASSWORD} \
-            -e FARMER_DB_HOST=${FARMER_DB_HOST} \
-            -e FARMER_DB_PORT=${FARMER_DB_PORT} \
-            -e FARMER_DB_NAME=${FARMER_DB_NAME} \
-            -e FARMER_REVERSE_PROXY_CONTAINER_ID=${FARMER_REVERSE_PROXY_CONTAINER_ID} \
-            -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
-            farmer/server
-
-        handle_container_error farmer-server
-    echo "${GREEN}Farmer server container is up.${RESET}"
-    echo ""
+    source ${DIR}/util/start-farmer
+    handle_error "starting farmer"
 
 echo "${YELLOW}"
 echo "===================================="
 echo "|| Installation details:          ||"
 echo "===================================="
 echo "${RESET}"
-echo "Server: ${CYAN}${MY_IP}${RESET} (or any address pointing to this machine)"
+echo "Server: ${CYAN}${FARMER_HOST_IP}${RESET} (or any address pointing to this machine)"
 echo "Server Port: ${CYAN}${FARMER_API_PORT}${RESET}"
 echo "Docker API: ${CYAN}${FARMER_DOCKER_API}${RESET}"
 echo "Data Location: ${CYAN}${FARMER_DATA_LOCATION}${RESET}"
 echo "Reverse Proxy Config Path: ${CYAN}${FARMER_REVERSE_PROXY_CONF_PATH}${RESET}"
 echo ""
-echo "Hub Admin: ${CYAN}http://${hub_ip}:15672/${RESET}"
+echo "Hub Admin: ${CYAN}http://${FARMER_HOST_IP}:15672/${RESET}"
 echo "    Hub Username: ${CYAN}admin${RESET}"
 echo "    Hub Password: ${CYAN}${hub_admin_pass}${RESET}"
 echo "    Admin Amqp URI: ${CYAN}${FARMER_ADMIN_AMQP_URI}${RESET}"

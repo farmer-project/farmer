@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Include utils
+DIR=`dirname $BASH_SOURCE`
+source ${DIR}/util/misc
+
+
+echo "${YELLOW}Stopping server...${RESET}"
+docker stop farmer-server
+handle_error "stoping farmer-server"
+
+echo "${YELLOW}Stopping hub...${RESET}"
+docker stop farmer-hub
+handle_error "stoping farmer-hub"
+
+echo "${YELLOW}Stopping database...${RESET}"
+docker stop farmer-database
+handle_error "stoping farmer-database"
+
+echo "${YELLOW}Stopping reverse proxy...${RESET}"
+docker stop farmer-reverse-proxy
+handle_error "stoping farmer-reverse-proxy"
+
+echo ""
+echo "${GREEN}"
+echo "===================================="
+echo "|| Farmer successfully stoped. ||"
+echo "===================================="
+echo "${RESET}"

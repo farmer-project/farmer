@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Include utils
+my_dir=`dirname $BASH_SOURCE`
+source ${my_dir}/misc
+
+###
+# Start Farmer
+###
+
+echo "====="
+echo "= Starting Farmer container..."
+echo "====="
+
+    docker start farmer-server
+    handle_container_error farmer-server
+
+echo "${GREEN}"
+echo "=========================================="
+echo "|| Farmer server is up successfully.    ||"
+echo "=========================================="
+echo "${RESET}"
