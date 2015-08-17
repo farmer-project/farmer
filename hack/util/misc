@@ -1,17 +1,66 @@
 #!/bin/bash
 
+export RESET="$(echo -e "\033[0m")"
+export GREEN="$(echo -e "\033[32m")"
+export YELLOW="$(echo -e "\033[33m")"
+export CYAN="$(echo -e "\033[36m")"
+export RED="$(echo -e "\033[31m")"
+export OK=0
+export NOT_OK=1
+
+# Retrieves IP address of a docker container
+docker_get_ip()
+{
+    docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${1}
+}
+
+# Retrieves an enviroment variable from a docker container
+docker_get_env()
+{
+    env_json=$(docker inspect --format '{{ json .Config.Env }}' ${1})
+    length=$(echo ${env_json} | jq '. | length')
+
+    for (( i=0; i<${length}; i++ ))
+    do
+       item=$(echo ${env_json} | jq '.['${i}']')
+       item=$(echo "[" $(echo -n ${item} | sed -n 's/=/", "/p') "]")
+
+       key=$(echo ${item} | jq '.[0]')
+       value=$(echo ${item} | jq '.[1]' --raw-output)
+
+        if [[ ${key} == *"$2"* ]]; then
+            echo ${value}
+            return ${OK}
+        fi
+    done
+
+    return ${NOT_OK}
+}
+
 # Ensures a container (by its name) does not exist and is ready to be sued by farmer!
 ensure_container_free()
 {
     container_name=${1}
     docker inspect ${container_name} &>/dev/null
+
     if [ $? -eq 0 ]; then
         read -r -p "A container with name '${container_name}' exists, Should I remove it? ${CYAN}[y/N]:${RESET} " response
         if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
             docker rm -f ${container_name}
-        else
-            exit
+            return ${OK}
         fi
+    fi
+
+    return ${NOT_OK}
+}
+
+# Prints an error if last command could not run and exists
+handle_error()
+{
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "${RED}Unexpected error on ${1}. Exiting...${RESET}"
+        exit ${NOT_OK}
     fi
 }
 
@@ -22,7 +71,7 @@ handle_container_error()
         echo ""
         echo "${RED}Could not download or run ${1} container.${RESET}"
         echo "You can restart docker daemon and re-run the installer again."
-        exit
+        exit ${NOT_OK}
     fi
 }
 
