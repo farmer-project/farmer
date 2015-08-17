@@ -96,8 +96,6 @@ echo ""
         fi
     echo ""
 
-echo "${GREEN}"
-echo "==============================================="
-echo "|| Farmer services are created successfully. ||"
-echo "==============================================="
-echo "${RESET}"
+echo ""
+echo "${GREEN}=== Farmer services are created successfully ===${RESET}"
+echo ""

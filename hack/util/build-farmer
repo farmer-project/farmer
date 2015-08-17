@@ -90,8 +90,6 @@ echo ""
     echo ""
 
 
-echo "${GREEN}"
-echo "==========================================="
-echo "|| Farmer succesfully built.             ||"
-echo "==========================================="
-echo "${RESET}"
+echo ""
+echo "${GREEN}=== Farmer succesfully built ===${RESET}"
+echo ""
