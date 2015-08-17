@@ -15,8 +15,6 @@ echo ""
     docker start farmer-server
     handle_container_error farmer-server
 
-echo "${GREEN}"
-echo "=========================================="
-echo "|| Farmer server is up successfully.    ||"
-echo "=========================================="
-echo "${RESET}"
+echo ""
+echo "${GREEN}=== Farmer server is up successfully ===${RESET}"
+echo ""

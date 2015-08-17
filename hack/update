@@ -25,8 +25,8 @@ source ${DIR}/stop
 source ${DIR}/util/start-services
 source ${DIR}/util/build-farmer
 source ${DIR}/util/start-farmer
+source ${DIR}/util/info
 
-echo ""
 echo "${GREEN}"
 echo "===================================="
 echo "|| Farmer successfully updated.   ||"

@@ -30,8 +30,7 @@ echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
 echo "${GREEN}Reverse-proxy container is up.${RESET}"
 echo ""
 
-echo "${GREEN}"
-echo "=========================================="
-echo "|| Farmer services are up successfully. ||"
-echo "=========================================="
-echo "${RESET}"
+
+echo ""
+echo "${GREEN}=== Farmer services are up successfully ===${RESET}"
+echo ""
