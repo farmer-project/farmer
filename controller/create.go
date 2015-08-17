@@ -14,6 +14,7 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 			stream.Write([]byte(err.Error()))
 		}
 
+		stream.Write([]byte("kthxbai"))
 		stream.Close()
 	}()
 
