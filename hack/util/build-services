@@ -40,7 +40,7 @@ echo "====="
                 -d tutum/rabbitmq
 
             handle_container_error tutum/rabbitmq
-            sleep 4
+            sleep 5
 
             echo " > Creating consumer user..."
             docker exec farmer-hub rabbitmqctl start_app
@@ -63,9 +63,11 @@ echo "====="
             docker run --name farmer-database \
                 -v ${FARMER_DATA_LOCATION}/mysql:/var/lib/mysql \
                 -p 3306:3306 \
-                -e MYSQL_ROOT_PASSWORD=$(generate_random) \
+                -e MYSQL_USER=farmer \
+                -e MYSQL_PASSWORD=$(generate_random) \
                 -e MYSQL_DATABASE=farmer \
                 -d mysql:latest
+            sleep 10
 
             handle_container_error tutum/mysql
             echo "${GREEN}Database container is up.${RESET}"

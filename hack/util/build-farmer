@@ -25,11 +25,9 @@ echo "====="
         export FARMER_REVERSE_PROXY_CONF_PATH=$(docker_get_env farmer-reverse-proxy FARMER_REVERSE_PROXY_CONF_PATH)
 
         # Database
-        export FARMER_DB_USERNAME=root
-        export FARMER_DB_PASSWORD=$(docker_get_env farmer-database MYSQL_ROOT_PASSWORD)
-        export FARMER_DB_HOST=$(docker_get_ip farmer-database)
-        export FARMER_DB_PORT=3306
-        export FARMER_DB_NAME=farmer
+        export FARMER_DB_USERNAME=$(docker_get_env farmer-database MYSQL_PASSWORD)
+        export FARMER_DB_PASSWORD=$(docker_get_env farmer-database MYSQL_USER)
+        export FARMER_DB_NAME=$(docker_get_env farmer-database MYSQL_DATABASE)
 
         # Hub
         hub_ip=$(docker_get_ip farmer-hub)
@@ -79,11 +77,12 @@ echo "====="
             -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
             -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \
             -e FARMER_DB_PASSWORD=${FARMER_DB_PASSWORD} \
-            -e FARMER_DB_HOST=${FARMER_DB_HOST} \
-            -e FARMER_DB_PORT=${FARMER_DB_PORT} \
             -e FARMER_DB_NAME=${FARMER_DB_NAME} \
+            -e FARMER_DB_HOST=db \
+            -e FARMER_DB_PORT=3306 \
             -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
             -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+            --link farmer-database:db \
             farmer/server
 
         handle_container_error farmer/server
