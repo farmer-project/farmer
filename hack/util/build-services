@@ -2,6 +2,7 @@
 
 # This scripts needs these variables to exist:
 #
+# OK
 # FARMER_DATA_LOCATION
 # FARMER_REVERSE_PROXY_PORT
 # FARMER_REVERSE_PROXY_PORT_SSL
@@ -11,9 +12,9 @@
 my_dir=`dirname $BASH_SOURCE`
 source ${my_dir}/misc
 
-echo "====="
-echo "= Creating and setting up Farmer dependent services..."
-echo "====="
+echo ""
+echo "${YELLOW}=== Creating and setting up Farmer dependent services ===${RESET}"
+echo ""
 
     # Make sure Docker is installed.
     if ! command_exists docker; then
@@ -60,9 +61,9 @@ echo "====="
 
         if [ $? -eq ${OK} ]; then
             mkdir -p /var/farmer/mysql
+            # TODO -v ${FARMER_DATA_LOCATION}/mysql:/var/lib/mysql \
             docker run --name farmer-database \
-                -v ${FARMER_DATA_LOCATION}/mysql:/var/lib/mysql \
-                -p 3306:3306 \
+                -e MYSQL_ROOT_PASSWORD=$(generate_random) \
                 -e MYSQL_USER=farmer \
                 -e MYSQL_PASSWORD=$(generate_random) \
                 -e MYSQL_DATABASE=farmer \

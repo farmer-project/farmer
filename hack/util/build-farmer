@@ -14,9 +14,9 @@
 my_dir=`dirname $BASH_SOURCE`
 source ${my_dir}/misc
 
-echo "====="
-echo "= Building Farmer..."
-echo "====="
+echo ""
+echo "${YELLOW}=== Building Farmer ===${RESET}"
+echo ""
 
     echo "${YELLOW}1) Gather required information from services' containers...${RESET}"
 
@@ -25,8 +25,8 @@ echo "====="
         export FARMER_REVERSE_PROXY_CONF_PATH=$(docker_get_env farmer-reverse-proxy FARMER_REVERSE_PROXY_CONF_PATH)
 
         # Database
-        export FARMER_DB_USERNAME=$(docker_get_env farmer-database MYSQL_PASSWORD)
-        export FARMER_DB_PASSWORD=$(docker_get_env farmer-database MYSQL_USER)
+        export FARMER_DB_USERNAME=$(docker_get_env farmer-database MYSQL_USER)
+        export FARMER_DB_PASSWORD=$(docker_get_env farmer-database MYSQL_PASSWORD)
         export FARMER_DB_NAME=$(docker_get_env farmer-database MYSQL_DATABASE)
 
         # Hub
