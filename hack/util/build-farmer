@@ -65,10 +65,10 @@ echo ""
         docker run --name farmer-server -d \
             -v ${FARMER_DATA_LOCATION}:${FARMER_DATA_LOCATION} \
             -v ${my_dir}/../..:/go/src/github.com/farmer-project/farmer:ro \
-            -p ${FARMER_API_PORT}:80 \
+            -p ${FARMER_API_PORT}:${FARMER_API_PORT} \
             -e GIT_SSH=${FARMER_GIT_SSH} \
             -e FARMER_DEBUG=true \
-            -e FARMER_API_PORT=80 \
+            -e FARMER_API_PORT=${FARMER_API_PORT} \
             -e FARMER_HOST_IP=${FARMER_HOST_IP} \
             -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
             -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
