@@ -12,6 +12,7 @@ func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
 			stream.Write([]byte(err.Error()))
 		}
 
+		stream.Write([]byte("kthxbai"))
 		stream.Close()
 	}()
 
