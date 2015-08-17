@@ -31,6 +31,7 @@ echo "${RESET}"
         response=${response:-y}
         if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
             farmer_install_docker
+            echo ""
         fi
     fi
 
@@ -41,6 +42,18 @@ echo "${RESET}"
         response=${response:-y}
         if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
             apt-get install jq -y --force-yes
+            echo ""
+        fi
+    fi
+
+    # Make sure git is installed.
+    if ! command_exists jq; then
+        echo "It seems git is not installed here."
+        read -r -p "Should I install git? ${CYAN}[Y/n]:${RESET} " response
+        response=${response:-y}
+        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            apt-get install git -y --force-yes
+            echo ""
         fi
     fi
 
@@ -90,7 +103,7 @@ echo "${RESET}"
         export FARMER_DOCKER_API="tcp://${FARMER_DOCKER_API_HOST}:${FARMER_DOCKER_API_PORT}"
 
     # Ask Farmer Data Location
-        echo -n "5) Where should I put box's data (e.g. cloned codes, database, proxy configs)? ${CYAN}(Default: /var/farmer):${RESET} "
+        echo -n "6) Where should I put box's data (e.g. cloned codes, database, proxy configs)? ${CYAN}(Default: /var/farmer):${RESET} "
         read FARMER_DATA_LOCATION
         echo ""
         export FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION:-/var/farmer}
@@ -117,8 +130,7 @@ echo "===================================="
 echo "|| Installation details:          ||"
 echo "===================================="
 echo "${RESET}"
-echo "Server: ${CYAN}${FARMER_HOST_IP}${RESET} (or any address pointing to this machine)"
-echo "Server Port: ${CYAN}${FARMER_API_PORT}${RESET}"
+echo "Farmer API Server URL: ${CYAN}http://${FARMER_HOST_IP}:${FARMER_API_PORT}${RESET}"
 echo "Docker API: ${CYAN}${FARMER_DOCKER_API}${RESET}"
 echo "Data Location: ${CYAN}${FARMER_DATA_LOCATION}${RESET}"
 echo "Reverse Proxy Config Path: ${CYAN}${FARMER_REVERSE_PROXY_CONF_PATH}${RESET}"
