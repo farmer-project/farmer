@@ -33,6 +33,7 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 	}
 
 	if err := box.Create(); err != nil {
+		os.RemoveAll(box.CodeDirectory)
 		db.DB.Delete(&box)
 		return err
 	}
