@@ -3,7 +3,7 @@
 FARMER_DEBUG = true
 FARMER_API_PORT = 5594
 FARMER_DOCKER_API = "tcp://172.17.0.1:4243"
-FARMER_DATA_LOCATION = "/var/farmer/data"
+FARMER_BOX_DATA_LOCATION = "/var/farmer/box"
 FARMER_CONSUMER_AMQP_URI = "amqp://farmer:farmer@172.17.0.1:5672/"
 FARMER_ADMIN_AMQP_URI = "amqp://admin:admin@172.17.0.1:5672/"
 FARMER_DB_USERNAME = "root"
