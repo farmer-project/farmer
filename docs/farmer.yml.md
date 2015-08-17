@@ -16,7 +16,7 @@ scripts:
 ```
 
 ### image
-Tell farmer to use which image to use when creating a Docker contianer for your instance.
+Tells farmer to use which image to use when creating a Docker contianer for your instance.
 
 ### ports
 Defines which ports you want to expose when creating the Docker container.
