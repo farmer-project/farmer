@@ -22,7 +22,7 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 
 # Roadmap
 
-- [X] [**v0.1**](farmer-project/farmer#3) Basic box management API with domain management.
+- [X] [**v0.1**](farmer-project/farmer#16) Basic box management API with domain management.
 - [ ] **v0.2** Admin UI (with AngularJS).
 - [ ] **v0.3** Box backups.
 - [ ] **v0.4** Statistics.
