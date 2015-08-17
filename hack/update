@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Include utils
+DIR=`dirname $BASH_SOURCE`
+source ${DIR}/util/misc
+
+# Check if farmer-server container exists
+status=$(docker inspect --type=container --format='{{ .State.Running }}' farmer-server)
+
+if [ $? -ne 0 ] || [[ "${status}" == "false" ]]; then
+    echo ""
+    echo "${RED}Farmer should be setup and running for update.${RESET}"
+    echo "${RED}Container with name farmer-server should exist and be in running state.${RESET}"
+    exit 1
+fi
+
+# Pre-load variables
+export FARMER_HOST_IP=$(docker_get_env farmer-server FARMER_HOST_IP)
+export FARMER_DATA_LOCATION=$(docker_get_env farmer-server FARMER_DATA_LOCATION)
+export FARMER_DOCKER_API=$(docker_get_env farmer-server FARMER_DOCKER_API)
+export FARMER_API_PORT=$(docker_get_env farmer-server FARMER_API_PORT)
+
+# Stop and rebuild farmer container
+source ${DIR}/stop
+source ${DIR}/util/start-services
+source ${DIR}/util/build-farmer
+source ${DIR}/util/start-farmer
+
+echo ""
+echo "${GREEN}"
+echo "===================================="
+echo "|| Farmer successfully updated.   ||"
+echo "===================================="
+echo "${RESET}"
