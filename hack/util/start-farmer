@@ -8,9 +8,9 @@ source ${my_dir}/misc
 # Start Farmer
 ###
 
-echo "====="
-echo "= Starting Farmer container..."
-echo "====="
+echo ""
+echo "${YELLOW}=== Starting Farmer container ===${RESET}"
+echo ""
 
     docker start farmer-server
     handle_container_error farmer-server

@@ -8,9 +8,9 @@ source ${my_dir}/misc
 # Start Services
 ###
 
-echo "====="
-echo "= Starting Farmer dependent services..."
-echo "====="
+echo ""
+echo "${YELLOW}=== Starting Farmer dependent services ===${RESET}"
+echo ""
 
 echo "${YELLOW}1) Starting hub container...${RESET}"
     docker start farmer-hub
