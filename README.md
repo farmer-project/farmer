@@ -3,7 +3,7 @@ Farmer is a PaaS that offers a simple API to create, deploy and manage small Saa
 
 ## Getting Started
 Farmer comes with a installer script with will bring a complete Farmer up in a few minutes.  
-You only need an **Ubuntu 14.04** and **git** client installed.
+You only need an **Ubuntu 14.04** and **git** client installed on your server.
 
 ### Quick Installation
 As simple as running commands below:
