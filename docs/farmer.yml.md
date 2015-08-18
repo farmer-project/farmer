@@ -29,3 +29,14 @@ Environment variables you want to pass to the Docker container.
 Tells farmer to run some scripts on specific events:
 * **create** After a box has been create and project code is cloned successfully. Usually useful for initialization of your project. (e.g. php `composer install`)
 * **deploy** After a project code has been updated by a new branch or version tag. Usually useful for running migrations and cleaning up. (e.g. symfony `php app/console cache:clear`)
+
+**NOTE** Box source code in under `/app` directory in the container. A `create` can look like this:
+
+```sh
+# devops/farmer/create.sh
+
+#!/bin/bash
+cd /app
+composer.phar install -v
+```
+
