@@ -101,6 +101,7 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 		Hostname:     box.Name,
 		Image:        box.Image,
 		ExposedPorts: dockerReversePortBindings(box.Ports),
+		Env: 		  box.Env,
 	}
 
 	dockerHostConfig := &docker.HostConfig{
