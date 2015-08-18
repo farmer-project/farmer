@@ -1,6 +1,7 @@
 # Farmer
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
 
 ## Getting Started
 Farmer comes with a installer script with will bring a complete Farmer up in a few minutes.  
