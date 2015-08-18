@@ -8,7 +8,6 @@ You only need an **Ubuntu 14.04** and **git** client installed on your server.
 ### Quick Installation
 As simple as running commands below:
 ```sh
-cd ~
 git clone https://github.com/farmer-project/farmer.git
 sudo hack/install
 ```
