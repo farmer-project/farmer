@@ -13,15 +13,25 @@ git clone https://github.com/farmer-project/farmer.git
 sudo hack/install
 ```
 
+### How does it work?
+Farmer works very simple for almost any small project.
+
+1. You put a [`.farmer.yml`](docs/farmer.yml.md) in root of your git-hosted project. (Read more about [`.farmer.yml`](docs/farmer.yml.md))
+2. You use [`farmer-cli`](https://github.com/farmer-project/farmer-cli) to (create a single instance)[https://github.com/farmer-project/farmer-cli#create-a-box] of your project with a unique name.
+3. You [assign a domain](https://github.com/farmer-project/farmer-cli#assignremove-a-domain-of-a-box) to you box using farmer-cli.
+4. Your web app in online.
+
+You can repeat this process for as many projects and as many boxes as you like. That's why it can be used as a small PaaS for your SaaS :)
+
 ### Farmer Client
 To access and manage your Farmer server you need to run our command-line program.  
 Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for installation intructions.
 
-# Known Issues
+## Known Issues
 * Currently farmer API (default on port `5549`) is accessible by **everyone**. Please protect this port (e.g. Using an `iptables` rule) if you want to use Farmer in production environment.
 * You need to manually `docker pull` any image you want to use in your `.farmer.yml` file.
 
-# Roadmap
+## Roadmap
 
 - [X] [**v0.1**](farmer-project/farmer#16) Basic box management API with domain management.
 - [ ] **v0.2** Admin UI (with AngularJS).

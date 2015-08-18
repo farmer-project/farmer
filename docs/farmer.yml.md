@@ -7,6 +7,7 @@ image: farmer/base-lemp
 ports:
  - 22/tcp
  - 80/tcp
+ - 4435/udp
 env:
  - foo=bar
  - baz=qux
@@ -16,15 +17,15 @@ scripts:
 ```
 
 ### image
-Tells farmer to use which image to use when creating a Docker contianer for your instance.
+Tells farmer which image to use when creating a Docker container for your instance.
 
 ### ports
 Defines which ports you want to expose when creating the Docker container.
 
 ### env
-Environment variables you want to pass to your box instance.
+Environment variables you want to pass to the Docker container.
 
 ### scripts
-Tell farmer to run some scripts on specific events:
+Tells farmer to run some scripts on specific events:
 * **create** After a box has been create and project code is cloned successfully. Usually useful for initialization of your project. (e.g. php `composer install`)
-* **deploy** After a project code has been updated with a new branch or version tag. Usually useful for clean up and running migrations. (e.g. symfony `php app/console cache:clear`)
+* **deploy** After a project code has been updated by a new branch or version tag. Usually useful for running migrations and cleaning up. (e.g. symfony `php app/console cache:clear`)
