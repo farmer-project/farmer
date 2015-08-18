@@ -3,6 +3,7 @@ package farmer
 import (
 	"github.com/fsouza/go-dockerclient"
 	"os"
+	"strings"
 )
 
 var dockerClient *docker.Client
@@ -16,7 +17,13 @@ func dockerCreateContainer(box *Box) error {
 		dockerCreateContainerOptions(box),
 	)
 
-	if err != nil {
+	if err == docker.ErrNoSuchImage {
+		if err := dockerPullImage(box); err != nil {
+			return err
+		}
+		return dockerCreateContainer(box)
+
+	} else if err != nil {
 		return err
 	}
 
@@ -101,7 +108,7 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 		Hostname:     box.Name,
 		Image:        box.Image,
 		ExposedPorts: dockerReversePortBindings(box.Ports),
-		Env: 		  box.Env,
+		Env:          box.Env,
 	}
 
 	dockerHostConfig := &docker.HostConfig{
@@ -115,6 +122,20 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 		Config:     dockerConfig,
 		HostConfig: dockerHostConfig,
 	}
+}
+
+func dockerPullImage(box *Box) error {
+	repository := strings.Split(box.Image, ":")[0]
+	tag := "latest"
+	if s := strings.Split(box.Image, ":"); len(s) > 1 {
+		tag = s[1]
+	}
+
+	return dockerClient.PullImage(docker.PullImageOptions{
+		OutputStream: box.OutputStream,
+		Repository:   repository,
+		Tag:          tag,
+	}, docker.AuthConfiguration{})
 }
 
 func dockerReversePortBindings(ports []string) map[docker.Port]struct{} {
