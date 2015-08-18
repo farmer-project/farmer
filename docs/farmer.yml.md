@@ -3,7 +3,7 @@ A file that exists in root of a project repository, describing how should Farmer
 
 Below is a full example of how `.farmer.yml` looks like:
 ```yml
-image: farmer/base-lemp
+image: ubuntu:14.04
 ports:
  - 22/tcp
  - 80/tcp
