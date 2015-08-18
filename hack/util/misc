@@ -48,10 +48,12 @@ ensure_container_free()
         if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
             docker rm -f ${container_name}
             return ${OK}
+        else
+            return ${NOT_OK}
         fi
     fi
 
-    return ${NOT_OK}
+    return ${OK}
 }
 
 # Prints an error if last command could not run and exists
@@ -119,7 +121,7 @@ farmer_install_docker()
 # Random string generator
 generate_random()
 {
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1
+    date +%s | sha256sum | base64 | head -c 10 ; echo
 }
 
 # Creates a file and sets a permission on it. (Recursively makes directories if they does not exist)
