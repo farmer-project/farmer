@@ -13,24 +13,20 @@ func init() {
 }
 
 func dockerCreateContainer(box *Box) error {
+	if err := dockerPullImage(box); err != nil {
+		return err
+	}
+
 	container, err := dockerClient.CreateContainer(
 		dockerCreateContainerOptions(box),
 	)
 
-	if err == docker.ErrNoSuchImage {
-		if err := dockerPullImage(box); err != nil {
-			return err
-		}
-		return dockerCreateContainer(box)
-
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
 	box.ContainerID = container.ID
-	dockerInspectContainer(box)
-
-	return err
+	return dockerInspectContainer(box)
 }
 
 func dockerInspectContainer(box *Box) error {
