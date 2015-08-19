@@ -24,7 +24,9 @@ func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
 
 	box.OutputStream = stream
 	box.ErrorStream = stream
-	box.Pathspec = pathspec
+	if pathspec != "" {
+		box.Pathspec = pathspec
+	}
 
 	if err := box.Deploy(); err != nil {
 		return err
