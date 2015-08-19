@@ -61,7 +61,8 @@ func checkDomain(url string) error {
 
 	err := db.DB.Where("url = ?", url).Find(domain).Error
 	if err != nil {
-		return err
+		// Could not find a domain so domain is available and free to use.
+		return nil
 	}
 
 	if domain.Url == url {
