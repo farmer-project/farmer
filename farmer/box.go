@@ -1,6 +1,9 @@
 package farmer
 
-import "io"
+import (
+	"io"
+	"github.com/fsouza/go-dockerclient"
+)
 
 type Box struct {
 	ID   uint   `gorm:"primary_key" json:"-"`
@@ -58,7 +61,9 @@ func (b *Box) Deploy() error {
 
 func (b *Box) Destroy() error {
 	if err := dockerDeleteContainer(b); err != nil {
-		return err
+		if err != docker.NoSuchContainer {
+			return err
+		}
 	}
 
 	return b.removeCode()
