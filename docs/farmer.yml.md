@@ -3,14 +3,14 @@ A file that exists in root of a project repository, describing how should Farmer
 
 Below is a full example of how `.farmer.yml` looks like:
 ```yml
-image: myorg/myapp # Docker image name, available locally on server OR on hub.docker.io.
+image: myorg/myapp:tag # Docker image name, available locally on server OR on hub.docker.io.
 ports:
  - 22/tcp
  - 80/tcp
  - 4435/udp
 env:
- - foo=bar
- - baz=qux
+ - FOO=bar
+ - BAZ=qux
 scripts:
  create: "devops/create.sh"
  deploy: "devops/deploy.sh"
