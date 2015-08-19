@@ -31,9 +31,10 @@ echo ""
         if [ $? -eq ${OK} ]; then
             export consumer_username=farmer
             export consumer_password=$(generate_random)
+            hub_admin_password=$(generate_random)
 
             docker run --name farmer-hub \
-                -e RABBITMQ_PASS=$(generate_random) \
+                -e RABBITMQ_PASS=${hub_admin_password} \
                 -e CONSUMER_USERNAME=${consumer_username} \
                 -e CONSUMER_PASSWORD=${consumer_password} \
                 -p 5672:5672 \
@@ -50,6 +51,9 @@ echo ""
 
             echo " > Allowing monitor access to consumer user..."
             docker exec farmer-hub rabbitmqctl set_user_tags ${consumer_username} monitoring
+            curl -i -u admin:${hub_admin_password} -H "content-type:application/json" \
+                 -XPUT -d'{"username":"${consumer_username}","vhost":"/","configure":".*","write":".*","read":".*"}' \
+                 http://$(docker_get_ip farmer-hub):15672/api/permissions/%2f/${consumer_username}
 
             echo "${GREEN}Hub container is created.${RESET}"
         else

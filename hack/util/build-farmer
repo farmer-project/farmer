@@ -58,39 +58,42 @@ echo ""
 
         ensure_container_free farmer-server
 
-        my_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-        docker build -t farmer/server ${my_dir}/../..
-        handle_container_error farmer/server
+        if [ $? -eq ${OK} ]; then
+            my_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+            docker build -t farmer/server ${my_dir}/../..
+            handle_container_error farmer/server
 
-        docker run --name farmer-server -d \
-            -v ${FARMER_DATA_LOCATION}:${FARMER_DATA_LOCATION} \
-            -v ${my_dir}/../..:/go/src/github.com/farmer-project/farmer:ro \
-            -p ${FARMER_API_PORT}:${FARMER_API_PORT} \
-            -e GIT_SSH=${FARMER_GIT_SSH} \
-            -e FARMER_DEBUG=true \
-            -e FARMER_API_PORT=${FARMER_API_PORT} \
-            -e FARMER_HOST_IP=${FARMER_HOST_IP} \
-            -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
-            -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
-            -e FARMER_BOX_DATA_LOCATION=${FARMER_DATA_LOCATION}/box \
-            -e FARMER_ADMIN_AMQP_URI=${FARMER_ADMIN_AMQP_URI} \
-            -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
-            -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \
-            -e FARMER_DB_PASSWORD=${FARMER_DB_PASSWORD} \
-            -e FARMER_DB_NAME=${FARMER_DB_NAME} \
-            -e FARMER_DB_HOST=db \
-            -e FARMER_DB_PORT=3306 \
-            -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
-            -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
-            --link farmer-database:db \
-            --hostname farmer \
-            farmer/server
+            docker run --name farmer-server -d \
+                -v ${FARMER_DATA_LOCATION}:${FARMER_DATA_LOCATION} \
+                -v ${my_dir}/../..:/go/src/github.com/farmer-project/farmer:ro \
+                -p ${FARMER_API_PORT}:${FARMER_API_PORT} \
+                -e GIT_SSH=${FARMER_GIT_SSH} \
+                -e FARMER_DEBUG=true \
+                -e FARMER_API_PORT=${FARMER_API_PORT} \
+                -e FARMER_HOST_IP=${FARMER_HOST_IP} \
+                -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
+                -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
+                -e FARMER_BOX_DATA_LOCATION=${FARMER_DATA_LOCATION}/box \
+                -e FARMER_ADMIN_AMQP_URI=${FARMER_ADMIN_AMQP_URI} \
+                -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
+                -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \
+                -e FARMER_DB_PASSWORD=${FARMER_DB_PASSWORD} \
+                -e FARMER_DB_NAME=${FARMER_DB_NAME} \
+                -e FARMER_DB_HOST=db \
+                -e FARMER_DB_PORT=3306 \
+                -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
+                -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+                --link farmer-database:db \
+                --hostname farmer \
+                farmer/server
 
-        handle_container_error farmer/server
-
-    echo "${GREEN}Image farmer/server is created successfully.${RESET}"
-    echo ""
-
+            handle_container_error farmer/server
+            echo "${GREEN}Image farmer/server is created successfully.${RESET}"
+            echo ""
+        else
+            echo "${GREEN}Reverse-proxy container already exists.${RESET}"
+            echo ""
+        fi
 
 echo ""
 echo "${GREEN}=== Farmer succesfully built ===${RESET}"
