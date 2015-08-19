@@ -14,7 +14,7 @@ func (box *Box) AddDomain(url string, port string) error {
 		return errors.New("Port number '" + port + "' is not open on box '" + box.Name + "' so you cannot assign a domain to it")
 	}
 
-	if !box.domainExist(url) {
+	if box.domainExist(url) {
 		return errors.New("Domain '" + url + "' is already assigned to box '" + box.Name + "'")
 	}
 

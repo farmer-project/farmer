@@ -29,9 +29,12 @@ echo "${YELLOW}Gather required information from services' containers...${RESET}"
     export FARMER_DB_NAME=$(docker_get_env farmer-server FARMER_DB_NAME)
 
     # Hub
-    export FARMER_CONSUMER_AMQP_URI=$(docker_get_env farmer-server FARMER_CONSUMER_AMQP_URI)
-    export FARMER_ADMIN_AMQP_URI=$(docker_get_env farmer-server FARMER_ADMIN_AMQP_URI)
-    export hub_admin_pass=$(docker_get_env farmer-hub RABBITMQ_PASS)
+    hub_ip=$(docker_get_ip farmer-hub)
+    hub_admin_pass=$(docker_get_env farmer-hub RABBITMQ_PASS)
+    hub_consumer_user=$(docker_get_env farmer-hub CONSUMER_USER)
+    hub_consumer_pass=$(docker_get_env farmer-hub CONSUMER_PASS)
+    export FARMER_ADMIN_AMQP_URI="amqp://admin:${hub_admin_pass}@${hub_ip}:5672/"
+    export FARMER_CONSUMER_AMQP_URI="amqp://${hub_consumer_user}:${hub_consumer_pass}@${FARMER_HOST_IP}:5672/"
 
 echo "${YELLOW}Starting farmer...${RESET}"
 

@@ -29,11 +29,10 @@ echo ""
         export FARMER_DB_NAME=$(docker_get_env farmer-database MYSQL_DATABASE)
 
         # Hub
-        hub_ip=$(docker_get_ip farmer-hub)
         hub_admin_pass=$(docker_get_env farmer-hub RABBITMQ_PASS)
         hub_consumer_user=$(docker_get_env farmer-hub CONSUMER_USER)
         hub_consumer_pass=$(docker_get_env farmer-hub CONSUMER_PASS)
-        export FARMER_ADMIN_AMQP_URI="amqp://admin:${hub_admin_pass}@${hub_ip}:5672/"
+        export FARMER_ADMIN_AMQP_URI="amqp://admin:${hub_admin_pass}@hub:5672/"
         export FARMER_CONSUMER_AMQP_URI="amqp://${hub_consumer_user}:${hub_consumer_pass}@${FARMER_HOST_IP}:5672/"
 
     echo "${GREEN}Information gathered.${RESET}"
@@ -84,6 +83,7 @@ echo ""
                 -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
                 -e FARMER_REVERSE_PROXY_LOCATION=${FARMER_REVERSE_PROXY_LOCATION} \
                 --link farmer-database:db \
+                --link farmer-hub:hub \
                 --hostname farmer \
                 farmer/server
 
