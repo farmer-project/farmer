@@ -5,9 +5,9 @@ DIR=`dirname $BASH_SOURCE`
 source ${DIR}/util/misc
 
 # Check if farmer-server container exists
-status=$(docker inspect --type=container --format='{{ .State.Running }}' farmer-server)
+status=$(docker inspect --type=container farmer-server)
 
-if [ $? -ne 0 ] || [[ "${status}" == "false" ]]; then
+if [ $? -ne 0 ]; then
     echo ""
     echo "${RED}Farmer should be setup and running for update.${RESET}"
     echo "${RED}Container with name farmer-server should exist and be in running state.${RESET}"
