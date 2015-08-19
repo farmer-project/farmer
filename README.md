@@ -29,7 +29,6 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 
 ## Known Issues
 * Currently farmer API (default on port `5549`) is accessible by **everyone**. Please protect this port (e.g. Using an `iptables` rule) if you want to use Farmer in production environment.
-* You need to manually `docker pull` any image you want to use in your `.farmer.yml` file `image` entry.
 * You need to manually grant access to `farmer` user in your farmer-hub RabbitMQ container. You can login using admin credentials provided after server setup. (e.g. `http://xx.xx.xx.xx:15672/`). Easily go to `admin` section and click on **farmer** user then [grant access to `/` vhost](http://i.stack.imgur.com/NSnyR.png). 
 
 ## Roadmap
