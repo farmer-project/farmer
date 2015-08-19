@@ -21,7 +21,7 @@ echo ""
 
         # Reverse-proxy
         export FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy
-        export FARMER_REVERSE_PROXY_CONF_PATH=$(docker_get_env farmer-reverse-proxy FARMER_REVERSE_PROXY_CONF_PATH)
+        export FARMER_REVERSE_PROXY_LOCATION=$(docker_get_env farmer-reverse-proxy FARMER_REVERSE_PROXY_LOCATION)
 
         # Database
         export FARMER_DB_USERNAME=$(docker_get_env farmer-database MYSQL_USER)
@@ -82,7 +82,7 @@ echo ""
                 -e FARMER_DB_HOST=db \
                 -e FARMER_DB_PORT=3306 \
                 -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
-                -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+                -e FARMER_REVERSE_PROXY_LOCATION=${FARMER_REVERSE_PROXY_LOCATION} \
                 --link farmer-database:db \
                 --hostname farmer \
                 farmer/server
