@@ -47,12 +47,21 @@ echo "${RESET}"
     fi
 
     # Make sure git is installed.
-    if ! command_exists jq; then
+    if ! command_exists git; then
         echo "It seems git is not installed here."
         read -r -p "Should I install git? ${CYAN}[Y/n]:${RESET} " response
         response=${response:-y}
         if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
             apt-get install git -y --force-yes
+
+            read -r -p "Git client config email? ${CYAN}(Default: farmer@localhost)${RESET} " git_email
+            git_email=${git_email:-"farmer@localhost"}
+            git config --global user.email "${git_email}"
+
+            read -r -p "Git client config user name? ${CYAN}(Default: farmer)${RESET} " git_username
+            git_username=${git_username:-"Farmer"}
+            git config --global user.name "${git_username}"
+
             echo ""
         fi
     fi
