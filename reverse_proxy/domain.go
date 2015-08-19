@@ -62,7 +62,10 @@ func checkDomain(url string) error {
 	err := db.DB.Where("url = ?", url).Find(domain).Error
 	if err != nil {
 		// Could not find a domain so domain is available and free to use.
-		return nil
+		if (err.Error() == "record not found") {
+			return nil
+		}
+		return err
 	}
 
 	if domain.Url == url {
@@ -71,7 +74,7 @@ func checkDomain(url string) error {
 			return err
 		}
 
-		return errors.New("Domain is already assigned to '" + box.Name + "' box.")
+		return errors.New("Domain '" + url + "' is already taken by '" + box.Name + "' box.")
 	}
 
 	return nil

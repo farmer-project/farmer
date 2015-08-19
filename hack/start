@@ -38,6 +38,6 @@ source ${DIR}/util/info
 
 echo "${GREEN}"
 echo "===================================="
-echo "|| Farmer successfully started. ||"
+echo "|| Farmer successfully started.   ||"
 echo "===================================="
 echo "${RESET}"
