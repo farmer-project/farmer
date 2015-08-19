@@ -2,7 +2,6 @@ package farmer
 
 import (
 	"io"
-	"github.com/fsouza/go-dockerclient"
 )
 
 type Box struct {
@@ -60,12 +59,7 @@ func (b *Box) Deploy() error {
 }
 
 func (b *Box) Destroy() error {
-	if err := dockerDeleteContainer(b); err != nil {
-		if _, ok := err.(*docker.NoSuchContainer); !ok {
-			return err
-		}
-	}
-
+	dockerDeleteContainer(b)
 	return b.removeCode()
 }
 
