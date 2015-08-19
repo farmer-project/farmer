@@ -61,7 +61,7 @@ func (b *Box) Deploy() error {
 
 func (b *Box) Destroy() error {
 	if err := dockerDeleteContainer(b); err != nil {
-		if err != docker.NoSuchContainer {
+		if _, ok := err.(*docker.NoSuchContainer); !ok {
 			return err
 		}
 	}

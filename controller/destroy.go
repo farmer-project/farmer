@@ -5,7 +5,7 @@ import (
 	"github.com/farmer-project/farmer/farmer"
 )
 
-func BoxDelete(name string) error {
+func BoxDestroy(name string) error {
 	box, err := farmer.FindBoxByName(name)
 
 	if err != nil {

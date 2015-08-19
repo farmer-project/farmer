@@ -24,7 +24,7 @@ func registerRoutes(server *martini.ClassicMartini) {
 	server.Put("/boxes/:name", binding.Bind(request.DeployRequest{}), boxDeploy)
 	server.Get("/boxes", boxList)
 	server.Get("/boxes/:name", boxInspect)
-	server.Delete("/boxes/:name", boxDelete)
+	server.Delete("/boxes/:name", boxDestroy)
 
 	// Domain
 	server.Post("/boxes/:name/domain", binding.Bind(request.Domain{}), domainAdd)
