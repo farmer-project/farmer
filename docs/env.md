@@ -12,6 +12,6 @@ FARMER_DB_HOST = "172.17.0.1"
 FARMER_DB_PORT = 3306
 FARMER_DB_NAME = "farmer"
 FARMER_REVERSE_PROXY_CONTAINER_ID = "farmer-nginx"
-FARMER_REVERSE_PROXY_CONF_PATH = "/etc/nginx/farmer"
+FARMER_REVERSE_PROXY_LOCATION = "/etc/nginx/farmer"
 FARMER_GIT_SSH = "/etc/nginx/farmer"
 ```

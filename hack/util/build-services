@@ -87,12 +87,12 @@ echo ""
         ensure_container_free farmer-reverse-proxy
 
         if [ $? -eq ${OK} ]; then
-            export FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_DATA_LOCATION}/proxy
+            export FARMER_REVERSE_PROXY_LOCATION=${FARMER_DATA_LOCATION}/proxy
             docker run --name farmer-reverse-proxy \
-                -e FARMER_REVERSE_PROXY_CONF_PATH=${FARMER_REVERSE_PROXY_CONF_PATH} \
+                -e FARMER_REVERSE_PROXY_LOCATION=${FARMER_REVERSE_PROXY_LOCATION} \
                 -p ${FARMER_REVERSE_PROXY_PORT}:80 \
                 -p ${FARMER_REVERSE_PROXY_PORT_SSL}:443 \
-                -v ${FARMER_REVERSE_PROXY_CONF_PATH}:/etc/nginx/conf.d:rw \
+                -v ${FARMER_REVERSE_PROXY_LOCATION}:/etc/nginx/conf.d:rw \
                 -d nginx
 
             handle_container_error nginx
