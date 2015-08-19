@@ -6,11 +6,16 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"errors"
 	"github.com/farmer-project/farmer/db"
 	"github.com/farmer-project/farmer/farmer"
 )
 
 func AddDomain(box *farmer.Box, url string, port string) error {
+	if err := checkDomain(url); err != nil {
+		return err
+	}
+
 	if err := box.AddDomain(url, port); err != nil {
 		return err
 	}
@@ -46,6 +51,26 @@ func ConfigureDomains(box *farmer.Box) error {
 		if err := setReverseProxyConfig(box.IP, domain.Url, domain.Port); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func checkDomain(url string) error {
+	domain := &farmer.Domain{}
+
+	err := db.DB.Where("url = ?", url).Find(domain).Error
+	if err != nil {
+		return err
+	}
+
+	if domain.Url == url {
+		box, err := farmer.FindBoxById(domain.BoxId)
+		if err != nil {
+			return err
+		}
+
+		return errors.New("Domain is already assigned to '" + box.Name + "' box.")
 	}
 
 	return nil

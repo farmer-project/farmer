@@ -3,9 +3,18 @@ package farmer
 import "github.com/farmer-project/farmer/db"
 
 func FindBoxByName(name string) (*Box, error) {
-	box := &Box{}
+	return findBoxBy("name", name)
+}
+
+func FindBoxById(id uint) (*Box, error) {
+	return findBoxBy("id", id)
+}
+
+func findBoxBy(field string, value interface{}) (*Box, error) {
 	var err error
-	if err = db.DB.Where("name = ?", name).Find(box).Error; err != nil {
+
+	box := &Box{}
+	if err = db.DB.Where(field+" = ?", value).Find(box).Error; err != nil {
 		return box, err
 	}
 
