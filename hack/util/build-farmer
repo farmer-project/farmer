@@ -99,7 +99,7 @@ echo ""
             echo "${GREEN}Image farmer/server is created successfully.${RESET}"
             echo ""
         else
-            echo "${GREEN}Reverse-proxy container already exists.${RESET}"
+            echo "${GREEN}farmer-server container already exists.${RESET}"
             echo ""
         fi
 
