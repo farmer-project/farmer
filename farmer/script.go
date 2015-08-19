@@ -9,7 +9,7 @@ func (b *Box) runScript(key string) error {
 	if _, ok := b.Scripts[key]; ok {
 		return dockerExecOnContainer(b, []string{
 			"sh",
-			"/app/" + b.Scripts[key],
+			b.Home + "/" + b.Scripts[key],
 		})
 	}
 

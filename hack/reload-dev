@@ -16,6 +16,7 @@ echo "${YELLOW}Gather required information from services' containers...${RESET}"
     export FARMER_API_PORT=$(docker_get_env farmer-server FARMER_API_PORT)
     export FARMER_DOCKER_API=$(docker_get_env farmer-server FARMER_DOCKER_API)
     export FARMER_DATA_LOCATION=$(docker_get_env farmer-server FARMER_DATA_LOCATION)
+    export FARMER_BOX_DATA_LOCATION=$(docker_get_env farmer-server FARMER_BOX_DATA_LOCATION)
 
     # Reverse-proxy
     export FARMER_REVERSE_PROXY_LOCATION=$(docker_get_env farmer-server FARMER_REVERSE_PROXY_LOCATION)

@@ -8,6 +8,7 @@ import (
 
 type FarmerConfig struct {
 	Image   string            `json:"image"`
+	Home    string            `json:"home" sql:"default:'/app'"`
 	Ports   []string          `sql:"-" json:"ports"`
 	Env     []string          `sql:"-" json:"-"`
 	Scripts map[string]string `sql:"-" json:"-"`
@@ -21,5 +22,17 @@ func (b *Box) parseFarmerfile() error {
 		return err
 	}
 
-	return yaml.Unmarshal(yamlFile, &b.FarmerConfig)
+	if err := yaml.Unmarshal(yamlFile, &b.FarmerConfig); err != nil {
+		return err
+	}
+
+	return setDefaultConfig(&b.FarmerConfig)
+}
+
+func setDefaultConfig(config *FarmerConfig) error {
+	if config.Home == "" {
+		config.Home = "/app"
+	}
+
+	return nil
 }

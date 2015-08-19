@@ -108,7 +108,7 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 	}
 
 	dockerHostConfig := &docker.HostConfig{
-		Binds:           []string{box.CodeDirectory + ":/app"},
+		Binds:           []string{box.CodeDirectory + ":" + box.Home},
 		CgroupParent:    box.CgroupParent,
 		PublishAllPorts: true,
 	}
