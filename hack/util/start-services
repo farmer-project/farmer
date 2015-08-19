@@ -18,13 +18,13 @@ echo "${YELLOW}1) Starting hub container...${RESET}"
 echo "${GREEN}Hub container is up.${RESET}"
 echo ""
 
-echo "${YELLOW}2) Installing database container...${RESET}"
+echo "${YELLOW}2) Starting database container...${RESET}"
     docker start farmer-database
     handle_container_error farmer-database
 echo "${GREEN}Database container is up.${RESET}"
 echo ""
 
-echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
+echo "${YELLOW}3) Starting reserve-proxy container...${RESET}"
     docker start farmer-reverse-proxy
     handle_container_error farmer-reverse-proxy
 echo "${GREEN}Reverse-proxy container is up.${RESET}"
