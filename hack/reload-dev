@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Include utils
+DIR=`dirname $BASH_SOURCE`
+source ${DIR}/util/misc
+
+source ${DIR}/util/start-services
+handle_error "starting services"
+
+status=$(docker stop farmer-server)
+
+echo "${YELLOW}Gather required information from services' containers...${RESET}"
+
+    # Farmer
+    export FARMER_HOST_IP=$(docker_get_env farmer-server FARMER_HOST_IP)
+    export FARMER_API_PORT=$(docker_get_env farmer-server FARMER_API_PORT)
+    export FARMER_DOCKER_API=$(docker_get_env farmer-server FARMER_DOCKER_API)
+    export FARMER_DATA_LOCATION=$(docker_get_env farmer-server FARMER_DATA_LOCATION)
+
+    # Reverse-proxy
+    export FARMER_REVERSE_PROXY_LOCATION=$(docker_get_env farmer-server FARMER_REVERSE_PROXY_LOCATION)
+
+    # Database
+    export FARMER_DB_USERNAME=$(docker_get_env farmer-server FARMER_DB_USERNAME)
+    export FARMER_DB_PASSWORD=$(docker_get_env farmer-server FARMER_DB_PASSWORD)
+    export FARMER_DB_HOST=$(docker_get_ip farmer-database)
+    export FARMER_DB_PORT=$(docker_get_env farmer-server FARMER_DB_PORT)
+    export FARMER_DB_NAME=$(docker_get_env farmer-server FARMER_DB_NAME)
+
+    # Hub
+    export FARMER_CONSUMER_AMQP_URI=$(docker_get_env farmer-server FARMER_CONSUMER_AMQP_URI)
+    export FARMER_ADMIN_AMQP_URI=$(docker_get_env farmer-server FARMER_ADMIN_AMQP_URI)
+    export hub_admin_pass=$(docker_get_env farmer-hub RABBITMQ_PASS)
+
+echo "${YELLOW}Starting farmer...${RESET}"
+
+go run ${DIR}/../main.go
