@@ -18,7 +18,10 @@ func findBoxBy(field string, value interface{}) (*Box, error) {
 		return box, err
 	}
 
-	box.Inspect()
+	if err = box.Inspect(); err != nil {
+		return box, err
+	}
+
 	if err = db.DB.Model(&box).Related(&box.Domains).Error; err != nil {
 		return box, err
 	}
