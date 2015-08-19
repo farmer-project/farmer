@@ -19,7 +19,7 @@ Farmer works very simple for almost any small project.
 1. You put a [`.farmer.yml`](docs/farmer.yml.md) in root of your git-hosted project. (Read more about [`.farmer.yml`](docs/farmer.yml.md))
 2. You use [`farmer-cli`](https://github.com/farmer-project/farmer-cli) to [create a single instance](https://github.com/farmer-project/farmer-cli#create-a-box) of your project with a unique name.
 3. You [assign a domain](https://github.com/farmer-project/farmer-cli#assign-a-domain-to-a-box) to you box using farmer-cli.
-4. Your web app in online.
+4. Your web app is up and running.
 
 You can repeat this process for as many projects and as many boxes as you like. That's why it can be used as a small PaaS for your SaaS :)
 
