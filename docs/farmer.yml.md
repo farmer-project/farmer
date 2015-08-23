@@ -4,7 +4,7 @@ A file that exists in root of a project repository, describing how should Farmer
 Below is a full example of how `.farmer.yml` looks like:
 ```yml
 image: myorg/myapp:tag # Docker image name, available locally on server OR on hub.docker.io.
-home: /app # Should be absolute path
+home: /app # Default: /app (Should be an absolute path)
 ports:
  - 22/tcp
  - 80/tcp
