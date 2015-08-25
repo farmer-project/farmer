@@ -19,7 +19,7 @@ func (b *Box) cloneCode() error {
 		return err
 	}
 
-	cmd = exec.Command("git", "checkout", "-B", b.Pathspec)
+	cmd = exec.Command("git", "checkout", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
 	cmd.Dir = b.CodeDirectory
@@ -50,7 +50,7 @@ func (b *Box) updateCode() error {
 		return err
 	}
 
-	cmd = exec.Command("git", "checkout", "master")
+	cmd = exec.Command("git", "fetch", "origin")
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
 	cmd.Dir = b.CodeDirectory
@@ -59,7 +59,7 @@ func (b *Box) updateCode() error {
 		return err
 	}
 
-	cmd = exec.Command("git", "checkout", "-B", b.Pathspec)
+	cmd = exec.Command("git", "checkout", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
 	cmd.Dir = b.CodeDirectory
@@ -82,15 +82,15 @@ func (b *Box) removeCode() error {
 
 func checkCodeConfig(box *Box) error {
 	if box.RepoUrl == "" {
-		return errors.New("Box repository Url should be set for cloning the code.")
+		return errors.New("Box repository Url must be set when cloning the code.")
 	}
 
 	if box.Pathspec == "" {
-		return errors.New("Box pathspec should be set for cloning the code.")
+		return errors.New("Box pathspec must be set when cloning the code.")
 	}
 
 	if box.CodeDirectory == "" {
-		return errors.New("Box code destination path should be set for cloning the code.")
+		return errors.New("Box code destination path must be set when cloning the code.")
 	}
 
 	return nil
