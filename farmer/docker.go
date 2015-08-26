@@ -1,8 +1,10 @@
 package farmer
 
 import (
+	"errors"
 	"github.com/fsouza/go-dockerclient"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,9 +15,7 @@ func init() {
 }
 
 func dockerCreateContainer(box *Box) error {
-	if err := dockerPullImage(box); err != nil {
-		return err
-	}
+	dockerPullImage(box)
 
 	container, err := dockerClient.CreateContainer(
 		dockerCreateContainerOptions(box),
@@ -42,7 +42,7 @@ func dockerInspectContainer(box *Box) error {
 	box.IP = container.NetworkSettings.IPAddress
 
 	box.Ports = dockerExtractPortBindings(container.NetworkSettings.Ports)
-	box.Status = dockerTranslateContainerState(container.State)
+	box.State = dockerTranslateContainerState(container.State)
 
 	return nil
 }
@@ -62,7 +62,16 @@ func dockerRunContainer(box *Box) error {
 		return err
 	}
 
-	return dockerStartContainer(box)
+	if err := dockerStartContainer(box); err != nil {
+		dockerClient.RemoveContainer(docker.RemoveContainerOptions{
+			ID: box.ContainerID,
+			RemoveVolumes: true,
+		})
+
+		return err
+	}
+
+	return nil
 }
 
 func dockerExecOnContainer(box *Box, commands []string) error {
@@ -79,12 +88,27 @@ func dockerExecOnContainer(box *Box, commands []string) error {
 		return err
 	}
 
-	return dockerClient.StartExec(exec.ID, docker.StartExecOptions{
+	err = dockerClient.StartExec(exec.ID, docker.StartExecOptions{
 		Detach:       false,
 		Tty:          false,
 		OutputStream: box.OutputStream,
 		ErrorStream:  box.ErrorStream,
 	})
+
+	if err != nil {
+		return err
+	}
+
+	inspectExec, err := dockerClient.InspectExec(exec.ID)
+	if err != nil {
+		return err
+	}
+
+	if inspectExec.ExitCode != 0 {
+		return errors.New("Exited with code " + strconv.Itoa(inspectExec.ExitCode))
+	}
+
+	return nil
 }
 
 func dockerDeleteContainer(box *Box) error {
@@ -132,6 +156,26 @@ func dockerPullImage(box *Box) error {
 		Repository:   repository,
 		Tag:          tag,
 	}, docker.AuthConfiguration{})
+}
+
+func dockerCloneContainerImage(box *Box) (string, error) {
+	revisionNum := strconv.Itoa(box.Revision + 1)
+
+	_, err := dockerClient.CommitContainer(docker.CommitContainerOptions{
+		Container:  box.ContainerID,
+		Repository: box.Name,
+		Tag:        revisionNum,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return box.Name + ":" + revisionNum, nil
+}
+
+func dockerRemoveImage(image string) error {
+	return dockerClient.RemoveImage(image)
 }
 
 func dockerReversePortBindings(ports []string) map[docker.Port]struct{} {

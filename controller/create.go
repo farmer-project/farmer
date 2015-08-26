@@ -26,7 +26,7 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 		Pathspec:      pathspec,
 		CodeDirectory: os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + name,
 		CgroupParent:  "level1",
-		Status:        "creating",
+		State:         "creating",
 	}
 
 	if err := db.DB.Save(&box).Error; err != nil {

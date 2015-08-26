@@ -14,4 +14,5 @@ FARMER_DB_NAME = "farmer"
 FARMER_REVERSE_PROXY_CONTAINER_ID = "farmer-nginx"
 FARMER_REVERSE_PROXY_LOCATION = "/etc/nginx/farmer"
 FARMER_GIT_SSH = "/etc/nginx/farmer"
+FARMER_TEMP_DATA_LOCATION = "/var/farmer/temp"
 ```

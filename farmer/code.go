@@ -95,3 +95,11 @@ func checkCodeConfig(box *Box) error {
 
 	return nil
 }
+
+func (b *Box) copyCode(destination string) error {
+	cmd := exec.Command("cp", "-rf", b.CodeDirectory, destination)
+	cmd.Stdout = b.OutputStream
+	cmd.Stderr = b.ErrorStream
+
+	return cmd.Run()
+}
