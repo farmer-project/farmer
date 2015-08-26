@@ -2,6 +2,7 @@ package farmer
 
 import (
 	"io"
+	"strconv"
 )
 
 type Box struct {
@@ -16,11 +17,13 @@ type Box struct {
 	Pathspec string `sql:"type:varchar(255);not null" json:"pathspec"`
 
 	ContainerID   string `sql:"type:char(64);not null" json:"container_id"`
-	Status        string `sql:"type:varchar(255);not null" json:"status"`
+	State         string `sql:"type:varchar(255);not null; default:'creating'" json:"state"`
 	Hostname      string `sql:"-" json:"hostname"`
 	CgroupParent  string `sql:"-" json:"cgroupParent"`
 	CodeDirectory string `sql:"type:varchar(255);not null" json:"code_directory"`
 	IP            string `sql:"-" json:"-"`
+
+	RevisionNumber int `json:"revision" sql:"default:1"`
 
 	FarmerConfig
 	Domains []Domain `json:"domains"`
@@ -58,11 +61,24 @@ func (b *Box) Deploy() error {
 	return b.runScript(SCRIPT_DEPLOY)
 }
 
+func (b *Box) Status() error {
+	if err := b.parseFarmerfile(); err != nil {
+		return err
+	}
+
+	return b.runScript(SCRIPT_STATUS)
+}
+
 func (b *Box) Destroy() error {
 	dockerDeleteContainer(b)
+	dockerRemoveImage(b.Image)
 	return b.removeCode()
 }
 
 func (b *Box) Restart() error {
 	return dockerRestartContainer(b)
+}
+
+func (b *Box) RevisionDirectory() string {
+	return b.CodeDirectory + "/" + strconv.Itoa(b.RevisionNumber)
 }

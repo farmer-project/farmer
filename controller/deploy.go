@@ -4,6 +4,7 @@ import (
 	"github.com/farmer-project/farmer/db"
 	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
+	"github.com/farmer-project/farmer/reverse_proxy"
 )
 
 func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
@@ -16,21 +17,32 @@ func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
 		stream.Close()
 	}()
 
-	box, err := farmer.FindBoxByName(name)
-
+	oldBox, err := farmer.FindBoxByName(name)
 	if err != nil {
 		return err
 	}
 
-	box.OutputStream = stream
-	box.ErrorStream = stream
 	if pathspec != "" {
-		box.Pathspec = pathspec
+		oldBox.Pathspec = pathspec
 	}
 
-	if err := box.Deploy(); err != nil {
+	oldBox.OutputStream = stream
+	oldBox.ErrorStream = stream
+
+	updatedBox, err := oldBox.Revision()
+	if err != nil {
+		updatedBox.Destroy()
 		return err
 	}
 
-	return db.DB.Save(box).Error
+	if err := reverse_proxy.ConfigureDomains(updatedBox); err != nil {
+		updatedBox.Destroy()
+		reverse_proxy.ConfigureDomains(oldBox)
+		return err
+	}
+
+	reverse_proxy.Restart()
+	oldBox.Destroy()
+
+	return db.DB.Save(updatedBox).Error
 }
