@@ -17,41 +17,32 @@ func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
 		stream.Close()
 	}()
 
-	box, err := farmer.FindBoxByName(name)
-	if err != nil {
-		return err
-	}
-
-	box.OutputStream = stream
-	box.ErrorStream = stream
-
-	cloneBox, err := box.Clone()
+	oldBox, err := farmer.FindBoxByName(name)
 	if err != nil {
 		return err
 	}
 
 	if pathspec != "" {
-		cloneBox.Pathspec = pathspec
+		oldBox.Pathspec = pathspec
 	}
 
-	if err := cloneBox.Deploy(); err != nil {
-		cloneBox.Destroy()
+	oldBox.OutputStream = stream
+	oldBox.ErrorStream = stream
+
+	updatedBox, err := oldBox.Revision()
+	if err != nil {
+		updatedBox.Destroy()
 		return err
 	}
 
-	if err := cloneBox.Status(); err != nil {
-		cloneBox.Destroy()
-		return err
-	}
-
-	if err := reverse_proxy.ConfigureDomains(cloneBox); err != nil {
-		reverse_proxy.ConfigureDomains(box)
-		cloneBox.Destroy()
+	if err := reverse_proxy.ConfigureDomains(updatedBox); err != nil {
+		updatedBox.Destroy()
+		reverse_proxy.ConfigureDomains(oldBox)
 		return err
 	}
 
 	reverse_proxy.Restart()
-	box.Destroy()
+	oldBox.Destroy()
 
-	return db.DB.Save(cloneBox).Error
+	return db.DB.Save(updatedBox).Error
 }

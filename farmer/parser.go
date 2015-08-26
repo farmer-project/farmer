@@ -15,7 +15,7 @@ type FarmerConfig struct {
 }
 
 func (b *Box) parseFarmerfile() error {
-	filename, _ := filepath.Abs(b.CodeDirectory + "/.farmer.yml")
+	filename, _ := filepath.Abs(b.RevisionDirectory() + "/.farmer.yml")
 	yamlFile, err := ioutil.ReadFile(filename)
 
 	if err != nil {

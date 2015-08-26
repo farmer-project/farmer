@@ -2,7 +2,6 @@ package farmer
 
 import (
 	"io"
-	"os"
 	"strconv"
 )
 
@@ -24,7 +23,7 @@ type Box struct {
 	CodeDirectory string `sql:"type:varchar(255);not null" json:"code_directory"`
 	IP            string `sql:"-" json:"-"`
 
-	Revision int `json:"revision" sql:"default:1"`
+	RevisionNumber int `json:"revision" sql:"default:1"`
 
 	FarmerConfig
 	Domains []Domain `json:"domains"`
@@ -70,50 +69,6 @@ func (b *Box) Status() error {
 	return b.runScript(SCRIPT_STATUS)
 }
 
-func (b *Box) Clone() (cloneBox *Box, err error) {
-	cloneBox = &Box{
-		ID:   b.ID,
-		Name: b.Name + "-rev" + strconv.Itoa(b.Revision+1),
-
-		InputStream:  b.InputStream,
-		OutputStream: b.OutputStream,
-		ErrorStream:  b.ErrorStream,
-
-		RepoUrl:  b.RepoUrl,
-		Pathspec: b.Pathspec,
-
-		State:        "creating",
-		Hostname:     b.Hostname,
-		CgroupParent: b.CgroupParent,
-
-		Revision:     b.Revision,
-		FarmerConfig: b.FarmerConfig,
-		Domains:      b.Domains,
-	}
-
-	b.OutputStream.Write([]byte("Commiting box image..."))
-
-	cloneBox.Image, err = dockerCloneContainerImage(b)
-	if err != nil {
-		return
-	}
-
-	b.OutputStream.Write([]byte("Done\n"))
-
-	cloneBox.CodeDirectory = os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + cloneBox.Name
-
-	b.copyCode(cloneBox.CodeDirectory)
-
-	if err = dockerRunContainer(cloneBox); err != nil {
-		os.RemoveAll(cloneBox.CodeDirectory)
-		dockerRemoveImage(cloneBox.Image)
-
-		return
-	}
-
-	return
-}
-
 func (b *Box) Destroy() error {
 	dockerDeleteContainer(b)
 	dockerRemoveImage(b.Image)
@@ -122,4 +77,8 @@ func (b *Box) Destroy() error {
 
 func (b *Box) Restart() error {
 	return dockerRestartContainer(b)
+}
+
+func (b *Box) RevisionDirectory() string {
+	return b.CodeDirectory + "/" + strconv.Itoa(b.RevisionNumber)
 }

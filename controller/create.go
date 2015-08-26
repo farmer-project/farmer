@@ -19,14 +19,15 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 	}()
 
 	box := farmer.Box{
-		Name:          name,
-		OutputStream:  stream,
-		ErrorStream:   stream,
-		RepoUrl:       repoUrl,
-		Pathspec:      pathspec,
-		CodeDirectory: os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + name,
-		CgroupParent:  "level1",
-		State:         "creating",
+		Name:           name,
+		OutputStream:   stream,
+		ErrorStream:    stream,
+		RepoUrl:        repoUrl,
+		Pathspec:       pathspec,
+		CodeDirectory:  os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + name,
+		CgroupParent:   "level1",
+		State:          "creating",
+		RevisionNumber: 1,
 	}
 
 	if err := db.DB.Save(&box).Error; err != nil {
@@ -34,7 +35,7 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 	}
 
 	if err := box.Create(); err != nil {
-		os.RemoveAll(box.CodeDirectory)
+		box.Destroy()
 		db.DB.Delete(&box)
 		return err
 	}

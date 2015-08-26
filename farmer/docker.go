@@ -64,7 +64,7 @@ func dockerRunContainer(box *Box) error {
 
 	if err := dockerStartContainer(box); err != nil {
 		dockerClient.RemoveContainer(docker.RemoveContainerOptions{
-			ID: box.ContainerID,
+			ID:            box.ContainerID,
 			RemoveVolumes: true,
 		})
 
@@ -132,13 +132,13 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 	}
 
 	dockerHostConfig := &docker.HostConfig{
-		Binds:           []string{box.CodeDirectory + ":" + box.Home},
+		Binds:           []string{box.RevisionDirectory() + ":" + box.Home},
 		CgroupParent:    box.CgroupParent,
 		PublishAllPorts: true,
 	}
 
 	return docker.CreateContainerOptions{
-		Name:       box.Name,
+		Name:       box.Name + "-rev" + strconv.Itoa(box.RevisionNumber),
 		Config:     dockerConfig,
 		HostConfig: dockerHostConfig,
 	}
@@ -159,19 +159,19 @@ func dockerPullImage(box *Box) error {
 }
 
 func dockerCloneContainerImage(box *Box) (string, error) {
-	revisionNum := strconv.Itoa(box.Revision + 1)
+	revisionNumber := strconv.Itoa(box.RevisionNumber + 1)
 
 	_, err := dockerClient.CommitContainer(docker.CommitContainerOptions{
 		Container:  box.ContainerID,
 		Repository: box.Name,
-		Tag:        revisionNum,
+		Tag:        revisionNumber,
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	return box.Name + ":" + revisionNum, nil
+	return box.Name + ":" + revisionNumber, nil
 }
 
 func dockerRemoveImage(image string) error {

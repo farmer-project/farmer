@@ -11,7 +11,9 @@ func (b *Box) cloneCode() error {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", b.RepoUrl, b.CodeDirectory)
+	dir := b.RevisionDirectory()
+
+	cmd := exec.Command("git", "clone", b.RepoUrl, dir)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
 
@@ -22,7 +24,7 @@ func (b *Box) cloneCode() error {
 	cmd = exec.Command("git", "checkout", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {
 		return err
@@ -31,7 +33,7 @@ func (b *Box) cloneCode() error {
 	cmd = exec.Command("git", "pull", "origin", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	return cmd.Run()
 }
@@ -41,10 +43,12 @@ func (b *Box) updateCode() error {
 		return err
 	}
 
+	dir := b.RevisionDirectory()
+
 	cmd := exec.Command("git", "reset", "--hard")
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {
 		return err
@@ -53,7 +57,7 @@ func (b *Box) updateCode() error {
 	cmd = exec.Command("git", "fetch", "origin")
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {
 		return err
@@ -62,7 +66,7 @@ func (b *Box) updateCode() error {
 	cmd = exec.Command("git", "checkout", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {
 		return err
@@ -71,13 +75,13 @@ func (b *Box) updateCode() error {
 	cmd = exec.Command("git", "pull", "origin", b.Pathspec)
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
-	cmd.Dir = b.CodeDirectory
+	cmd.Dir = dir
 
 	return cmd.Run()
 }
 
 func (b *Box) removeCode() error {
-	return os.RemoveAll(b.CodeDirectory)
+	return os.RemoveAll(b.RevisionDirectory())
 }
 
 func checkCodeConfig(box *Box) error {
@@ -94,12 +98,4 @@ func checkCodeConfig(box *Box) error {
 	}
 
 	return nil
-}
-
-func (b *Box) copyCode(destination string) error {
-	cmd := exec.Command("cp", "-rf", b.CodeDirectory, destination)
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-
-	return cmd.Run()
 }
