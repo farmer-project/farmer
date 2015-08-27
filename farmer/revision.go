@@ -58,7 +58,7 @@ func (b *Box) Revision() (newBox *Box, err error) {
 func (b *Box) copyCode(destBox *Box) error {
 	cmd := exec.Command(
 		"cp",
-		"-rf",
+		"-rfv",
 		b.RevisionDirectory(),
 		destBox.RevisionDirectory(),
 	)
