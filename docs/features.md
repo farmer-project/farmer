@@ -8,7 +8,7 @@ Before you can start using farmer you need to know some terms.
 A single container representing a full-stack single app with one or multiple domains assigned to it. You can host a wordpress blog on a box, and a Sylius e-commerce instance on another box, with different domains and fully isolated environments.
 
 ### .farmer.yml
-This is heart of the Farmer. A simple file you place inside your project source code and farmer behaves based on configuration written in this file. [**Read more** about farmer file here](farmer.yml.md).
+This is heart of the Farmer. A simple file you place inside your project source code and farmer behaves based on configuration written in this file. [**Read more** about .farmer.yml here](farmer.yml.md).
 
 ### Scripts
 Here is a list of scripts you can define in your [`.farmer.yml` file](farmer.yml.md)
