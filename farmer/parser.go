@@ -11,6 +11,7 @@ type FarmerConfig struct {
 	Home    string            `json:"home" sql:"default:'/app'"`
 	Ports   []string          `sql:"-" json:"ports"`
 	Env     []string          `sql:"-" json:"-"`
+	Shared  []string          `sql:"-" json:"-"`
 	Scripts map[string]string `sql:"-" json:"-"`
 }
 

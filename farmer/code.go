@@ -38,55 +38,51 @@ func (b *Box) cloneCode() error {
 	return cmd.Run()
 }
 
-func (b *Box) updateCode() error {
-	if err := checkCodeConfig(b); err != nil {
+func (b *Box) makeShared() error {
+	if err := b.setupShared(); err != nil {
 		return err
 	}
 
-	dir := b.RevisionDirectory()
+	return b.linkShared()
+}
 
-	cmd := exec.Command("git", "remote", "set-url", "origin", b.RepoUrl)
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-	cmd.Dir = dir
+func (b *Box) setupShared() error {
+	os.Mkdir(b.SharedDirectory(), 0777)
 
-	if err := cmd.Run(); err != nil {
-		return err
+	for _, asset := range b.Shared {
+		shared := b.RevisionDirectory() + "/" + asset
+		dest := b.SharedDirectory() + "/" + asset
+
+		_, err := os.Stat(dest)
+		if os.IsNotExist(err) {
+			cmd := exec.Command("mv", shared, dest)
+			cmd.Stdout = b.OutputStream
+			cmd.Stderr = b.ErrorStream
+			if err := cmd.Run(); err != nil {
+				return err
+			}
+		}
 	}
 
-	cmd = exec.Command("git", "reset", "--hard")
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-	cmd.Dir = dir
+	return nil
+}
 
-	if err := cmd.Run(); err != nil {
-		return err
+func (b *Box) linkShared() error {
+	for _, dir := range b.Shared {
+		dest := b.RevisionDirectory() + "/" + dir
+		shared := b.SharedDirectory() + "/" + dir
+
+		os.RemoveAll(dest)
+
+		cmd := exec.Command("ln", "-s", shared, dest)
+		cmd.Stdout = b.OutputStream
+		cmd.Stderr = b.ErrorStream
+		if err := cmd.Run(); err != nil {
+			return err
+		}
 	}
 
-	cmd = exec.Command("git", "fetch", "origin")
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-	cmd.Dir = dir
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	cmd = exec.Command("git", "checkout", b.Pathspec)
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-	cmd.Dir = dir
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	cmd = exec.Command("git", "pull", "origin", b.Pathspec)
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-	cmd.Dir = dir
-
-	return cmd.Run()
+	return nil
 }
 
 func (b *Box) removeCode() error {

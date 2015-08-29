@@ -1,9 +1,6 @@
 package farmer
 
-import (
-	"os/exec"
-	"strconv"
-)
+import "strconv"
 
 func (b *Box) Revision() (newBox *Box, err error) {
 	newBox = &Box{
@@ -38,13 +35,23 @@ func (b *Box) Revision() (newBox *Box, err error) {
 
 	b.OutputStream.Write([]byte("Done\n"))
 
-	b.copyCode(newBox)
+	if err = newBox.cloneCode(); err != nil {
+		return
+	}
+
+	if err = newBox.parseFarmerfile(); err != nil {
+		return
+	}
+
+	if err = newBox.makeShared(); err != nil {
+		return
+	}
 
 	if err = dockerRunContainer(newBox); err != nil {
 		return
 	}
 
-	if err = newBox.Deploy(); err != nil {
+	if err = newBox.runScript(SCRIPT_DEPLOY); err != nil {
 		return
 	}
 
@@ -55,16 +62,8 @@ func (b *Box) Revision() (newBox *Box, err error) {
 	return
 }
 
-func (b *Box) copyCode(destBox *Box) error {
-	cmd := exec.Command(
-		"cp",
-		"-rfv",
-		b.RevisionDirectory(),
-		destBox.RevisionDirectory(),
-	)
-
-	cmd.Stdout = b.OutputStream
-	cmd.Stderr = b.ErrorStream
-
-	return cmd.Run()
+func (b *Box) DestroyRevision() error {
+	dockerDeleteContainer(b)
+	dockerRemoveImage(b.Image)
+	return b.removeCode()
 }
