@@ -1,4 +1,5 @@
 # Farmer Enviroment Variables
+When `farmer` binary runs it expects these variables to exist:
 ```toml
 FARMER_DEBUG = true
 FARMER_API_PORT = 5594
