@@ -27,6 +27,16 @@ func AddDomain(box *farmer.Box, url string, port string) error {
 	return db.DB.Save(&box).Error
 }
 
+func DeleteDomains(box *farmer.Box) error {
+	for _, domain := range box.Domains {
+		if err := DeleteDomain(box, domain.Url); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func DeleteDomain(box *farmer.Box, url string) error {
 	domain := &farmer.Domain{
 		BoxId: box.ID,
