@@ -3,6 +3,7 @@ package farmer
 import (
 	"io"
 	"strconv"
+	"os"
 )
 
 type Box struct {
@@ -42,23 +43,15 @@ func (b *Box) Create() error {
 		return err
 	}
 
-	return b.runScript(SCRIPT_CREATE)
+	if err := b.runScript(SCRIPT_CREATE); err != nil {
+		return err
+	}
+
+	return b.makeShared()
 }
 
 func (b *Box) Inspect() error {
 	return dockerInspectContainer(b)
-}
-
-func (b *Box) Deploy() error {
-	if err := b.updateCode(); err != nil {
-		return err
-	}
-
-	if err := b.parseFarmerfile(); err != nil {
-		return err
-	}
-
-	return b.runScript(SCRIPT_DEPLOY)
 }
 
 func (b *Box) Status() error {
@@ -72,7 +65,7 @@ func (b *Box) Status() error {
 func (b *Box) Destroy() error {
 	dockerDeleteContainer(b)
 	dockerRemoveImage(b.Image)
-	return b.removeCode()
+	return os.RemoveAll(b.CodeDirectory)
 }
 
 func (b *Box) Restart() error {
@@ -81,4 +74,8 @@ func (b *Box) Restart() error {
 
 func (b *Box) RevisionDirectory() string {
 	return b.CodeDirectory + "/" + strconv.Itoa(b.RevisionNumber)
+}
+
+func (b *Box) SharedDirectory() string {
+	return b.CodeDirectory + "/shared"
 }

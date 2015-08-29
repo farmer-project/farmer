@@ -17,36 +17,36 @@ func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream)
 		stream.Close()
 	}()
 
-	oldBox, err := farmer.FindBoxByName(name)
+	currentBox, err := farmer.FindBoxByName(name)
 	if err != nil {
 		return err
 	}
 
 	if pathspec != "" {
-		oldBox.Pathspec = pathspec
+		currentBox.Pathspec = pathspec
 	}
 
 	if repoUrl != "" {
-		oldBox.RepoUrl = repoUrl
+		currentBox.RepoUrl = repoUrl
 	}
 
-	oldBox.OutputStream = stream
-	oldBox.ErrorStream = stream
+	currentBox.OutputStream = stream
+	currentBox.ErrorStream = stream
 
-	updatedBox, err := oldBox.Revision()
+	updatedBox, err := currentBox.Revision()
 	if err != nil {
-		updatedBox.Destroy()
+		updatedBox.DestroyRevision()
 		return err
 	}
 
 	if err := reverse_proxy.ConfigureDomains(updatedBox); err != nil {
-		updatedBox.Destroy()
-		reverse_proxy.ConfigureDomains(oldBox)
+		updatedBox.DestroyRevision()
+		reverse_proxy.ConfigureDomains(currentBox)
 		return err
 	}
 
 	reverse_proxy.Restart()
-	oldBox.Destroy()
+	currentBox.DestroyRevision()
 
 	return db.DB.Save(updatedBox).Error
 }
