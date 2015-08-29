@@ -15,6 +15,7 @@ env:
 scripts:
  create: "devops/create.sh"
  deploy: "devops/deploy.sh"
+ status: "devops/status.sh"
 ```
 
 ### image
@@ -33,6 +34,7 @@ Environment variables you want to pass to the Docker container.
 Tells farmer to run some scripts on specific events:
 * **create** After a box has been create and project code is cloned successfully. Usually useful for initialization of your project. (e.g. php `composer install`)
 * **deploy** After a project code has been updated by a new branch or version tag. Usually useful for running migrations and cleaning up. (e.g. symfony `php app/console cache:clear`)
+* **status** Before deploying on the real production box farmer tries to dry-run deployment on a cloned box (which is exactly a copy of the real box) then it runs `status` script inside that cloned box, this script can exit with `0` code or any other code if any error happens. If this script exits with `0` code farmer assumes deployment was successful, so it replaces real production box with the cloned one and marks it as a new revision.
 
 **NOTE** Box source code in under home directory (e.g `/app`) in the container. A `create` script can look like this:
 
