@@ -37,7 +37,7 @@ func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 		return 500, string(err.Error())
 	}
 
-	go controller.BoxDeploy(params["name"], req.Pathspec, stream)
+	go controller.BoxDeploy(params["name"], req.RepoUrl, req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
 		AmqpURI:   stream.AmqpURI(),

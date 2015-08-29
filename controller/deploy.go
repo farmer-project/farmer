@@ -7,7 +7,7 @@ import (
 	"github.com/farmer-project/farmer/reverse_proxy"
 )
 
-func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
+func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream) (err error) {
 	defer func() {
 		if err != nil {
 			stream.Write([]byte(err.Error()))
@@ -24,6 +24,10 @@ func BoxDeploy(name string, pathspec string, stream *hub.Stream) (err error) {
 
 	if pathspec != "" {
 		oldBox.Pathspec = pathspec
+	}
+
+	if repoUrl != "" {
+		oldBox.RepoUrl = repoUrl
 	}
 
 	oldBox.OutputStream = stream

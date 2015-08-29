@@ -45,7 +45,16 @@ func (b *Box) updateCode() error {
 
 	dir := b.RevisionDirectory()
 
-	cmd := exec.Command("git", "reset", "--hard")
+	cmd := exec.Command("git", "remote", "set-url", "origin", b.RepoUrl)
+	cmd.Stdout = b.OutputStream
+	cmd.Stderr = b.ErrorStream
+	cmd.Dir = dir
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	cmd = exec.Command("git", "reset", "--hard")
 	cmd.Stdout = b.OutputStream
 	cmd.Stderr = b.ErrorStream
 	cmd.Dir = dir
