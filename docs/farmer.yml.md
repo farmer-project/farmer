@@ -12,6 +12,10 @@ ports:
 env:
  - FOO=bar
  - BAZ=qux
+shared:
+ - app/config/parameters.yml
+ - app/Resources/settings.yml
+ - web/media
 scripts:
  create: "devops/create.sh"
  deploy: "devops/deploy.sh"
@@ -29,6 +33,9 @@ Defines which ports you want to expose when creating the Docker container.
 
 ### env
 Environment variables you want to pass to the Docker container.
+
+### shared
+An array of files and directories (which should exists after code is cloned and `create` script is ran) which you want keep between your app deploys (revisions). e.g. Configuration files, user uploaded content.
 
 ### scripts
 Tells farmer to run some scripts on specific events:
