@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"path"
 )
 
 func (b *Box) cloneCode() error {
@@ -52,6 +53,8 @@ func (b *Box) setupShared() error {
 	for _, asset := range b.Shared {
 		shared := b.RevisionDirectory() + "/" + asset
 		dest := b.SharedDirectory() + "/" + asset
+
+		os.MkdirAll(path.Dir(dest), 0777)
 
 		_, err := os.Stat(dest)
 		if os.IsNotExist(err) {
