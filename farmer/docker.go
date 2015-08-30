@@ -15,7 +15,7 @@ func init() {
 }
 
 func dockerCreateContainer(box *Box) error {
-	dockerPullImage(box)
+	//dockerPullImage(box)
 
 	container, err := dockerClient.CreateContainer(
 		dockerCreateContainerOptions(box),
@@ -132,7 +132,10 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 	}
 
 	dockerHostConfig := &docker.HostConfig{
-		Binds:           []string{box.RevisionDirectory() + ":" + box.Home},
+		Binds:           []string{
+			box.RevisionDirectory() + ":" + box.Home,
+			box.SharedDirectory() + ":/shared",
+		},
 		CgroupParent:    box.CgroupParent,
 		PublishAllPorts: true,
 	}

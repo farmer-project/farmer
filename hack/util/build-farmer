@@ -87,13 +87,8 @@ echo ""
                 --hostname farmer \
                 farmer/server
 
-            read -r -p "Git client config email? ${CYAN}(Default: farmer@localhost)${RESET} " git_email
-            git_email=${git_email:-"farmer@localhost"}
-            docker exec farmer-server git config --global user.email "${git_email}"
-
-            read -r -p "Git client config user name? ${CYAN}(Default: farmer)${RESET} " git_username
-            git_username=${git_username:-"Farmer"}
-            docker exec farmer-server git config --global user.name "${git_username}"
+            docker exec farmer-server git config --global user.email "farmer@localhost"
+            docker exec farmer-server git config --global user.name "farmer"
 
             handle_container_error farmer/server
             echo "${GREEN}Image farmer/server is created successfully.${RESET}"

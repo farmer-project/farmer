@@ -51,14 +51,15 @@ func (b *Box) setupShared() error {
 	os.Mkdir(b.SharedDirectory(), 0777)
 
 	for _, asset := range b.Shared {
-		shared := b.RevisionDirectory() + "/" + asset
-		dest := b.SharedDirectory() + "/" + asset
+		assetPath := b.RevisionDirectory() + "/" + asset
+		sharedRealPath := b.SharedDirectory() + "/" + asset
 
-		os.MkdirAll(path.Dir(dest), 0777)
+		os.MkdirAll(path.Dir(sharedRealPath), 0777)
 
-		_, err := os.Stat(dest)
+		_, err := os.Stat(sharedRealPath)
+
 		if os.IsNotExist(err) {
-			cmd := exec.Command("mv", shared, dest)
+			cmd := exec.Command("mv", assetPath, path.Dir(sharedRealPath) + "/")
 			cmd.Stdout = b.OutputStream
 			cmd.Stderr = b.ErrorStream
 			if err := cmd.Run(); err != nil {
@@ -71,13 +72,12 @@ func (b *Box) setupShared() error {
 }
 
 func (b *Box) linkShared() error {
-	for _, dir := range b.Shared {
-		dest := b.RevisionDirectory() + "/" + dir
-		shared := b.SharedDirectory() + "/" + dir
+	for _, asset := range b.Shared {
+		destRealPath := b.RevisionDirectory() + "/" + asset
 
-		os.RemoveAll(dest)
+		os.RemoveAll(destRealPath)
 
-		cmd := exec.Command("ln", "-s", shared, dest)
+		cmd := exec.Command("ln", "-s", "/shared/" + asset, destRealPath)
 		cmd.Stdout = b.OutputStream
 		cmd.Stderr = b.ErrorStream
 		if err := cmd.Run(); err != nil {

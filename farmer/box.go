@@ -64,7 +64,7 @@ func (b *Box) Status() error {
 
 func (b *Box) Destroy() error {
 	dockerDeleteContainer(b)
-	dockerRemoveImage(b.Image)
+	//dockerRemoveImage(b.Image)
 	return os.RemoveAll(b.CodeDirectory)
 }
 
