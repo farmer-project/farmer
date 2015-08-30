@@ -17,15 +17,16 @@ func init() {
 func dockerCreateContainer(box *Box) error {
 	//dockerPullImage(box)
 
-	container, err := dockerClient.CreateContainer(
-		dockerCreateContainerOptions(box),
-	)
+	options := dockerCreateContainerOptions(box)
+	dockerEnsureVolumes(options.HostConfig)
 
+	container, err := dockerClient.CreateContainer(options)
 	if err != nil {
 		return err
 	}
 
 	box.ContainerID = container.ID
+
 	return dockerInspectContainer(box)
 }
 
@@ -132,7 +133,7 @@ func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
 	}
 
 	dockerHostConfig := &docker.HostConfig{
-		Binds:           []string{
+		Binds: []string{
 			box.RevisionDirectory() + ":" + box.Home,
 			box.SharedDirectory() + ":/shared",
 		},
@@ -175,6 +176,13 @@ func dockerCloneContainerImage(box *Box) (string, error) {
 	}
 
 	return box.Name + ":" + revisionNumber, nil
+}
+
+func dockerEnsureVolumes(hostConfig *docker.HostConfig) {
+	for _, binding := range hostConfig.Binds {
+		paths := strings.Split(binding, ":")
+		os.MkdirAll(paths[0], 0777)
+	}
 }
 
 func dockerRemoveImage(image string) error {

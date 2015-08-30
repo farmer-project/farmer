@@ -39,6 +39,36 @@ func (b *Box) cloneCode() error {
 	return cmd.Run()
 }
 
+func (b *Box) syncShared(srcBox *Box) error {
+	for _, asset := range b.Shared {
+		var assetPath string
+
+		srcAssetPath := srcBox.RevisionDirectory() + "/" + asset
+		ownAssetPath := b.RevisionDirectory() + "/" + asset
+
+		if exists(srcAssetPath) {
+			assetPath = srcAssetPath
+		} else {
+			assetPath = ownAssetPath
+		}
+
+		sharedRealPath := b.SharedDirectory() + "/" + asset
+
+		if !exists(sharedRealPath) && exists(assetPath) {
+			os.MkdirAll(path.Dir(sharedRealPath), 0777)
+
+			cmd := exec.Command("mv", assetPath, path.Dir(sharedRealPath)+"/")
+			cmd.Stdout = b.OutputStream
+			cmd.Stderr = b.ErrorStream
+			if err := cmd.Run(); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (b *Box) makeShared() error {
 	if err := b.setupShared(); err != nil {
 		return err
@@ -54,16 +84,18 @@ func (b *Box) setupShared() error {
 		assetPath := b.RevisionDirectory() + "/" + asset
 		sharedRealPath := b.SharedDirectory() + "/" + asset
 
-		os.MkdirAll(path.Dir(sharedRealPath), 0777)
+		if !exists(sharedRealPath) {
+			if exists(assetPath) {
+				os.MkdirAll(path.Dir(sharedRealPath), 0777)
 
-		_, err := os.Stat(sharedRealPath)
-
-		if os.IsNotExist(err) {
-			cmd := exec.Command("mv", assetPath, path.Dir(sharedRealPath) + "/")
-			cmd.Stdout = b.OutputStream
-			cmd.Stderr = b.ErrorStream
-			if err := cmd.Run(); err != nil {
-				return err
+				cmd := exec.Command("mv", assetPath, path.Dir(sharedRealPath)+"/")
+				cmd.Stdout = b.OutputStream
+				cmd.Stderr = b.ErrorStream
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+			} else {
+				return errors.New("Shared asset '" + assetPath + "' should exist in source code.")
 			}
 		}
 	}
@@ -77,7 +109,7 @@ func (b *Box) linkShared() error {
 
 		os.RemoveAll(destRealPath)
 
-		cmd := exec.Command("ln", "-s", "/shared/" + asset, destRealPath)
+		cmd := exec.Command("ln", "-s", "/shared/"+asset, destRealPath)
 		cmd.Stdout = b.OutputStream
 		cmd.Stderr = b.ErrorStream
 		if err := cmd.Run(); err != nil {
@@ -106,4 +138,9 @@ func checkCodeConfig(box *Box) error {
 	}
 
 	return nil
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }
