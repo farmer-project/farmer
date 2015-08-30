@@ -24,6 +24,14 @@ func (b *Box) Revision() (newBox *Box, err error) {
 		CodeDirectory:  b.CodeDirectory,
 	}
 
+	if err = newBox.cloneCode(); err != nil {
+		return
+	}
+
+	if err = newBox.parseFarmerfile(); err != nil {
+		return
+	}
+
 	b.OutputStream.Write(
 		[]byte("Commiting box image from revision #" + strconv.Itoa(b.RevisionNumber) + " to revision #" + strconv.Itoa(newBox.RevisionNumber) + "..."),
 	)
@@ -34,14 +42,6 @@ func (b *Box) Revision() (newBox *Box, err error) {
 	}
 
 	b.OutputStream.Write([]byte("Done\n"))
-
-	if err = newBox.cloneCode(); err != nil {
-		return
-	}
-
-	if err = newBox.parseFarmerfile(); err != nil {
-		return
-	}
 
 	if err = newBox.syncShared(b); err != nil {
 		return
