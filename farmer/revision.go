@@ -43,7 +43,7 @@ func (b *Box) Revision() (newBox *Box, err error) {
 		return
 	}
 
-	if err = newBox.makeShared(); err != nil {
+	if err = newBox.syncShared(b); err != nil {
 		return
 	}
 
@@ -52,6 +52,10 @@ func (b *Box) Revision() (newBox *Box, err error) {
 	}
 
 	if err = newBox.runScript(SCRIPT_DEPLOY); err != nil {
+		return
+	}
+
+	if err = newBox.makeShared(); err != nil {
 		return
 	}
 

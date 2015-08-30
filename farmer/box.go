@@ -2,8 +2,8 @@ package farmer
 
 import (
 	"io"
-	"strconv"
 	"os"
+	"strconv"
 )
 
 type Box struct {
