@@ -63,6 +63,13 @@ func (b *Box) syncShared(srcBox *Box) error {
 			if err := cmd.Run(); err != nil {
 				return err
 			}
+
+			cmd = exec.Command("ln", "-s", "/shared/"+asset, assetPath)
+			cmd.Stdout = b.OutputStream
+			cmd.Stderr = b.ErrorStream
+			if err := cmd.Run(); err != nil {
+				return err
+			}
 		}
 	}
 
