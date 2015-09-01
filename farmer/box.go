@@ -54,12 +54,46 @@ func (b *Box) Inspect() error {
 	return dockerInspectContainer(b)
 }
 
-func (b *Box) Status() error {
-	if err := b.parseFarmerfile(); err != nil {
-		return err
+func (b *Box) Test() (err error) {
+	if err = b.parseFarmerfile(); err != nil {
+		return
 	}
 
-	return b.runScript(SCRIPT_STATUS)
+	testBox := &Box{
+		Name: b.Name + "-test",
+
+		InputStream:  b.InputStream,
+		OutputStream: b.OutputStream,
+		ErrorStream:  b.ErrorStream,
+
+		RepoUrl:  b.RepoUrl,
+		Pathspec: b.Pathspec,
+
+		State:        "testing",
+		Hostname:     b.Hostname,
+		CgroupParent: b.CgroupParent,
+
+		RevisionNumber: b.RevisionNumber,
+		FarmerConfig:   b.FarmerConfig,
+		Domains:        b.Domains,
+		CodeDirectory:  b.CodeDirectory,
+	}
+
+	testBox.Image, err = dockerCloneContainerImage(b)
+	if err != nil {
+		return
+	}
+
+	if err = dockerRunContainer(testBox); err != nil {
+		return
+	}
+
+	err = testBox.runScript(SCRIPT_TEST)
+
+	dockerDeleteContainer(testBox)
+	dockerRemoveImage(testBox.Image)
+
+	return
 }
 
 func (b *Box) Destroy() error {
