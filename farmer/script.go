@@ -3,7 +3,7 @@ package farmer
 const (
 	SCRIPT_CREATE = "create"
 	SCRIPT_DEPLOY = "deploy"
-	SCRIPT_STATUS = "status"
+	SCRIPT_TEST   = "test"
 )
 
 func (b *Box) runScript(key string) error {

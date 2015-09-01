@@ -59,7 +59,7 @@ func (b *Box) Revision() (newBox *Box, err error) {
 		return
 	}
 
-	if err = newBox.Status(); err != nil {
+	if err = newBox.Test(); err != nil {
 		return
 	}
 
