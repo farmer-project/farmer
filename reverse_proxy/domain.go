@@ -57,8 +57,10 @@ func DeleteDomain(box *farmer.Box, url string) error {
 }
 
 func ConfigureDomains(box *farmer.Box) error {
+	release, _ := box.GetCurrentRelease()
+
 	for _, domain := range box.Domains {
-		if err := setReverseProxyConfig(box.IP, domain.Url, domain.Port); err != nil {
+		if err := setReverseProxyConfig(release.IP, domain.Url, domain.Port); err != nil {
 			return err
 		}
 	}

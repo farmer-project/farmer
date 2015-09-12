@@ -10,7 +10,12 @@ type Domain struct {
 }
 
 func (box *Box) AddDomain(url string, port string) error {
-	if !box.openPort(port) {
+	currentRelease, err := box.GetCurrentRelease()
+	if err != nil {
+		return err
+	}
+
+	if !currentRelease.openPort(port) {
 		return errors.New("Port number '" + port + "' is not open on box '" + box.Name + "' so you cannot assign a domain to it")
 	}
 
@@ -43,8 +48,8 @@ func (box *Box) DeleteDomain(url string) error {
 	return nil
 }
 
-func (box *Box) openPort(port string) bool {
-	for _, p := range box.Ports {
+func (r *Release) openPort(port string) bool {
+	for _, p := range r.Ports {
 		if p == port+"/udp" || p == port+"/tcp" {
 			return true
 		}

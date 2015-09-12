@@ -98,6 +98,12 @@ echo "${RESET}"
         export FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION:-/var/farmer}
         mkdir -p ${FARMER_DATA_LOCATION}/box
 
+    # Ask Farmer Keep Releases
+        echo -n "7) In-order to rollback; how many releases do you want to keep for any box? ${CYAN}(Default: 3):${RESET} "
+        read FARMER_BOX_KEEP_RELEASES
+        echo ""
+        export FARMER_BOX_KEEP_RELEASES=${FARMER_BOX_KEEP_RELEASES:-3}
+
 ###
 # Installation
 ###

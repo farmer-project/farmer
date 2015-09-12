@@ -3,9 +3,10 @@ package controller
 import (
 	"os"
 
-	"github.com/farmer-project/farmer/db"
+	"errors"
 	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
+	"strconv"
 )
 
 func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream) (err error) {
@@ -14,31 +15,28 @@ func BoxCreate(name string, repoUrl string, pathspec string, stream *hub.Stream)
 			stream.Write([]byte(err.Error()))
 		}
 
-		stream.Write([]byte("kthxbai"))
 		stream.Close()
 	}()
 
+	if existBox, _ := farmer.FindBoxByName(name); existBox.Name == name {
+		return errors.New("Duplicate box name '" + name + "'")
+	}
+
+	kr, _ := strconv.Atoi(os.Getenv("FARMER_BOX_KEEP_RELEASES"))
 	box := farmer.Box{
-		Name:           name,
-		OutputStream:   stream,
-		ErrorStream:    stream,
-		RepoUrl:        repoUrl,
-		Pathspec:       pathspec,
-		CodeDirectory:  os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + name,
-		CgroupParent:   "level1",
-		State:          "creating",
-		RevisionNumber: 1,
+		Name:          name,
+		CodeDirectory: os.Getenv("FARMER_BOX_DATA_LOCATION") + "/" + name,
+		KeepReleases:  kr,
 	}
 
-	if err := db.DB.Save(&box).Error; err != nil {
-		return err
-	}
-
-	if err := box.Create(); err != nil {
+	if err = box.Create(); err != nil {
 		box.Destroy()
-		db.DB.Delete(&box)
-		return err
 	}
 
-	return db.DB.Save(&box).Error
+	if _, err = box.Release(repoUrl, pathspec, stream); err != nil {
+		box.Destroy()
+		return
+	}
+
+	return nil
 }

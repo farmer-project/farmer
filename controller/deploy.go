@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"github.com/farmer-project/farmer/db"
+	"errors"
+
+	"github.com/farmer-project/farmer/dispatcher"
 	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
-	"github.com/farmer-project/farmer/reverse_proxy"
 )
 
 func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream) (err error) {
@@ -13,40 +14,31 @@ func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream)
 			stream.Write([]byte(err.Error()))
 		}
 
-		stream.Write([]byte("kthxbai"))
 		stream.Close()
 	}()
 
-	currentBox, err := farmer.FindBoxByName(name)
+	box, err := farmer.FindBoxByName(name)
 	if err != nil {
-		return err
+		return errors.New("Cannot find box '" + name + "'")
 	}
 
-	if pathspec != "" {
-		currentBox.Pathspec = pathspec
+	release, _ := box.GetCurrentRelease()
+	if release.State == farmer.TestingState {
+		return errors.New("Box '" + name + "' is in deploying progress!")
 	}
 
-	if repoUrl != "" {
-		currentBox.RepoUrl = repoUrl
+	if release.RepoUrl == "" {
+		repoUrl = release.RepoUrl
 	}
 
-	currentBox.OutputStream = stream
-	currentBox.ErrorStream = stream
-
-	updatedBox, err := currentBox.Revision()
-	if err != nil {
-		updatedBox.DestroyRevision()
-		return err
+	if release.Pathspec == "" {
+		pathspec = release.Pathspec
 	}
 
-	if err := reverse_proxy.ConfigureDomains(updatedBox); err != nil {
-		updatedBox.DestroyRevision()
-		reverse_proxy.ConfigureDomains(currentBox)
-		return err
+	if _, err = box.Release(repoUrl, pathspec, stream); err != nil {
+		return
 	}
 
-	reverse_proxy.Restart()
-	currentBox.DestroyRevision()
-
-	return db.DB.Save(updatedBox).Error
+	dispatcher.Trigger("new_release", box)
+	return
 }

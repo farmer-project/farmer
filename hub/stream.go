@@ -66,5 +66,6 @@ func (s *Stream) AmqpURI() string {
 }
 
 func (s *Stream) Close() error {
+	s.Write([]byte("kthxbai")) // say to client that streaming is finished
 	return s.connection.Close()
 }

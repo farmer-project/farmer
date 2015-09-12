@@ -2,6 +2,13 @@ package farmer
 
 import "github.com/farmer-project/farmer/db"
 
+func FetchAllBox() ([]Box, error) {
+	boxes := []Box{}
+	result := db.DB.Find(&boxes)
+
+	return boxes, result.Error
+}
+
 func FindBoxByName(name string) (*Box, error) {
 	return findBoxBy("name", name)
 }
@@ -12,14 +19,17 @@ func FindBoxById(id uint) (*Box, error) {
 
 func findBoxBy(field string, value interface{}) (*Box, error) {
 	var err error
-
 	box := &Box{}
+
 	if err = db.DB.Where(field+" = ?", value).Find(box).Error; err != nil {
 		return box, err
 	}
 
-	box.Inspect()
 	if err = db.DB.Model(&box).Related(&box.Domains).Error; err != nil {
+		return box, err
+	}
+
+	if err = db.DB.Model(&box).Related(&box.Releases).Error; err != nil {
 		return box, err
 	}
 

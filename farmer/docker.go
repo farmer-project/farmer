@@ -14,10 +14,10 @@ func init() {
 	dockerClient, _ = docker.NewClient(os.Getenv("FARMER_DOCKER_API"))
 }
 
-func dockerCreateContainer(box *Box) error {
+func dockerCreateContainer(release *Release) error {
 	//dockerPullImage(box)
 
-	options := dockerCreateContainerOptions(box)
+	options := dockerCreateContainerOptions(release)
 	dockerEnsureVolumes(options.HostConfig)
 
 	container, err := dockerClient.CreateContainer(options)
@@ -25,47 +25,47 @@ func dockerCreateContainer(box *Box) error {
 		return err
 	}
 
-	box.ContainerID = container.ID
+	release.ContainerID = container.ID
 
-	return dockerInspectContainer(box)
+	return dockerInspectContainer(release)
 }
 
-func dockerInspectContainer(box *Box) error {
-	container, err := dockerClient.InspectContainer(box.ContainerID)
+func dockerInspectContainer(release *Release) error {
+	container, err := dockerClient.InspectContainer(release.ContainerID)
 
 	if err != nil {
 		return err
 	}
 
-	box.Hostname = container.Config.Hostname
-	box.CgroupParent = container.HostConfig.CgroupParent
-	box.Image = container.Config.Image
-	box.IP = container.NetworkSettings.IPAddress
+	release.Hostname = container.Config.Hostname
+	release.CgroupParent = container.HostConfig.CgroupParent
+	release.Image = container.Config.Image
+	release.IP = container.NetworkSettings.IPAddress
 
-	box.Ports = dockerExtractPortBindings(container.NetworkSettings.Ports)
-	box.State = dockerTranslateContainerState(container.State)
+	release.Ports = dockerExtractPortBindings(container.NetworkSettings.Ports)
+	release.State = dockerTranslateContainerState(container.State)
 
 	return nil
 }
 
-func dockerStartContainer(box *Box) error {
-	err := dockerClient.StartContainer(box.ContainerID, dockerCreateContainerOptions(box).HostConfig)
+func dockerStartContainer(release *Release) error {
+	err := dockerClient.StartContainer(release.ContainerID, dockerCreateContainerOptions(release).HostConfig)
 
 	if err != nil {
 		return err
 	}
 
-	return dockerInspectContainer(box)
+	return dockerInspectContainer(release)
 }
 
-func dockerRunContainer(box *Box) error {
-	if err := dockerCreateContainer(box); err != nil {
+func dockerRunContainer(release *Release) error {
+	if err := dockerCreateContainer(release); err != nil {
 		return err
 	}
 
-	if err := dockerStartContainer(box); err != nil {
+	if err := dockerStartContainer(release); err != nil {
 		dockerClient.RemoveContainer(docker.RemoveContainerOptions{
-			ID:            box.ContainerID,
+			ID:            release.ContainerID,
 			RemoveVolumes: true,
 		})
 
@@ -75,9 +75,9 @@ func dockerRunContainer(box *Box) error {
 	return nil
 }
 
-func dockerExecOnContainer(box *Box, commands []string) error {
+func dockerExecOnContainer(release *Release, commands []string) error {
 	exec, err := dockerClient.CreateExec(docker.CreateExecOptions{
-		Container:    box.ContainerID,
+		Container:    release.ContainerID,
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -92,8 +92,8 @@ func dockerExecOnContainer(box *Box, commands []string) error {
 	err = dockerClient.StartExec(exec.ID, docker.StartExecOptions{
 		Detach:       false,
 		Tty:          false,
-		OutputStream: box.OutputStream,
-		ErrorStream:  box.ErrorStream,
+		OutputStream: release.OutputStream,
+		ErrorStream:  release.ErrorStream,
 	})
 
 	if err != nil {
@@ -112,70 +112,67 @@ func dockerExecOnContainer(box *Box, commands []string) error {
 	return nil
 }
 
-func dockerDeleteContainer(box *Box) error {
+func dockerDeleteContainer(release *Release) error {
 	return dockerClient.RemoveContainer(docker.RemoveContainerOptions{
-		ID:            box.ContainerID,
+		ID:            release.ContainerID,
 		RemoveVolumes: false,
 		Force:         true,
 	})
 }
 
-func dockerRestartContainer(box *Box) error {
-	return dockerClient.RestartContainer(box.ContainerID, 1)
+func dockerRestartContainer(release *Release) error {
+	return dockerClient.RestartContainer(release.ContainerID, 1)
 }
 
-func dockerCreateContainerOptions(box *Box) docker.CreateContainerOptions {
+func dockerCreateContainerOptions(release *Release) docker.CreateContainerOptions {
 	dockerConfig := &docker.Config{
-		Hostname:     box.Name,
-		Image:        box.Image,
-		ExposedPorts: dockerReversePortBindings(box.Ports),
-		Env:          box.Env,
+		Hostname:     release.Name,
+		Image:        release.Image,
+		ExposedPorts: dockerReversePortBindings(release.Ports),
+		Env:          release.Env,
 	}
 
 	dockerHostConfig := &docker.HostConfig{
 		Binds: []string{
-			box.RevisionDirectory() + ":" + box.Home,
-			box.SharedDirectory() + ":/shared",
+			release.CodeDirectory + ":" + release.Home,
+			release.SharedDirectory + ":/shared",
 		},
-		CgroupParent:    box.CgroupParent,
+		CgroupParent:    release.CgroupParent,
 		PublishAllPorts: true,
 	}
 
 	return docker.CreateContainerOptions{
-		Name:       box.Name + "-rev" + strconv.Itoa(box.RevisionNumber),
+		Name:       release.Name,
 		Config:     dockerConfig,
 		HostConfig: dockerHostConfig,
 	}
 }
 
-func dockerPullImage(box *Box) error {
-	repository := strings.Split(box.Image, ":")[0]
+func dockerPullImage(release *Release) error {
+	repository := strings.Split(release.Image, ":")[0]
 	tag := "latest"
-	if s := strings.Split(box.Image, ":"); len(s) > 1 {
+	if s := strings.Split(release.Image, ":"); len(s) > 1 {
 		tag = s[1]
 	}
 
 	return dockerClient.PullImage(docker.PullImageOptions{
-		OutputStream: box.OutputStream,
+		OutputStream: release.OutputStream,
 		Repository:   repository,
 		Tag:          tag,
 	}, docker.AuthConfiguration{})
 }
 
-func dockerCloneContainerImage(box *Box) (string, error) {
-	revisionNumber := strconv.Itoa(box.RevisionNumber + 1)
-
+func dockerCloneContainerImage(release *Release) (string, error) {
 	_, err := dockerClient.CommitContainer(docker.CommitContainerOptions{
-		Container:  box.ContainerID,
-		Repository: box.Name,
-		Tag:        revisionNumber,
+		Container:  release.ContainerID,
+		Repository: release.Name,
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	return box.Name + ":" + revisionNumber, nil
+	return release.Name, nil
 }
 
 func dockerEnsureVolumes(hostConfig *docker.HostConfig) {

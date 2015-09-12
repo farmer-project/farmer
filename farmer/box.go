@@ -4,112 +4,139 @@ import (
 	"io"
 	"os"
 	"strconv"
+
+	"errors"
+	"github.com/farmer-project/farmer/db"
 )
 
 type Box struct {
-	ID   uint   `gorm:"primary_key" json:"-"`
-	Name string `sql:"not null;unique" json:"name"`
-
-	InputStream  io.Reader `sql:"-" json:"-"`
-	OutputStream io.Writer `sql:"-" json:"-"`
-	ErrorStream  io.Writer `sql:"-" json:"-"`
-
-	RepoUrl  string `sql:"type:varchar(255);" json:"repo_url"`
-	Pathspec string `sql:"type:varchar(255);not null" json:"pathspec"`
-
-	ContainerID   string `sql:"type:char(64);not null" json:"container_id"`
-	State         string `sql:"type:varchar(255);not null; default:'creating'" json:"state"`
-	Hostname      string `sql:"-" json:"hostname"`
-	CgroupParent  string `sql:"-" json:"cgroupParent"`
+	ID            uint   `gorm:"primary_key" json:"-"`
+	Name          string `sql:"type:varchar(128);not null;unique" json:"name"`
 	CodeDirectory string `sql:"type:varchar(255);not null" json:"code_directory"`
-	IP            string `sql:"-" json:"-"`
 
-	RevisionNumber int `json:"revision" sql:"default:1"`
+	CurrentRelease int        `sql:"type:int; default:0" json:"current"`
+	Revision       int        `sql:"type:int; default:0" json:"revision"`
+	Releases       []*Release `json:"-"`
+	KeepReleases   int        `sql:"type:int; default:1" json:"keep_releases"`
 
-	FarmerConfig
 	Domains []Domain `json:"domains"`
 }
 
 func (b *Box) Create() error {
-	if err := b.cloneCode(); err != nil {
+	b.Revision = 0
+	b.CurrentRelease = 0
+
+	if b.KeepReleases == 0 {
+		b.KeepReleases = 1
+	}
+
+	if err := os.MkdirAll(b.sharedDirectory(), 0777); err != nil {
 		return err
 	}
 
-	if err := b.parseFarmerfile(); err != nil {
-		return err
-	}
-
-	if err := dockerRunContainer(b); err != nil {
-		return err
-	}
-
-	if err := b.runScript(SCRIPT_CREATE); err != nil {
-		return err
-	}
-
-	return b.makeShared()
+	return db.DB.Save(b).Error
 }
 
-func (b *Box) Inspect() error {
-	return dockerInspectContainer(b)
+func (b *Box) Release(repoUrl string, pathspec string, stream io.Writer) (*Release, error) {
+	if repoUrl == "" {
+		return &Release{}, errors.New("RepoUrl is not specified!")
+	}
+
+	if pathspec == "" {
+		return &Release{}, errors.New("Pathspec is not specified!")
+	}
+
+	numStr := strconv.Itoa(b.Revision + 1)
+	release := &Release{
+		BoxID:           b.ID,
+		Name:            b.Name + "-rev" + numStr,
+		CodeDirectory:   b.CodeDirectory + "/" + numStr,
+		SharedDirectory: b.sharedDirectory(),
+		RepoUrl:         repoUrl,
+		Pathspec:        pathspec,
+		OutputStream:    stream,
+		ErrorStream:     stream,
+	}
+
+	release.cloneCode()
+	release.parseFarmerfile()
+
+	if b.Revision > 0 {
+		previousRelease, err := findReleaseById(b.CurrentRelease)
+		if err != nil {
+			return release, err
+		}
+
+		release.Image, err = previousRelease.commitImage()
+		if err != nil {
+			return release, err
+		}
+
+		if err = previousRelease.syncShared(release); err != nil {
+			return release, err
+		}
+	}
+
+	if err := release.runContainer(); err != nil {
+		release.Destroy()
+		return release, err
+	}
+
+	scriptTag := ScriptCreate
+	if b.CurrentRelease > 0 {
+		scriptTag = ScriptDeploy
+	}
+
+	if err := release.runScript(scriptTag); err != nil {
+		release.Destroy()
+		return release, err
+	}
+
+	if err := release.Test(); err != nil {
+		release.Destroy()
+		return release, err
+	}
+
+	b.Releases = append(b.Releases, release)
+	b.CurrentRelease = release.ID
+	b.Revision++
+
+	b.cleanup()
+
+	db.DB.Save(b)
+
+	return release, nil
 }
 
-func (b *Box) Test() (err error) {
-	if err = b.parseFarmerfile(); err != nil {
+func (b *Box) GetCurrentRelease() (release *Release, err error) {
+	if release, err = findReleaseById(b.CurrentRelease); err != nil {
 		return
 	}
 
-	testBox := &Box{
-		Name: b.Name + "-test",
-
-		InputStream:  b.InputStream,
-		OutputStream: b.OutputStream,
-		ErrorStream:  b.ErrorStream,
-
-		RepoUrl:  b.RepoUrl,
-		Pathspec: b.Pathspec,
-
-		State:        "testing",
-		Hostname:     b.Hostname,
-		CgroupParent: b.CgroupParent,
-
-		RevisionNumber: b.RevisionNumber,
-		FarmerConfig:   b.FarmerConfig,
-		Domains:        b.Domains,
-		CodeDirectory:  b.CodeDirectory,
-	}
-
-	testBox.Image, err = dockerCloneContainerImage(b)
-	if err != nil {
+	if err = release.Inspect(); err != nil {
 		return
 	}
-
-	if err = dockerRunContainer(testBox); err != nil {
-		return
-	}
-
-	err = testBox.runScript(SCRIPT_TEST)
-
-	dockerDeleteContainer(testBox)
-	dockerRemoveImage(testBox.Image)
 
 	return
 }
 
 func (b *Box) Destroy() error {
-	dockerDeleteContainer(b)
-	//dockerRemoveImage(b.Image)
-	return os.RemoveAll(b.CodeDirectory)
+	for _, release := range b.Releases {
+		release.Destroy()
+	}
+	os.RemoveAll(b.CodeDirectory)
+	return db.DB.Delete(b).Error
 }
 
-func (b *Box) Restart() error {
-	return dockerRestartContainer(b)
+func (b *Box) cleanup() error {
+	if len(b.Releases) > b.KeepReleases {
+		selectedRelease := b.Releases[0]
+		return selectedRelease.Destroy()
+	}
+
+	return nil
 }
 
-func (b *Box) RevisionDirectory() string {
-	return b.CodeDirectory + "/" + strconv.Itoa(b.RevisionNumber)
-}
-
-func (b *Box) SharedDirectory() string {
+func (b *Box) sharedDirectory() string {
 	return b.CodeDirectory + "/shared"
 }

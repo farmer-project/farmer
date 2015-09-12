@@ -14,6 +14,7 @@ func main() {
 	db.DB.AutoMigrate(
 		&farmer.Box{},
 		&farmer.Domain{},
+		&farmer.Release{},
 	)
 
 	// API Server

@@ -15,19 +15,19 @@ type FarmerConfig struct {
 	Scripts map[string]string `sql:"-" json:"-"`
 }
 
-func (b *Box) parseFarmerfile() error {
-	filename, _ := filepath.Abs(b.RevisionDirectory() + "/.farmer.yml")
+func (r *Release) parseFarmerfile() error {
+	filename, _ := filepath.Abs(r.CodeDirectory + "/.farmer.yml")
 	yamlFile, err := ioutil.ReadFile(filename)
 
 	if err != nil {
 		return err
 	}
 
-	if err := yaml.Unmarshal(yamlFile, &b.FarmerConfig); err != nil {
+	if err := yaml.Unmarshal(yamlFile, &r.FarmerConfig); err != nil {
 		return err
 	}
 
-	return setDefaultConfig(&b.FarmerConfig)
+	return setDefaultConfig(&r.FarmerConfig)
 }
 
 func setDefaultConfig(config *FarmerConfig) error {
