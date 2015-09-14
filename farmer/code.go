@@ -63,13 +63,36 @@ func (b *Box) syncShared(srcBox *Box) error {
 			if err := cmd.Run(); err != nil {
 				return err
 			}
+		}
 
-			cmd = exec.Command("ln", "-s", "/shared/"+asset, assetPath)
-			cmd.Stdout = b.OutputStream
-			cmd.Stderr = b.ErrorStream
-			if err := cmd.Run(); err != nil {
-				return err
-			}
+		cmd := exec.Command("rm", "-rf", ownAssetPath)
+		cmd.Stdout = b.OutputStream
+		cmd.Stderr = b.ErrorStream
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+
+		os.MkdirAll(path.Dir(ownAssetPath), 0777)
+		cmd = exec.Command("ln", "-s", "/shared/"+asset, ownAssetPath)
+		cmd.Stdout = b.OutputStream
+		cmd.Stderr = b.ErrorStream
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+
+		cmd = exec.Command("rm", "-rf", srcAssetPath)
+		cmd.Stdout = b.OutputStream
+		cmd.Stderr = b.ErrorStream
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+
+		os.MkdirAll(path.Dir(srcAssetPath), 0777)
+		cmd = exec.Command("ln", "-s", "/shared/"+asset, srcAssetPath)
+		cmd.Stdout = b.OutputStream
+		cmd.Stderr = b.ErrorStream
+		if err := cmd.Run(); err != nil {
+			return err
 		}
 	}
 
