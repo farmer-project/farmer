@@ -42,7 +42,13 @@ echo ""
 
         farmer_git_ssh_wrapper=${FARMER_DATA_LOCATION}/keys/git_wrapper.sh
         mkdir -p ${FARMER_DATA_LOCATION}/keys
-        ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+
+        if [ ! ${NO_INTERACTION} ]; then
+            ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+        else
+            echo -e  'n\n'|ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+        fi
+
         touch ${farmer_git_ssh_wrapper}
         echo "#!/bin/bash" > ${farmer_git_ssh_wrapper}
         echo "ssh -o StrictHostKeyChecking=no -i ${FARMER_DATA_LOCATION}/keys/gitkey_rsa \$@" > ${farmer_git_ssh_wrapper}
@@ -54,8 +60,7 @@ echo ""
     echo ""
 
     echo "${YELLOW}3) Building the image...${RESET}"
-
-        ensure_container_free farmer-server
+        ensure_container_free_trivial farmer-server
 
         if [ $? -eq ${OK} ]; then
             my_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -73,6 +78,7 @@ echo ""
                 -e FARMER_DOCKER_API=${FARMER_DOCKER_API} \
                 -e FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION} \
                 -e FARMER_BOX_DATA_LOCATION=${FARMER_DATA_LOCATION}/box \
+                -e FARMER_BOX_KEEP_RELEASES=${FARMER_BOX_KEEP_RELEASES} \
                 -e FARMER_ADMIN_AMQP_URI=${FARMER_ADMIN_AMQP_URI} \
                 -e FARMER_CONSUMER_AMQP_URI=${FARMER_CONSUMER_AMQP_URI} \
                 -e FARMER_DB_USERNAME=${FARMER_DB_USERNAME} \

@@ -6,7 +6,6 @@ import (
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/api/response"
 	"github.com/farmer-project/farmer/controller"
-	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
 	"github.com/go-martini/martini"
 )
@@ -17,6 +16,10 @@ func boxCreate(req request.CreateRequest) (int, string) {
 
 	if err != nil {
 		return 500, err.Error()
+	}
+
+	if err := req.Validate(); err != nil {
+		return 400, err.Error()
 	}
 
 	go controller.BoxCreate(req.Name, req.RepoUrl, req.Pathspec, stream)
@@ -37,6 +40,10 @@ func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 		return 500, string(err.Error())
 	}
 
+	if err := req.Validate(); err != nil {
+		return 400, err.Error()
+	}
+
 	go controller.BoxDeploy(params["name"], req.RepoUrl, req.Pathspec, stream)
 
 	json, _ := json.Marshal(&response.StreamResponse{
@@ -49,14 +56,12 @@ func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 
 // GET
 func boxInspect(params martini.Params) (int, string) {
-	box, err := farmer.FindBoxByName(params["name"])
-
+	inspect, err := controller.BoxInspect(params["name"])
 	if err != nil {
 		return 500, err.Error()
 	}
 
-	json, _ := json.Marshal(box)
-
+	json, _ := json.Marshal(inspect)
 	return 200, string(json)
 }
 

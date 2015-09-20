@@ -12,8 +12,9 @@ func main() {
 	defer db.Close()
 
 	db.DB.AutoMigrate(
-		&farmer.Box{},
+		&farmer.Release{},
 		&farmer.Domain{},
+		&farmer.Box{},
 	)
 
 	// API Server
