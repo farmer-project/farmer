@@ -19,8 +19,8 @@ echo ""
     # Make sure Docker is installed.
     if ! command_exists docker; then
         echo "It seems Docker daemon is not installed here."
-        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+
+        if $(ask_confirm "Should I install Docker latest version?"); then
             farmer_install_docker
         fi
     fi
@@ -77,14 +77,14 @@ echo ""
             sleep 10
 
             handle_container_error tutum/mysql
-            echo "${GREEN}Database container is up.${RESET}"
+            echo "${GREEN}Database container is created.${RESET}"
         else
             echo "${GREEN}Database container already exists.${RESET}"
         fi
     echo ""
 
     echo "${YELLOW}3) Installing reserve-proxy container...${RESET}"
-        ensure_container_free farmer-reverse-proxy
+        ensure_container_free_trivial farmer-reverse-proxy
 
         if [ $? -eq ${OK} ]; then
             export FARMER_REVERSE_PROXY_LOCATION=${FARMER_DATA_LOCATION}/proxy
@@ -96,7 +96,7 @@ echo ""
                 -d nginx
 
             handle_container_error nginx
-            echo "${GREEN}Reverse-proxy container is up.${RESET}"
+            echo "${GREEN}Reverse-proxy container is created.${RESET}"
         else
             echo "${GREEN}Reverse-proxy container already exists.${RESET}"
         fi

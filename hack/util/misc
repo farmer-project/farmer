@@ -8,6 +8,43 @@ export RED="$(echo -e "\033[31m")"
 export OK=0
 export NOT_OK=1
 
+# Asks user confirmation
+ask_confirm()
+{
+    message=${1}
+    default=${2:-yes}
+
+    if [ ! ${NO_INTERACTION} ]; then
+        if [[ ${default} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            read -r -p "${message} ${CYAN}[Y/n]:${RESET} " response
+        else
+            read -r -p "${message} ${CYAN}[y/N]:${RESET} " response
+        fi
+    fi
+
+    response=${response:-${default}}
+
+    if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        return ${OK}
+    fi
+
+    return ${NOT_OK}
+}
+
+# Asks user input with a default value
+ask_input()
+{
+    if [ ! ${NO_INTERACTION} ]; then
+        read ${1}
+    else
+        echo ""
+    fi
+
+    if [ ! "${!1}" ]; then
+        export ${1}=${2}
+    fi
+}
+
 # Retrieves IP address of a docker container
 docker_get_ip()
 {
@@ -44,13 +81,36 @@ ensure_container_free()
     docker inspect ${container_name} &>/dev/null
 
     if [ $? -eq 0 ]; then
-        read -r -p "A container with name '${container_name}' exists, Should I remove it? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        ask_confirm "A container with name '${container_name}' exists, Should I remove it?" no
+        result=$?
+
+        if [ ${result} -eq 0 ]; then
             docker rm -f ${container_name}
             return ${OK}
-        else
-            return ${NOT_OK}
         fi
+
+        return ${NOT_OK}
+    fi
+
+    return ${OK}
+}
+
+# Same as above with default answer to YES.
+ensure_container_free_trivial()
+{
+    container_name=${1}
+    docker inspect ${container_name} &>/dev/null
+
+    if [ $? -eq 0 ]; then
+        ask_confirm "A container with name '${container_name}' exists, Should I remove it?" yes
+        result=$?
+
+        if [ ${result} -eq 0 ]; then
+            docker rm -f ${container_name}
+            return ${OK}
+        fi
+
+        return ${NOT_OK}
     fi
 
     return ${OK}

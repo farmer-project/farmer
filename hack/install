@@ -27,22 +27,18 @@ echo "${RESET}"
     # Make sure Docker is installed.
     if ! command_exists docker; then
         echo "It seems Docker daemon is not installed here."
-        read -r -p "Should I install Docker latest version? ${CYAN}[Y/n]:${RESET} " response
-        response=${response:-y}
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+
+        if $(ask_confirm "Should I install Docker latest version?"); then
             farmer_install_docker
-            echo ""
         fi
     fi
 
     # Make sure jq is installed.
     if ! command_exists jq; then
         echo "It seems JQ json tool is not installed here."
-        read -r -p "Should I install jq? ${CYAN}[Y/n]:${RESET} " response
-        response=${response:-y}
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+
+        if $(ask_confirm "Should I install jq?"); then
             apt-get install jq -y --force-yes
-            echo ""
         fi
     fi
 
@@ -52,60 +48,44 @@ echo "${RESET}"
 
     # Ask Farmer API Port
         echo -n "1) Which port should Farmer API listen to? ${CYAN}(Default: 5549):${RESET} "
-        read FARMER_API_PORT
-        echo ""
-        export FARMER_API_PORT=${FARMER_API_PORT:-5549}
+        ask_input FARMER_API_PORT 5549
 
     # Ask Reverse Proxy Port
         echo    "2) Which port should Farmer reverse-proxy listen to?"
         echo -n "   This is where all PUBLIC http traffic should go to. ${CYAN}(Default: 80):${RESET} "
-        read FARMER_REVERSE_PROXY_PORT
-        export FARMER_REVERSE_PROXY_PORT=${FARMER_REVERSE_PROXY_PORT:-80}
+        ask_input FARMER_REVERSE_PROXY_PORT 80
 
         echo -n "   http(s) SSL traffic port? ${CYAN}(Default: 443):${RESET} "
-        read FARMER_REVERSE_PROXY_PORT_SSL
-        echo ""
-        export FARMER_REVERSE_PROXY_PORT_SSL=${FARMER_REVERSE_PROXY_PORT_SSL:-443}
+        ask_input FARMER_REVERSE_PROXY_PORT_SSL 443
 
     # Ask Server IP
         MY_IP=$(my_ip)
         echo    "3) What is this server's public acessible IP address?"
         echo -n "   Used for adminstration UIs. ${CYAN}(Default: ${MY_IP}):${RESET} "
-        read FARMER_HOST_IP
-        echo ""
-        export FARMER_HOST_IP=${FARMER_HOST_IP:-$MY_IP}
+        ask_input FARMER_HOST_IP ${MY_IP}
         farmer_check_host ${FARMER_HOST_IP}
 
     # Ask Docker API
         echo    "4) What is this server's Docker daemon API Address?"
         echo -n "   It should be accssible from within Farmer's container. ${CYAN}(Default: ${FARMER_HOST_IP}):${RESET} "
-        read FARMER_DOCKER_API_HOST
-        echo ""
-        export FARMER_DOCKER_API_HOST=${FARMER_DOCKER_API_HOST:-$FARMER_HOST_IP}
+        ask_input FARMER_DOCKER_API_HOST ${FARMER_HOST_IP}
         farmer_check_host ${FARMER_DOCKER_API_HOST}
 
         echo -n "5) What is Docker daemon API Port? ${CYAN}(Default: 4243):${RESET} "
-        read FARMER_DOCKER_API_PORT
-        echo ""
-        export FARMER_DOCKER_API_PORT=${FARMER_DOCKER_API_PORT:-4243}
-
+        ask_input FARMER_DOCKER_API_PORT 4243
         export FARMER_DOCKER_API="tcp://${FARMER_DOCKER_API_HOST}:${FARMER_DOCKER_API_PORT}"
 
     # Ask Farmer Data Location
         echo -n "6) Where should I put box's data (e.g. cloned codes, database, proxy configs)? ${CYAN}(Default: /var/farmer):${RESET} "
-        read FARMER_DATA_LOCATION
-        echo ""
-        export FARMER_DATA_LOCATION=${FARMER_DATA_LOCATION:-/var/farmer}
+        ask_input FARMER_DATA_LOCATION "/var/farmer"
         mkdir -p ${FARMER_DATA_LOCATION}/box
 
     # Ask Farmer Keep Releases
         unset FARMER_BOX_KEEP_RELEASES
         while [[ ! ${FARMER_BOX_KEEP_RELEASES} =~ ^[0-9]+$ ]]; do
-            echo -n "7) In-order to rollback; how many releases do you want to keep for any box? ${CYAN}(Default: 3):${RESET} "
-            read FARMER_BOX_KEEP_RELEASES
-            echo ""
+            echo -n "7) In order to rollback; how many releases do you want to keep for any box? ${CYAN}(Default: 3):${RESET} "
+            ask_input FARMER_BOX_KEEP_RELEASES 3
         done
-        export FARMER_BOX_KEEP_RELEASES=${FARMER_BOX_KEEP_RELEASES:-3}
 
 ###
 # Installation

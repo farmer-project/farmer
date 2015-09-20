@@ -1,0 +1,8 @@
+sudo: required
+
+services:
+  - docker
+
+script:
+  - sudo NO_INTERACTION=1 hack/install
+  - "curl -i -H 'Accept: application/json' http://localhost:5549/boxes"
