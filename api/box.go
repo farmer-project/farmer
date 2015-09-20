@@ -8,7 +8,6 @@ import (
 	"github.com/farmer-project/farmer/controller"
 	"github.com/farmer-project/farmer/hub"
 	"github.com/go-martini/martini"
-	"fmt"
 )
 
 // POST
@@ -63,7 +62,6 @@ func boxInspect(params martini.Params) (int, string) {
 	}
 
 	json, _ := json.Marshal(inspect)
-	fmt.Println(string(json))
 	return 200, string(json)
 }
 

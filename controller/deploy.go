@@ -10,11 +10,7 @@ import (
 
 func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream) (err error) {
 	defer func() {
-		if err != nil {
-			stream.Write([]byte(err.Error()))
-		}
-
-		stream.Close()
+		stream.Close(err)
 	}()
 
 	box, err := farmer.FindBoxByName(name)
@@ -22,23 +18,25 @@ func BoxDeploy(name string, repoUrl string, pathspec string, stream *hub.Stream)
 		return errors.New("Cannot find box '" + name + "'")
 	}
 
-	release, _ := box.GetCurrentRelease()
-	if release.State == farmer.TestingState {
-		return errors.New("Box '" + name + "' is in deploying progress!")
+	if box.State == farmer.StagingState {
+		return errors.New("Box '" + name + "' is in Staging progress!")
 	}
 
-	if release.RepoUrl == "" {
-		repoUrl = release.RepoUrl
+	box.OutputStream = stream
+	box.ErrorStream = stream
+
+	if repoUrl == "" {
+		repoUrl = box.Production.RepoUrl
 	}
 
-	if release.Pathspec == "" {
-		pathspec = release.Pathspec
+	if pathspec == "" {
+		pathspec = box.Production.Pathspec
 	}
 
-	if _, err = box.Release(repoUrl, pathspec, stream); err != nil {
+	if err = box.Release(repoUrl, pathspec); err != nil {
 		return
 	}
 
 	dispatcher.Trigger("new_release", box)
-	return
+	return nil
 }

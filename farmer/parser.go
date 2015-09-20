@@ -7,8 +7,8 @@ import (
 )
 
 type FarmerConfig struct {
-	Image   string            `json:"image"`
-	Home    string            `json:"home" sql:"default:'/app'"`
+	Image   string            `sql:"type:varchar(128);not null" json:"image"`
+	Home    string            `sql:"default:'/app'" json:"home"`
 	Ports   []string          `sql:"-" json:"ports"`
 	Env     []string          `sql:"-" json:"-"`
 	Shared  []string          `sql:"-" json:"-"`

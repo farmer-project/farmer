@@ -15,8 +15,6 @@ func init() {
 }
 
 func dockerCreateContainer(release *Release) error {
-	//dockerPullImage(box)
-
 	options := dockerCreateContainerOptions(release)
 	dockerEnsureVolumes(options.HostConfig)
 
@@ -38,18 +36,18 @@ func dockerInspectContainer(release *Release) error {
 	}
 
 	release.Hostname = container.Config.Hostname
-	release.CgroupParent = container.HostConfig.CgroupParent
 	release.Image = container.Config.Image
 	release.IP = container.NetworkSettings.IPAddress
 
 	release.Ports = dockerExtractPortBindings(container.NetworkSettings.Ports)
-	release.State = dockerTranslateContainerState(container.State)
 
 	return nil
 }
 
 func dockerStartContainer(release *Release) error {
-	err := dockerClient.StartContainer(release.ContainerID, dockerCreateContainerOptions(release).HostConfig)
+	err := dockerClient.StartContainer(
+		release.ContainerID, dockerCreateContainerOptions(release).HostConfig,
+	)
 
 	if err != nil {
 		return err
@@ -59,14 +57,21 @@ func dockerStartContainer(release *Release) error {
 }
 
 func dockerRunContainer(release *Release) error {
+	if release.Type != ProductionType {
+		dockerClient.RemoveContainer(docker.RemoveContainerOptions{
+			ID:            release.containerName(),
+			RemoveVolumes: false,
+			Force:         true,
+		})
+	}
+
 	if err := dockerCreateContainer(release); err != nil {
 		return err
 	}
 
 	if err := dockerStartContainer(release); err != nil {
 		dockerClient.RemoveContainer(docker.RemoveContainerOptions{
-			ID:            release.ContainerID,
-			RemoveVolumes: true,
+			ID: release.ContainerID,
 		})
 
 		return err
@@ -92,8 +97,8 @@ func dockerExecOnContainer(release *Release, commands []string) error {
 	err = dockerClient.StartExec(exec.ID, docker.StartExecOptions{
 		Detach:       false,
 		Tty:          false,
-		OutputStream: release.OutputStream,
-		ErrorStream:  release.ErrorStream,
+		OutputStream: release.Box.OutputStream,
+		ErrorStream:  release.Box.ErrorStream,
 	})
 
 	if err != nil {
@@ -112,6 +117,13 @@ func dockerExecOnContainer(release *Release, commands []string) error {
 	return nil
 }
 
+func dockerRenameContainer(release *Release) error {
+	return dockerClient.RenameContainer(docker.RenameContainerOptions{
+		ID:   release.ContainerID,
+		Name: release.containerName(),
+	})
+}
+
 func dockerDeleteContainer(release *Release) error {
 	return dockerClient.RemoveContainer(docker.RemoveContainerOptions{
 		ID:            release.ContainerID,
@@ -120,13 +132,9 @@ func dockerDeleteContainer(release *Release) error {
 	})
 }
 
-func dockerRestartContainer(release *Release) error {
-	return dockerClient.RestartContainer(release.ContainerID, 1)
-}
-
 func dockerCreateContainerOptions(release *Release) docker.CreateContainerOptions {
 	dockerConfig := &docker.Config{
-		Hostname:     release.Name,
+		Hostname:     release.Box.Name,
 		Image:        release.Image,
 		ExposedPorts: dockerReversePortBindings(release.Ports),
 		Env:          release.Env,
@@ -135,14 +143,13 @@ func dockerCreateContainerOptions(release *Release) docker.CreateContainerOption
 	dockerHostConfig := &docker.HostConfig{
 		Binds: []string{
 			release.CodeDirectory + ":" + release.Home,
-			release.SharedDirectory + ":/shared",
+			release.ShareDirectory + ":/shared",
 		},
-		CgroupParent:    release.CgroupParent,
 		PublishAllPorts: true,
 	}
 
 	return docker.CreateContainerOptions{
-		Name:       release.Name,
+		Name:       release.containerName(),
 		Config:     dockerConfig,
 		HostConfig: dockerHostConfig,
 	}
@@ -156,23 +163,26 @@ func dockerPullImage(release *Release) error {
 	}
 
 	return dockerClient.PullImage(docker.PullImageOptions{
-		OutputStream: release.OutputStream,
+		OutputStream: release.Box.OutputStream,
 		Repository:   repository,
 		Tag:          tag,
 	}, docker.AuthConfiguration{})
 }
 
-func dockerCloneContainerImage(release *Release) (string, error) {
+func dockerCommitContainer(release *Release, tag string) (string, error) {
+	repoName := "farmer/box/" + release.Box.Name
+
 	_, err := dockerClient.CommitContainer(docker.CommitContainerOptions{
-		Container:  release.ContainerID,
-		Repository: release.Name,
+		Container:  release.containerName(),
+		Repository: repoName,
+		Tag:        tag,
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	return release.Name, nil
+	return repoName + ":" + tag, nil
 }
 
 func dockerEnsureVolumes(hostConfig *docker.HostConfig) {
@@ -205,20 +215,4 @@ func dockerExtractPortBindings(ports map[docker.Port][]docker.PortBinding) []str
 	}
 
 	return portBindings
-}
-
-func dockerTranslateContainerState(state docker.State) string {
-	switch {
-	case state.Running:
-		return "running"
-
-	case state.Paused:
-		return "paused"
-
-	case state.Restarting:
-		return "restarting"
-
-	default:
-		return "created"
-	}
 }

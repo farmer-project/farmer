@@ -1,30 +1,63 @@
 package farmer
 
 import (
+	"errors"
 	"io"
 	"os"
-	"strconv"
 
-	"errors"
 	"github.com/farmer-project/farmer/db"
+	"github.com/farmer-project/farmer/dispatcher"
 )
 
 type Box struct {
-	ID            uint   `gorm:"primary_key" json:"-"`
-	Name          string `sql:"type:varchar(128);not null;unique" json:"name"`
-	CodeDirectory string `sql:"type:varchar(255);not null" json:"code_directory"`
+	ID        int    `gorm:"primary_key"`
+	Name      string `sql:"type:varchar(64);" json:"name"`
+	Directory string `sql:"type:varchar(255);not null" json:"directory"`
+	State     string `sql:"type:varchar(32);not null; default:'creating'" json:"state"`
+	Revision  int    `sql:"default:0" json:"revision"`
 
-	CurrentRelease int        `sql:"type:int; default:0" json:"current"`
-	Revision       int        `sql:"type:int; default:0" json:"revision"`
-	Releases       []*Release `json:"-"`
-	KeepReleases   int        `sql:"type:int; default:1" json:"keep_releases"`
+	OutputStream io.Writer `sql:"-" json:"-"`
+	ErrorStream  io.Writer `sql:"-" json:"-"`
+
+	ProductionID int
+	Production   Release
+	StagingID    int
+	Staging      Release
+	TestID       int
+	Test         Release
+	KeepReleases int       `sql:"default:1" json:"keep_releases"`
+	Releases     []Release `json:"-"`
 
 	Domains []Domain `json:"domains"`
+
+	UpdateTime string `sql:"type:char(64);not null" json:"update_time"`
 }
 
-func (b *Box) Create() error {
-	b.Revision = 0
-	b.CurrentRelease = 0
+const (
+	CreatedState = "create"
+	RunningState = "running"
+	StagingState = "staging"
+	SuspendState = "suspended"
+)
+
+func (b *Box) sharedDirectory() string {
+	return b.Directory + "/shared"
+}
+
+// Create box basement
+func (b *Box) Setup() error {
+	if b.Name == "" {
+		return errors.New("Name field is empty")
+	}
+
+	box := &Box{}
+	if db.DB.Where("name = ?", b.Name).Find(box); box.Name == b.Name {
+		return errors.New("Duplicate box name")
+	}
+
+	if b.Directory == "" {
+		return errors.New("Code directory field is empty")
+	}
 
 	if b.KeepReleases == 0 {
 		b.KeepReleases = 1
@@ -34,109 +67,105 @@ func (b *Box) Create() error {
 		return err
 	}
 
-	return db.DB.Save(b).Error
+	return b.SetState(CreatedState)
 }
 
-func (b *Box) Release(repoUrl string, pathspec string, stream io.Writer) (*Release, error) {
-	if repoUrl == "" {
-		return &Release{}, errors.New("RepoUrl is not specified!")
+func (b *Box) Release(repoUrl string, pathspec string) error {
+	defer db.DB.Save(b)
+	release, err := NewRelease(b, repoUrl, pathspec)
+
+	if err != nil {
+		return err
 	}
 
-	if pathspec == "" {
-		return &Release{}, errors.New("Pathspec is not specified!")
+	if err := b.stage(release); err != nil {
+		return err
 	}
 
-	numStr := strconv.Itoa(b.Revision + 1)
-	release := &Release{
-		BoxID:           b.ID,
-		Name:            b.Name + "-rev" + numStr,
-		CodeDirectory:   b.CodeDirectory + "/" + numStr,
-		SharedDirectory: b.sharedDirectory(),
-		RepoUrl:         repoUrl,
-		Pathspec:        pathspec,
-		OutputStream:    stream,
-		ErrorStream:     stream,
+	if err := b.Staging.test(); err != nil {
+		return err
 	}
 
-	release.cloneCode()
-	release.parseFarmerfile()
-
-	if b.Revision > 0 {
-		previousRelease, err := findReleaseById(b.CurrentRelease)
-		if err != nil {
-			return release, err
-		}
-
-		release.Image, err = previousRelease.commitImage()
-		if err != nil {
-			return release, err
-		}
-
-		if err = previousRelease.syncShared(release); err != nil {
-			return release, err
-		}
+	if err := b.deploy(); err != nil {
+		return err
 	}
 
-	if err := release.runContainer(); err != nil {
-		release.Destroy()
-		return release, err
-	}
+	return b.cleanup()
+}
+
+func (b *Box) stage(release Release) error {
+	defer func() {
+		b.Staging = release
+		b.SetState(RunningState)
+	}()
+
+	release.Type = StagingType
+	b.SetState(StagingState)
 
 	scriptTag := ScriptCreate
-	if b.CurrentRelease > 0 {
+	if b.Revision > 0 {
 		scriptTag = ScriptDeploy
 	}
 
+	if err := release.runContainer(); err != nil {
+		return err
+	}
+
 	if err := release.runScript(scriptTag); err != nil {
-		release.Destroy()
-		return release, err
+		return err
 	}
 
-	if err := release.Test(); err != nil {
-		release.Destroy()
-		return release, err
+	return release.makeShared()
+}
+
+func (b *Box) deploy() error {
+	if err := b.Test.Destroy(false); err != nil {
+		return err
+	}
+	b.TestID = 0
+	b.Test = Release{}
+
+	if b.Production.ID > 0 {
+		b.Production.Destroy(false)
 	}
 
-	b.Releases = append(b.Releases, release)
-	b.CurrentRelease = release.ID
+	b.ProductionID = b.Staging.ID
+	b.Production = b.Staging
+	if err := b.Production.changeType(ProductionType); err != nil {
+		return err
+	}
+
+	b.Releases = append(b.Releases, b.Production)
 	b.Revision++
 
-	b.cleanup()
+	b.StagingID = 0
+	b.Staging = Release{}
 
-	db.DB.Save(b)
-
-	return release, nil
+	return db.DB.Save(b).Error
 }
 
-func (b *Box) GetCurrentRelease() (release *Release, err error) {
-	if release, err = findReleaseById(b.CurrentRelease); err != nil {
-		return
-	}
+func (b *Box) SetState(state string) error {
+	b.State = state
+	err := db.DB.Save(b).Error
 
-	if err = release.Inspect(); err != nil {
-		return
-	}
+	dispatcher.Trigger("box_changed", b)
 
-	return
-}
-
-func (b *Box) Destroy() error {
-	for _, release := range b.Releases {
-		release.Destroy()
-	}
-	os.RemoveAll(b.CodeDirectory)
-	return db.DB.Delete(b).Error
+	return err
 }
 
 func (b *Box) cleanup() error {
 	if len(b.Releases) > b.KeepReleases {
 		selectedRelease := b.Releases[0]
-		return selectedRelease.Destroy()
+		return selectedRelease.Destroy(true)
 	}
 
 	return nil
 }
 
-func (b *Box) sharedDirectory() string {
-	return b.CodeDirectory + "/shared"
+func (b *Box) Destroy() error {
+	for _, release := range b.Releases {
+		release.Destroy(true)
+	}
+	os.RemoveAll(b.Directory)
+	return db.DB.Delete(b).Error
 }

@@ -4,18 +4,13 @@ import "errors"
 
 type Domain struct {
 	ID    uint   `gorm:"primary_key" json:"-"`
-	BoxId uint   `sql:"index" json:"-"`
+	BoxID int    `sql:"index" json:"-"`
 	Url   string `sql:"type:varchar(255);" json:"url"`
 	Port  string `sql:"type:varchar(8);" json:"port"`
 }
 
 func (box *Box) AddDomain(url string, port string) error {
-	currentRelease, err := box.GetCurrentRelease()
-	if err != nil {
-		return err
-	}
-
-	if !currentRelease.openPort(port) {
+	if !box.Production.openPort(port) {
 		return errors.New("Port number '" + port + "' is not open on box '" + box.Name + "' so you cannot assign a domain to it")
 	}
 
@@ -24,7 +19,7 @@ func (box *Box) AddDomain(url string, port string) error {
 	}
 
 	box.Domains = append(box.Domains, Domain{
-		BoxId: box.ID,
+		BoxID: box.ID,
 		Url:   url,
 		Port:  port,
 	})

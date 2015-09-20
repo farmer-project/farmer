@@ -99,9 +99,12 @@ echo "${RESET}"
         mkdir -p ${FARMER_DATA_LOCATION}/box
 
     # Ask Farmer Keep Releases
-        echo -n "7) In-order to rollback; how many releases do you want to keep for any box? ${CYAN}(Default: 3):${RESET} "
-        read FARMER_BOX_KEEP_RELEASES
-        echo ""
+        unset FARMER_BOX_KEEP_RELEASES
+        while [[ ! ${FARMER_BOX_KEEP_RELEASES} =~ ^[0-9]+$ ]]; do
+            echo -n "7) In-order to rollback; how many releases do you want to keep for any box? ${CYAN}(Default: 3):${RESET} "
+            read FARMER_BOX_KEEP_RELEASES
+            echo ""
+        done
         export FARMER_BOX_KEEP_RELEASES=${FARMER_BOX_KEEP_RELEASES:-3}
 
 ###

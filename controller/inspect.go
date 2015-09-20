@@ -2,11 +2,33 @@ package controller
 
 import "github.com/farmer-project/farmer/farmer"
 
-func BoxInspect(boxName string) (*farmer.Release, error) {
+type BoxInspection struct {
+	Name     string          `json:"name"`
+	State    string          `json:"state"`
+	Image    string          `json:"image"`
+	RepoUrl  string          `json:"repo_url"`
+	Pathspec string          `json:"pathspec"`
+	Home     string          `json:"home"`
+	Ports    []string        `json:"ports"`
+	Domains  []farmer.Domain `json:"domains"`
+	UpdateAt string          `json:"update_at"`
+}
+
+func BoxInspect(boxName string) (BoxInspection, error) {
 	box, err := farmer.FindBoxByName(boxName)
 	if err != nil {
-		return &farmer.Release{}, err
+		return BoxInspection{}, err
 	}
 
-	return box.GetCurrentRelease()
+	return BoxInspection{
+		Name:     box.Name,
+		State:    box.State,
+		Image:    box.Production.Image,
+		RepoUrl:  box.Production.RepoUrl,
+		Pathspec: box.Production.Pathspec,
+		Home:     box.Production.Home,
+		Ports:    box.Production.Ports,
+		Domains:  box.Domains,
+		UpdateAt: box.Production.CreatedAt,
+	}, nil
 }

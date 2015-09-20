@@ -8,7 +8,7 @@ type FarmerBox struct {
 	Image    string `json:"image"`
 	RepoUrl  string `json:"repo_url"`
 	Pathspec string `json:"pathspec"`
-	Revision int    `json:"revision"`
+	UpdateAt string `json:"update_at"`
 }
 
 func BoxList() ([]FarmerBox, error) {
@@ -16,14 +16,13 @@ func BoxList() ([]FarmerBox, error) {
 
 	boxes, _ := farmer.FetchAllBox()
 	for _, box := range boxes {
-		release, _ := box.GetCurrentRelease()
 		result = append(result, FarmerBox{
 			Name:     box.Name,
-			State:    release.State,
-			Image:    release.Image,
-			RepoUrl:  release.RepoUrl,
-			Pathspec: release.Pathspec,
-			Revision: box.Revision,
+			State:    box.State,
+			Image:    box.Production.Image,
+			RepoUrl:  box.Production.RepoUrl,
+			Pathspec: box.Production.Pathspec,
+			UpdateAt: box.UpdateTime,
 		})
 	}
 
