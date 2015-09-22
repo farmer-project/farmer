@@ -3,23 +3,23 @@ package api
 import (
 	"encoding/json"
 
+	"github.com/go-martini/martini"
+
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/api/response"
 	"github.com/farmer-project/farmer/controller"
 	"github.com/farmer-project/farmer/hub"
-	"github.com/go-martini/martini"
 )
 
 // POST
 func boxCreate(req request.CreateRequest) (int, string) {
-	stream, err := hub.CreateStream()
-
-	if err != nil {
-		return 500, err.Error()
-	}
-
 	if err := req.Validate(); err != nil {
 		return 400, err.Error()
+	}
+
+	stream, err := hub.CreateStream()
+	if err != nil {
+		return 500, err.Error()
 	}
 
 	go controller.BoxCreate(req.Name, req.RepoUrl, req.Pathspec, stream)
@@ -34,14 +34,13 @@ func boxCreate(req request.CreateRequest) (int, string) {
 
 // PUT
 func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
-	stream, err := hub.CreateStream()
-
-	if err != nil {
-		return 500, string(err.Error())
-	}
-
 	if err := req.Validate(); err != nil {
 		return 400, err.Error()
+	}
+
+	stream, err := hub.CreateStream()
+	if err != nil {
+		return 500, string(err.Error())
 	}
 
 	go controller.BoxDeploy(params["name"], req.RepoUrl, req.Pathspec, stream)

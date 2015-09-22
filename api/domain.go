@@ -1,9 +1,10 @@
 package api
 
 import (
+	"github.com/go-martini/martini"
+
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/controller"
-	"github.com/go-martini/martini"
 )
 
 func domainAdd(req request.Domain, params martini.Params) (int, string) {

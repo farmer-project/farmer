@@ -2,10 +2,11 @@ package farmer
 
 import (
 	"errors"
-	"github.com/farmer-project/farmer/db"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/farmer-project/farmer/db"
 )
 
 type Release struct {
@@ -65,7 +66,7 @@ func NewRelease(box *Box, repoUrl string, pathspec string) (Release, error) {
 func (r *Release) setup() (err error) {
 	r.CodeDirectory = r.Box.Directory + "/" + strconv.Itoa(r.ID)
 	r.ShareDirectory = r.Box.sharedDirectory()
-	r.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
+	r.CreatedAt = time.Now().Format(TimeFormat)
 
 	if err = r.cloneCode(r.Box.OutputStream, r.Box.ErrorStream); err != nil {
 		return
@@ -89,6 +90,7 @@ func (r *Release) changeType(releaseType string) error {
 		releaseType == StagingType ||
 		releaseType == TestType {
 		var err error
+		oldImage := r.Image
 
 		r.Image, err = dockerCommitContainer(r, strconv.Itoa(r.ID)+"-"+releaseType)
 		if err != nil {
@@ -99,9 +101,11 @@ func (r *Release) changeType(releaseType string) error {
 			return err
 		}
 
+		dockerRemoveImage(oldImage)
+
 		r.Type = releaseType
 		return dockerRunContainer(r)
-		// TODO: uncomment code below on issue https://github.com/docker/docker/issues/16435 solved
+		// TODO: delete code above and uncomment below on issue https://github.com/docker/docker/issues/15727 solved
 		//		return dockerRenameContainer(r)
 	}
 
@@ -124,6 +128,10 @@ func (r *Release) containerName() string {
 }
 
 func (r *Release) test() (err error) {
+	if r.Box.Test.ID > 0 {
+		r.Box.Test.Destroy(true)
+	}
+
 	r.Box.Test = Release{
 		Box:            r.Box,
 		BoxID:          r.BoxID,
@@ -133,7 +141,7 @@ func (r *Release) test() (err error) {
 		Pathspec:       r.Pathspec,
 		Type:           TestType,
 
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedAt: time.Now().Format(TimeFormat),
 	}
 	r.Box.Test.Hostname = r.Hostname
 	r.Box.Test.FarmerConfig = r.FarmerConfig

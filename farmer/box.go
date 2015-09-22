@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 
 	"github.com/farmer-project/farmer/db"
 	"github.com/farmer-project/farmer/dispatcher"
@@ -37,7 +38,6 @@ const (
 	CreatedState = "create"
 	RunningState = "running"
 	StagingState = "staging"
-	SuspendState = "suspended"
 )
 
 func (b *Box) sharedDirectory() string {
@@ -72,46 +72,58 @@ func (b *Box) Setup() error {
 
 func (b *Box) Release(repoUrl string, pathspec string) error {
 	defer db.DB.Save(b)
-	release, err := NewRelease(b, repoUrl, pathspec)
 
+	b.publish("Make new release")
+	release, err := NewRelease(b, repoUrl, pathspec)
 	if err != nil {
 		return err
 	}
 
+	b.publish("Created release to stage")
 	if err := b.stage(release); err != nil {
 		return err
 	}
 
+	b.publish("Test on staging release")
 	if err := b.Staging.test(); err != nil {
+		dispatcher.Trigger("test_release_failed", b)
 		return err
 	}
 
+	b.publish("Move staging to production")
 	if err := b.deploy(); err != nil {
 		return err
 	}
 
-	return b.cleanup()
+	b.publish("Cleanup old releases")
+	if err := b.cleanup(); err != nil {
+		return err
+	}
+
+	b.UpdateTime = time.Now().Local().Format(TimeFormat)
+	return nil
 }
 
 func (b *Box) stage(release Release) error {
 	defer func() {
+		b.StagingID = release.ID
 		b.Staging = release
 		b.SetState(RunningState)
 	}()
 
-	release.Type = StagingType
 	b.SetState(StagingState)
+	release.Type = StagingType
 
-	scriptTag := ScriptCreate
+	script := ScriptCreate
 	if b.Revision > 0 {
-		scriptTag = ScriptDeploy
+		script = ScriptDeploy
 	}
 
 	if err := release.runContainer(); err != nil {
 		return err
 	}
 
-	if err := release.runScript(scriptTag); err != nil {
+	if err := release.runScript(script); err != nil {
 		return err
 	}
 
@@ -141,7 +153,7 @@ func (b *Box) deploy() error {
 	b.StagingID = 0
 	b.Staging = Release{}
 
-	return db.DB.Save(b).Error
+	return b.SetState(RunningState)
 }
 
 func (b *Box) SetState(state string) error {
@@ -160,6 +172,10 @@ func (b *Box) cleanup() error {
 	}
 
 	return nil
+}
+
+func (b *Box) publish(message string) {
+	b.OutputStream.Write([]byte(FarmerPreMessage + message + "\n"))
 }
 
 func (b *Box) Destroy() error {

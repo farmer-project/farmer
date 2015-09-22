@@ -2,10 +2,11 @@ package farmer
 
 import (
 	"errors"
-	"github.com/fsouza/go-dockerclient"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 var dockerClient *docker.Client

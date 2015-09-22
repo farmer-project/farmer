@@ -1,16 +1,20 @@
 package controller
 
-import "github.com/farmer-project/farmer/farmer"
+import (
+	"strconv"
+
+	"github.com/farmer-project/farmer/farmer"
+)
 
 type BoxInspection struct {
 	Name     string          `json:"name"`
 	State    string          `json:"state"`
-	Image    string          `json:"image"`
 	RepoUrl  string          `json:"repo_url"`
 	Pathspec string          `json:"pathspec"`
 	Home     string          `json:"home"`
 	Ports    []string        `json:"ports"`
 	Domains  []farmer.Domain `json:"domains"`
+	Revision string          `json:"revision"`
 	UpdateAt string          `json:"update_at"`
 }
 
@@ -23,12 +27,12 @@ func BoxInspect(boxName string) (BoxInspection, error) {
 	return BoxInspection{
 		Name:     box.Name,
 		State:    box.State,
-		Image:    box.Production.Image,
 		RepoUrl:  box.Production.RepoUrl,
 		Pathspec: box.Production.Pathspec,
 		Home:     box.Production.Home,
 		Ports:    box.Production.Ports,
 		Domains:  box.Domains,
+		Revision: strconv.Itoa(box.Revision),
 		UpdateAt: box.Production.CreatedAt,
 	}, nil
 }

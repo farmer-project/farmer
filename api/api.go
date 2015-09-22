@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/farmer-project/farmer/api/request"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
+
+	"github.com/farmer-project/farmer/api/request"
 )
 
 func Listen() {

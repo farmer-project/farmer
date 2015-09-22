@@ -1,11 +1,12 @@
 package hub
 
 import (
-	"github.com/streadway/amqp"
 	"math/rand"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 type Stream struct {

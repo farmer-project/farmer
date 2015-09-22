@@ -5,7 +5,6 @@ import "github.com/farmer-project/farmer/farmer"
 type FarmerBox struct {
 	Name     string `json:"name"`
 	State    string `json:"state"`
-	Image    string `json:"image"`
 	RepoUrl  string `json:"repo_url"`
 	Pathspec string `json:"pathspec"`
 	UpdateAt string `json:"update_at"`
@@ -19,7 +18,6 @@ func BoxList() ([]FarmerBox, error) {
 		result = append(result, FarmerBox{
 			Name:     box.Name,
 			State:    box.State,
-			Image:    box.Production.Image,
 			RepoUrl:  box.Production.RepoUrl,
 			Pathspec: box.Production.Pathspec,
 			UpdateAt: box.UpdateTime,

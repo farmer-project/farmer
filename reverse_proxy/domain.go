@@ -1,12 +1,12 @@
 package reverse_proxy
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
 
-	"errors"
 	"github.com/farmer-project/farmer/db"
 	"github.com/farmer-project/farmer/farmer"
 )
