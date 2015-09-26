@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Preparation
+DIR=`dirname $BASH_SOURCE`
+source ${DIR}/util
+download_farmer_client
+EXIT_STATUS=0
+
+# Check docker
+docker version
+
+# Install farmer
+export NO_INTERACTION=1
+hack/install
+sleep 10
+
+# Test suites
+${DIR}/suites/create_box || EXIT_STATUS=$?
+${DIR}/suites/list_all_boxes || EXIT_STATUS=$?
+
+exit ${EXIT_STATUS}

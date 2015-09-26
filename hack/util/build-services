@@ -19,8 +19,8 @@ echo ""
     # Make sure Docker is installed.
     if ! command_exists docker; then
         echo "It seems Docker daemon is not installed here."
-        read -r -p "Should I install Docker latest version? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+
+        if $(ask_confirm "Should I install Docker latest version?"); then
             farmer_install_docker
         fi
     fi
@@ -43,7 +43,7 @@ echo ""
                 -d tutum/rabbitmq
 
             handle_container_error tutum/rabbitmq
-            sleep 5
+            sleep 10
 
             echo " > Creating consumer user..."
             docker exec farmer-hub rabbitmqctl start_app
@@ -51,6 +51,7 @@ echo ""
 
             echo " > Allowing monitor access to consumer user..."
             docker exec farmer-hub rabbitmqctl set_user_tags ${consumer_username} monitoring
+
             curl -i -u admin:${hub_admin_password} -H "content-type:application/json" \
                  -XPUT -d'{"username":"${consumer_username}","vhost":"/","configure":".*","write":".*","read":".*"}' \
                  http://$(docker_get_ip farmer-hub):15672/api/permissions/%2f/${consumer_username}
@@ -77,7 +78,7 @@ echo ""
             sleep 10
 
             handle_container_error tutum/mysql
-            echo "${GREEN}Database container is up.${RESET}"
+            echo "${GREEN}Database container is created.${RESET}"
         else
             echo "${GREEN}Database container already exists.${RESET}"
         fi
@@ -96,7 +97,7 @@ echo ""
                 -d nginx
 
             handle_container_error nginx
-            echo "${GREEN}Reverse-proxy container is up.${RESET}"
+            echo "${GREEN}Reverse-proxy container is created.${RESET}"
         else
             echo "${GREEN}Reverse-proxy container already exists.${RESET}"
         fi
