@@ -1,5 +1,5 @@
 
-# Farmer [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)    
+# Farmer [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)  [![Join the chat at https://gitter.im/farmer-project/farmer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/farmer-project/farmer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.
 
 ## Getting Started
