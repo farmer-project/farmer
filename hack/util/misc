@@ -8,6 +8,43 @@ export RED="$(echo -e "\033[31m")"
 export OK=0
 export NOT_OK=1
 
+# Asks user confirmation
+ask_confirm()
+{
+    message=${1}
+    default=${2:-yes}
+
+    if [ ! ${NO_INTERACTION} ]; then
+        if [[ ${default} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            read -r -p "${message} ${CYAN}[Y/n]:${RESET} " response
+        else
+            read -r -p "${message} ${CYAN}[y/N]:${RESET} " response
+        fi
+    fi
+
+    response=${response:-${default}}
+
+    if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        return ${OK}
+    fi
+
+    return ${NOT_OK}
+}
+
+# Asks user input with a default value
+ask_input()
+{
+    if [ ! ${NO_INTERACTION} ]; then
+        read ${1}
+    else
+        echo ""
+    fi
+
+    if [ ! "${!1}" ]; then
+        export ${1}=${2}
+    fi
+}
+
 # Retrieves IP address of a docker container
 docker_get_ip()
 {
@@ -37,6 +74,21 @@ docker_get_env()
     return ${NOT_OK}
 }
 
+# Checks if docker API works
+docker_check_api()
+{
+    docker_version_url="${1}"
+    docker run tutum/curl:latest curl -sSL -m 10 ${docker_version_url}
+    STATUS=$?
+
+    if [ ${STATUS} -ne 0 ]; then
+        echo "${RED}Docker API doesn't seem to work on \"${docker_version_url}\".${RESET}"
+        exit
+    fi
+
+    return ${OK}
+}
+
 # Ensures a container (by its name) does not exist and is ready to be sued by farmer!
 ensure_container_free()
 {
@@ -44,13 +96,15 @@ ensure_container_free()
     docker inspect ${container_name} &>/dev/null
 
     if [ $? -eq 0 ]; then
-        read -r -p "A container with name '${container_name}' exists, Should I remove it? ${CYAN}[y/N]:${RESET} " response
-        if [[ ${response} =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        ask_confirm "A container with name '${container_name}' exists, Should I remove it?" yes
+        result=$?
+
+        if [ ${result} -eq 0 ]; then
             docker rm -f ${container_name}
             return ${OK}
-        else
-            return ${NOT_OK}
         fi
+
+        return ${NOT_OK}
     fi
 
     return ${OK}
@@ -69,10 +123,13 @@ handle_error()
 # Prints a friendly error if last container could not be created
 handle_container_error()
 {
-    if [ $? -ne 0 ]; then
+    last_exit_code=$?
+    if [ ${last_exit_code} -ne 0 ]; then
         echo ""
-        echo "${RED}Could not download or run ${1} container.${RESET}"
+        echo "${RED}Could not download/run ${1} container. Exit code ${last_exit_code}.${RESET}"
         echo "You can restart docker daemon and re-run the installer again."
+
+        tail -n 25 /var/log/upstart/docker.log
         exit ${NOT_OK}
     fi
 }
@@ -88,10 +145,21 @@ my_ip()
     echo ${ip}
 }
 
+# Returns this system IP from a container's point of view
+my_ip_from_container()
+{
+    echo $(docker run alpine:latest netstat -nr | grep '^0\.0\.0\.0' | awk '{print $2}') | head -n1 | tail -n1
+}
+
 # Returns this system external IP.
 my_external_ip()
 {
-	dig +short myip.opendns.com @resolver1.opendns.com
+    hostname -I &>/dev/null
+    if [ $? -eq 0 ]; then
+        hostname -I|cut -f1 -d ' '
+    else
+        hostname -i|cut -f1 -d ' '
+    fi
 }
 
 # Returns this system local IP.
@@ -152,7 +220,7 @@ farmer_check_host()
 # Test an FQDN for validity.
 function valid_domain()
 {
-    echo ${1} |grep -P '(?=^.{1,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
+    echo ${1} |grep '^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.[a-zA-Z]*$'
     return $?
 }
 

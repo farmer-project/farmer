@@ -1,0 +1,6 @@
+#!/bin/bash
+source $(dirname $BASH_SOURCE)/../util
+
+docker pull tutum/lamp # FIXME Should be pulled by farmer automatically!
+farmer_client create testappA -r https://github.com/farmer-project/farmer-examples.git -p test/simple-create
+farmer_client list | grep testappA

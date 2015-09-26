@@ -42,7 +42,14 @@ echo ""
 
         farmer_git_ssh_wrapper=${FARMER_DATA_LOCATION}/keys/git_wrapper.sh
         mkdir -p ${FARMER_DATA_LOCATION}/keys
-        ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+
+        if [ ! ${NO_INTERACTION} ]; then
+            ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+        else
+            # Do not overwrite an existing key.
+            echo -e  'n\n'|ssh-keygen -b 2048 -t rsa -f ${FARMER_DATA_LOCATION}/keys/gitkey_rsa -q -N ""
+        fi
+
         touch ${farmer_git_ssh_wrapper}
         echo "#!/bin/bash" > ${farmer_git_ssh_wrapper}
         echo "ssh -o StrictHostKeyChecking=no -i ${FARMER_DATA_LOCATION}/keys/gitkey_rsa \$@" > ${farmer_git_ssh_wrapper}
@@ -54,7 +61,6 @@ echo ""
     echo ""
 
     echo "${YELLOW}3) Building the image...${RESET}"
-
         ensure_container_free farmer-server
 
         if [ $? -eq ${OK} ]; then
@@ -83,15 +89,17 @@ echo ""
                 -e FARMER_DB_PORT=3306 \
                 -e FARMER_REVERSE_PROXY_CONTAINER_ID=farmer-reverse-proxy \
                 -e FARMER_REVERSE_PROXY_LOCATION=${FARMER_REVERSE_PROXY_LOCATION} \
+                -e FARMER_BOX_KEEP_RELEASES=${FARMER_BOX_KEEP_RELEASES} \
                 --link farmer-database:db \
                 --link farmer-hub:hub \
                 --hostname farmer \
                 farmer/server
 
+            handle_container_error farmer/server
+
             docker exec farmer-server git config --global user.email "farmer@localhost"
             docker exec farmer-server git config --global user.name "farmer"
 
-            handle_container_error farmer/server
             echo "${GREEN}Image farmer/server is created successfully.${RESET}"
             echo ""
         else

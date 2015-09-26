@@ -1,0 +1,30 @@
+#!/bin/bash
+
+download_farmer_client()
+{
+    git clone https://github.com/farmer-project/farmer-cli.git /tmp/farmer-cli
+    echo "FROM golang:1.4-onbuild" > /tmp/farmer-cli/Dockerfile
+    docker build -t farmer-cli /tmp/farmer-cli
+    rm -Rf ${HOME}/.farmer.cfg
+    echo ServerUrl = \"http://$(my_external_ip):5549\" >> ${HOME}/.farmer.cfg
+    farmer_client --help
+}
+
+farmer_client()
+{
+    docker run --rm \
+        -v /tmp/farmer-cli:/go/src/app \
+        -v ${HOME}/.farmer.cfg:/root/.farmer.cfg \
+        -w /go/src/app farmer-cli \
+        go run main.go "${@}"
+}
+
+my_external_ip()
+{
+    hostname -I &>/dev/null
+    if [ $? -eq 0 ]; then
+        hostname -I|cut -f1 -d ' '
+    else
+        hostname -i|cut -f1 -d ' '
+    fi
+}

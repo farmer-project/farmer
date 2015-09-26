@@ -1,0 +1,4 @@
+#!/bin/bash
+source $(dirname $BASH_SOURCE)/../util
+
+farmer_client list | grep REPOSITORY

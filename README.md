@@ -1,6 +1,9 @@
+# Farmer
+Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.   
 
-# Farmer [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)  [![Join the chat at https://gitter.im/farmer-project/farmer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/farmer-project/farmer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
+[![Build Status](http://ci.ravaj.ir/buildStatus/icon?job=farmer-integration-tests&style=plastic)](http://ci.ravaj.ir/job/farmer-integration-tests)
+[![Join the chat at https://gitter.im/farmer-project/farmer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/farmer-project/farmer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Getting Started
 Farmer comes with a installer script with will bring a complete Farmer up in a few minutes.  
@@ -33,10 +36,11 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 ## Roadmap
 
 - [X] [**v0.1**](https://github.com/farmer-project/farmer/issues/16) Basic box management API with domain management.
-- [ ] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Fail safe Staging
-- [ ] **v0.3** Box backups.
-- [ ] **v0.4** Statistics.
-- [ ] **v0.5** Load balancing and multi-server support.
- 
+- [ ] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Fail-safe Staging feature, Farmer integration tests.
+- [ ] **v0.3** Rollback to older releases
+- [ ] **v0.4** Admin UI in AngularJS
+- [ ] **v0.5** Statistics
+- [ ] **v0.6** Load balancing and multi-server support
+
 ## License
 Visit our **[MIT License](LICENSE)**.
