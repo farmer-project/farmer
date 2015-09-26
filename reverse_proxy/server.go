@@ -1,8 +1,9 @@
 package reverse_proxy
 
 import (
-	"github.com/fsouza/go-dockerclient"
 	"os"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 var dockerClient *docker.Client

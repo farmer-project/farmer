@@ -7,27 +7,27 @@ import (
 )
 
 type FarmerConfig struct {
-	Image   string            `json:"image"`
-	Home    string            `json:"home" sql:"default:'/app'"`
+	Image   string            `sql:"type:varchar(128);not null" json:"image"`
+	Home    string            `sql:"default:'/app'" json:"home"`
 	Ports   []string          `sql:"-" json:"ports"`
 	Env     []string          `sql:"-" json:"-"`
 	Shared  []string          `sql:"-" json:"-"`
 	Scripts map[string]string `sql:"-" json:"-"`
 }
 
-func (b *Box) parseFarmerfile() error {
-	filename, _ := filepath.Abs(b.RevisionDirectory() + "/.farmer.yml")
+func (r *Release) parseFarmerfile() error {
+	filename, _ := filepath.Abs(r.CodeDirectory + "/.farmer.yml")
 	yamlFile, err := ioutil.ReadFile(filename)
 
 	if err != nil {
 		return err
 	}
 
-	if err := yaml.Unmarshal(yamlFile, &b.FarmerConfig); err != nil {
+	if err := yaml.Unmarshal(yamlFile, &r.FarmerConfig); err != nil {
 		return err
 	}
 
-	return setDefaultConfig(&b.FarmerConfig)
+	return setDefaultConfig(&r.FarmerConfig)
 }
 
 func setDefaultConfig(config *FarmerConfig) error {

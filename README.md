@@ -1,5 +1,5 @@
 
-# Farmer [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)    
+# Farmer [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)  [![Join the chat at https://gitter.im/farmer-project/farmer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/farmer-project/farmer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.
 
 ## Getting Started
@@ -33,7 +33,7 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 ## Roadmap
 
 - [X] [**v0.1**](https://github.com/farmer-project/farmer/issues/16) Basic box management API with domain management.
-- [ ] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Admin UI (with AngularJS).
+- [ ] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Fail safe Staging
 - [ ] **v0.3** Box backups.
 - [ ] **v0.4** Statistics.
 - [ ] **v0.5** Load balancing and multi-server support.

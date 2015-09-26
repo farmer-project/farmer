@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"errors"
+
 	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/reverse_proxy"
 )
@@ -8,7 +10,7 @@ import (
 func DomainAdd(boxName string, url string, port string) error {
 	box, err := farmer.FindBoxByName(boxName)
 	if err != nil {
-		return err
+		return errors.New("Cannot find box '" + boxName + "'")
 	}
 
 	if err := reverse_proxy.AddDomain(box, url, port); err != nil {

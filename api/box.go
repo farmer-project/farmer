@@ -3,18 +3,21 @@ package api
 import (
 	"encoding/json"
 
+	"github.com/go-martini/martini"
+
 	"github.com/farmer-project/farmer/api/request"
 	"github.com/farmer-project/farmer/api/response"
 	"github.com/farmer-project/farmer/controller"
-	"github.com/farmer-project/farmer/farmer"
 	"github.com/farmer-project/farmer/hub"
-	"github.com/go-martini/martini"
 )
 
 // POST
 func boxCreate(req request.CreateRequest) (int, string) {
-	stream, err := hub.CreateStream()
+	if err := req.Validate(); err != nil {
+		return 400, err.Error()
+	}
 
+	stream, err := hub.CreateStream()
 	if err != nil {
 		return 500, err.Error()
 	}
@@ -31,8 +34,11 @@ func boxCreate(req request.CreateRequest) (int, string) {
 
 // PUT
 func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
-	stream, err := hub.CreateStream()
+	if err := req.Validate(); err != nil {
+		return 400, err.Error()
+	}
 
+	stream, err := hub.CreateStream()
 	if err != nil {
 		return 500, string(err.Error())
 	}
@@ -49,14 +55,12 @@ func boxDeploy(req request.DeployRequest, params martini.Params) (int, string) {
 
 // GET
 func boxInspect(params martini.Params) (int, string) {
-	box, err := farmer.FindBoxByName(params["name"])
-
+	inspect, err := controller.BoxInspect(params["name"])
 	if err != nil {
 		return 500, err.Error()
 	}
 
-	json, _ := json.Marshal(box)
-
+	json, _ := json.Marshal(inspect)
 	return 200, string(json)
 }
 

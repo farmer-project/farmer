@@ -1,11 +1,12 @@
 package hub
 
 import (
-	"github.com/streadway/amqp"
 	"math/rand"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 type Stream struct {
@@ -65,6 +66,12 @@ func (s *Stream) AmqpURI() string {
 	return os.Getenv("FARMER_CONSUMER_AMQP_URI")
 }
 
-func (s *Stream) Close() error {
+func (s *Stream) Close(err error) error {
+	if err != nil {
+		s.Write([]byte(err.Error()))
+		s.Write([]byte("FAILED"))
+	}
+
+	s.Write([]byte("kthxbai")) // say to client that streaming is finished
 	return s.connection.Close()
 }
