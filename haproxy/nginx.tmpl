@@ -1,0 +1,47 @@
+{{ range $service := lsdir "/services" }}
+  {{ if ls (printf "/services/%s/web" $service) }}
+    upstream backend_{{ base $service }} {
+      {{ $hosts := printf "/services/%s/web/*" $service }}
+      {{ range getvs $hosts }}
+        server {{.}};
+      {{ end }}
+    }
+
+    server {
+      listen 80;
+      server_name {{ base $service }}.http.farmer;
+      {{ $domains := printf "/domains/%s/*" $service }}
+      {{ range getvs $domains }}
+        server_name {{.}};
+      {{ end }}
+
+      location / {
+        proxy_pass http://backend_{{base $service}};
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    }
+
+#    server {
+#      listen 443 ssl;
+#      server_name {{ base $service }}.ssl.farmer;
+#      {{ range getvs (printf "/domains/%s/*" $service) }}
+#        server_name {{.}};
+#      {{ end }}
+#
+#      location / {
+#        proxy_pass http://backend_{{base $service}};
+#        proxy_ssl  on;
+#        proxy_ssl_certificate        /var/farmer/certs/{{ $service }}/server.crt;
+#        proxy_ssl_certificate_key    /var/farmer/certs/{{ $service }}/server.key;
+#        proxy_ssl_protocols          SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+#        proxy_redirect off;
+#        proxy_set_header Host $host;
+#        proxy_set_header X-Real-IP $remote_addr;
+#        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#      }
+#    }
+  {{end}}
+{{end}}

@@ -1,0 +1,86 @@
+global
+    daemon
+    maxconn 256
+    debug
+
+defaults
+    timeout connect 5000ms
+    timeout client 500000ms
+    timeout server 500000ms
+    log global
+
+frontend name_resolver_http
+    bind *:80
+    mode http
+{{ range $dir := lsdir "/services" }}
+    {{ $schemedir := printf "/services/%s/scheme" $dir}}{{ if ls $schemedir }}{{$scheme := getv $schemedir}}
+        {{ if and $scheme (or (eq $scheme "http") (eq $scheme "http-and-https")) (not (exists (printf "/services/%s/private" $dir))) }}
+    acl is_{{ $dir }} url_beg /{{ $dir }}
+    acl is_{{ $dir }} hdr_beg(host) {{ $dir }}
+    use_backend {{ $dir }}_servers if is_{{ $dir }}
+        {{ end }}
+        {{ if and $scheme (eq $scheme "https") (not (exists (printf "/services/%s/private" $dir))) }}
+    acl is_{{ $dir }} url_beg /{{ $dir }}
+    acl is_{{ $dir }} hdr_beg(host) {{ $dir }}
+    redirect scheme https code 301 if !{ ssl_fc } is_{{ $dir }}
+        {{ end }}
+{{ end }}{{ end }}
+
+frontend name_resolver_tcp
+    bind *:81
+    mode tcp
+{{ range $dir := lsdir "/services" }}
+    {{ $schemedir := printf "/services/%s/scheme" $dir}}{{ if ls $schemedir }}{{$scheme := getv $schemedir}}
+        {{if and $scheme (eq $scheme "tcp") (not (exists (printf "/services/%s/private" $dir))) }}
+    acl is_{{ $dir }} url_beg /{{ $dir }}
+    use_backend {{ $dir }}_servers if is_{{ $dir }}
+        {{ end }}{{ end }}
+{{ end }}
+
+{{ if ls "/config/services/ssl_support" }}
+frontend name_resolver_https
+    bind *:443 ssl crt /keys
+    mode http
+    {{ range $dir := lsdir "/services" }}
+        {{ $schemedir := printf "/services/%s/scheme" $dir}}{{ if ls $schemedir }}{{$scheme := getv $schemedir}}
+        {{ if and $scheme (or (eq $scheme "https") (eq $scheme "http-and-https")) (not (exists (printf "/services/%s/private" $dir))) }}
+    acl is_{{ $dir }} hdr_beg(host) {{ $dir }}
+    use_backend {{ $dir }}_servers if is_{{ $dir }}
+        {{ end }}{{ end }}
+    {{ end }}
+{{ end }}
+
+{{ range $dir := lsdir "/services" }}
+    {{ $host_portdir := printf "/services/%s/host_port" $dir}}{{range $host_port := ls $host_portdir}}
+    {{ $schemedir := printf "/services/%s/scheme" $dir}}{{ if ls $schemedir }}{{$scheme := getv $schemedir}}
+    {{ if $scheme }}
+frontend {{ $dir }}_port
+    {{if or (eq $scheme "https") (eq $scheme "http-and-https")}}
+        mode http
+    {{ else }}
+        mode {{ $scheme }}
+    {{ end }}
+    bind *:{{ getv $host_portdir }}
+    default_backend {{ $dir }}_servers
+    {{ end }}{{ end }}{{ end }}
+{{ end }}
+
+
+{{ range $dir := lsdir "/services" }}
+backend {{ $dir }}_servers
+    {{ $schemedir := printf "/services/%s/scheme" $dir}}{{ if ls $schemedir }}{{$scheme := getv $schemedir}}
+    {{if or (eq $scheme "https") (eq $scheme "http-and-https")}}
+        mode http
+    {{ else }}
+        mode {{ $scheme }}
+    {{ end }}
+    {{ $hostsdir := printf "/services/%s/hosts" $dir}}{{ range $hostnumber := ls $hostsdir }}
+        {{ with $host := printf "/services/%s/hosts/%s" $dir $hostnumber }}
+               {{ with $host_ip := getv $host }}
+                        {{ if $host_ip }}
+    server server_{{ $dir }}_{{ $hostnumber }} {{ getv $host }}
+                        {{ end }}
+                {{ end }}
+        {{ end }}
+    {{ end }}{{ end }}
+{{ end }}
