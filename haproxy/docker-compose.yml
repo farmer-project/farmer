@@ -34,7 +34,7 @@ proxy:
 
 browser:
   container_name: farmer_proxy_etcd_browser
-  image: etcd-browser
+  image: buddho/etcd-browser
   ports:
     - 8000:8000
   links:
