@@ -5,6 +5,6 @@ RUN chmod u+x /usr/local/bin/confd
 ADD confd.toml /etc/confd/conf.d/configuration.toml
 ADD nginx.tmpl /etc/confd/templates/nginx.tmpl
 
-ADD ./entrypoint.sh /entrypoint.sh
+ADD entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

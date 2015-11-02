@@ -1,19 +1,14 @@
 {{ range $service := lsdir "/services" }}
   {{ if ls (printf "/services/%s/web" $service) }}
-    upstream backend_{{ base $service }} {
-      {{ $hosts := printf "/services/%s/web/*" $service }}
-      {{ range getvs $hosts }}
-        server {{.}};
-      {{ end }}
+    upstream backend_{{ base $service }} { {{ $hosts := printf "/services/%s/web/*" $service }}{{ range getvs $hosts }}
+        server {{.}};{{ end }}
     }
 
     server {
       listen 80;
       server_name {{ base $service }}.http.farmer;
-      {{ $domains := printf "/domains/%s/*" $service }}
-      {{ range getvs $domains }}
-        server_name {{.}};
-      {{ end }}
+      {{ $domains := printf "/services/%s/domains/*" $service }} {{ range getvs $domains }}
+      server_name {{.}}; {{ end }}
 
       location / {
         proxy_pass http://backend_{{base $service}};
