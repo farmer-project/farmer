@@ -1,4 +1,5 @@
 # Farmer
+## This project is abondoned in favor of [ravaj-group/farmer](https://github.com/ravaj-group/farmer)
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.   
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
@@ -36,7 +37,7 @@ Visit [**farmer-cli**](https://github.com/farmer-project/farmer-cli) for install
 ## Roadmap
 
 - [X] [**v0.1**](https://github.com/farmer-project/farmer/issues/16) Basic box management API with domain management.
-- [ ] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Fail-safe Staging feature, Farmer integration tests.
+- [X] [**v0.2**](https://github.com/farmer-project/farmer/issues/17) Fail-safe Staging feature, Farmer integration tests.
 - [ ] **v0.3** Rollback to older releases
 - [ ] **v0.4** Admin UI in AngularJS
 - [ ] **v0.5** Statistics
