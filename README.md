@@ -3,7 +3,6 @@
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.   
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
-[![Build Status](http://ci.ravaj.ir/buildStatus/icon?job=farmer-integration-tests&style=plastic)](http://ci.ravaj.ir/job/farmer-integration-tests)
 [![Join the chat at https://gitter.im/farmer-project/farmer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/farmer-project/farmer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Getting Started
