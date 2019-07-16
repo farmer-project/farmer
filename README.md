@@ -1,5 +1,5 @@
 # Farmer
-## This project is abondoned in favor of [ravaj-group/farmer](https://github.com/ravaj-group/farmer)
+## This project is abandoned in favor of [ravaj-group/farmer](https://github.com/ravaj-group/farmer)
 Farmer is a PaaS that offers a simple API to create, deploy and manage small SaaS projects.   
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/farmer-project/farmer)
